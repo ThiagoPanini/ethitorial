@@ -46,10 +46,11 @@ Documento vivo. Reflete a arquitetura **atual e pretendida**. Mudanças signific
 ### `apps/web` (Next.js 15)
 
 - Renderiza catálogo público (RSC + streaming)
-- Renderiza player de slides (MDX → componentes React)
+- Renderiza player de slides (MDX → componentes React via `slide-kit`) — ver [ADR-0012](adr/0012-slide-kit-base-plus-extensoes-locais.md)
+- Hospeda `slide-kit/` (catálogo base de primitivas, animações Framer Motion e chrome de player)
 - UI de auth, perfil, votos, comentários
-- Server Actions para mutations simples
-- Consome `apps/api` via fetch para operações de domínio (a definir: que vai cair em Server Action no Next vs endpoint FastAPI)
+- Server Actions exclusivas para concerns do Next (revalidar cache, cookies funcionais, redirects) — ver [ADR-0010](adr/0010-server-actions-apenas-para-concerns-do-next.md)
+- Consome `apps/api` via `fetch` para todas as operações de domínio (voto, comentário, perfil, upload). Cliente gerado a partir do OpenAPI.
 
 ### `apps/api` (FastAPI)
 
@@ -59,7 +60,7 @@ Documento vivo. Reflete a arquitetura **atual e pretendida**. Mudanças signific
 
 ```
 apps/api/src/talkingpres/
-├── catalog/         # Presentation, Slide, Tag, Author
+├── catalog/         # Presentation, Slide, Tag (referencia User por UserId — ADR-0007)
 ├── identity/        # User, Session, Auth
 ├── engagement/      # View, Vote, Comment
 ├── narration/       # [V2] voice, RAG, Q&A
@@ -156,5 +157,4 @@ PORTÃO 3 — On merge to main (deploy)
 
 ## Pontos abertos
 
-- Onde a borda Server Action ↔ FastAPI? Hipótese inicial: tudo público no FastAPI; Server Actions só para coisas estritamente do web (ex.: revalidar cache, mutations triviais de UI). Decidir via ADR ao implementar primeira mutation.
 - Cache de catálogo: Cloudflare cache padrão ou Redis dedicado? Decidir ao medir.
