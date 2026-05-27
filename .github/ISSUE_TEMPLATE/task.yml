@@ -1,0 +1,72 @@
+name: Task
+description: Tarefa granular para o planning board
+title: "[task]: "
+labels: ["proposed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use este template para tarefas executaveis. Decisoes arquiteturais novas devem virar ADR antes da implementacao.
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto
+      description: Qual problema esta tarefa resolve e onde ela se encaixa na fase atual?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criterio de aceite
+      description: Liste resultados observaveis. Prefira tarefas pequenas, verificaveis e com escopo fechado.
+      placeholder: |
+        - ...
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: agent-notes
+    attributes:
+      label: Notas para o agente
+      description: Restricoes, arquivos relevantes, comandos esperados, ou pontos onde o agente deve parar.
+    validations:
+      required: false
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencias
+      description: Decisoes, segredos, producao, tarefas anteriores ou acoes humanas necessarias.
+    validations:
+      required: false
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      options:
+        - "0"
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+    validations:
+      required: true
+  - type: dropdown
+    id: owner
+    attributes:
+      label: Owner
+      options:
+        - Human
+        - Agent
+        - Pairing
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0
+        - P1
+        - P2
+    validations:
+      required: false

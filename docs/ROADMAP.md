@@ -11,6 +11,7 @@ Para a visão de longo prazo, ver [VISION.md](VISION.md). Para decisões registr
 Sem código de produto. Objetivo: base sólida de documentação, infra, automação e setup AI-first.
 
 > **Progresso (atualizado 2026-05-27):** infra base da VPS e fundação documental concluídas; borda Cloudflare e esqueleto de aplicação pendentes. Trilha auditável em [docs/ai-ops/](ai-ops/), receitas reproduzíveis em [docs/guides/](guides/).
+> **Acompanhamento ao vivo:** [GitHub Project `talkingpres — roadmap`](https://github.com/users/ThiagoPanini/projects/4).
 
 ### Infra e borda
 
