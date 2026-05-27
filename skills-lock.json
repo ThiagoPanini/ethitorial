@@ -30,6 +30,18 @@
       "sourceType": "github",
       "skillPath": "plugins/llm-application-dev/skills/prompt-engineering-patterns/SKILL.md",
       "computedHash": "2bf9fca17f1ce77dbf6c037843389b19caef4e8b4ab48f9227369953312008cc"
+    },
+    "write-a-skill": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/write-a-skill/SKILL.md",
+      "computedHash": "b44d8aab2ead83c716e01af4c9a24ccc4575ce70ad58ec4f1749fb88c9cc82ba"
+    },
+    "write-guide": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/write-guide/SKILL.md",
+      "computedHash": "ecc96d36de720993dd4b476485175dbcc03f2adfd9dfea81c5593e8bc2a06a45"
     }
   }
 }
