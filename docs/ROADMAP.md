@@ -10,28 +10,49 @@ Para a visão de longo prazo, ver [VISION.md](VISION.md). Para decisões registr
 
 Sem código de produto. Objetivo: base sólida de documentação, infra, automação e setup AI-first.
 
-- [ ] Provisionar VPS Hostinger (KVM 2), endurecer (ssh keys, ufw, fail2ban, updates automáticos)
-- [ ] Instalar Coolify
-- [ ] Configurar DNS no Cloudflare apontando para a VPS, com proxy ligado
+> **Progresso (atualizado 2026-05-27):** infra base da VPS e fundação documental concluídas; borda Cloudflare e esqueleto de aplicação pendentes. Trilha auditável em [docs/ai-ops/](ai-ops/), receitas reproduzíveis em [docs/guides/](guides/).
+
+### Infra e borda
+
+- [x] Provisionar VPS Hostinger (KVM 2) e endurecer (ssh keys, ufw, fail2ban, unattended-upgrades) — ver [ai-ops 0002](ai-ops/0002-hardening-talkingpres-prod.md)
+- [x] Instalar Coolify (via template Hostinger; 4 containers saudáveis, Traefik como proxy) — ver [ai-ops 0001](ai-ops/0001-setup-inicial-talkingpres-prod.md)
+- [ ] Borda Cloudflare — receita pronta em [guide 0002](guides/0002-configurar-cloudflare-r2-mcp.md), execução pendente:
+  - [ ] Trocar nameservers para a Cloudflare e ativar a zona `talkingpres.com`
+  - [ ] Publicar Coolify em subdomínio proxied com TLS Full (strict)
+  - [ ] Criar admin do Coolify (senha direto no gerenciador de segredos)
+  - [ ] Fechar a origem: restringir UFW aos ranges Cloudflare, fechar portas temporárias `8000/6001/6002`, validar com checagem externa tripla
+- [ ] Backup do Postgres em R2 (bucket criado no [guide 0002](guides/0002-configurar-cloudflare-r2-mcp.md); credencial S3 + schedule no Coolify em guide futuro)
+- [ ] Runbook de restore mensal do Postgres (backup não testado não é backup)
+- [ ] Deploy "hello world" em produção respondendo em `talkingpres.com`
+
+### CI/CD e qualidade
+
 - [ ] CI: GitHub Actions com lint + typecheck + testes em PR
 - [ ] Branch protection na `main`: PR obrigatório, CI verde obrigatório, sem force-push
 - [ ] Secret scanning no CI (`gitleaks`)
+
+### Código e ambiente local
+
 - [ ] Skeleton monorepo: `apps/web` (Next.js) + `apps/api` (FastAPI), ambos com "hello world" rodando
 - [ ] Docker Compose local com Postgres
-- [ ] AGENTS.md + CLAUDE.md (`@AGENTS.md`) + `.github/copilot-instructions.md`
-- [ ] docs/CONTEXT.md preenchido após sessão `grill-with-docs`
-- [ ] ADRs iniciais concluídos
+
+### Documentação e setup AI-first
+
+- [x] AGENTS.md + CLAUDE.md (`@AGENTS.md`) + `.github/copilot-instructions.md`
+- [x] docs/CONTEXT.md preenchido após sessão `grill-with-docs`
+- [x] ADRs iniciais concluídos (0001–0012)
+- [x] Sistema de documentação versionada: taxonomia ADR / lesson / guide / runbook / ai-ops, cada gênero com README e critério de uso
+- [x] Skills de autoria (`write-a-guide`, `write-a-lesson`, `write-a-skill`) para manter o padrão dos docs
 - [ ] CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md
-- [ ] Deploy "hello world" em produção respondendo em `talkingpres.com`
 
 ## Fase 1 — Catálogo público (read-only)
 
 - [ ] Modelo de domínio: `Presentation`, `Slide`, `Tag` (publicador referenciado por `UserId` — ver [ADR-0007](adr/0007-publicar-e-papel-de-user.md))
 - [ ] Migrations Alembic iniciais
 - [ ] Endpoints REST: list, filter, search, get-by-slug
-- [ ] Player de slides renderizado a partir de MDX
+- [ ] Player de slides renderizado a partir de MDX via `slide-kit` (base + extensões locais — ver [ADR-0012](adr/0012-slide-kit-base-plus-extensoes-locais.md))
 - [ ] Landing page CodeWiki-style: hero, grid de destaques, animações de scroll
-- [ ] Página de listagem com filtros por tag e busca
+- [ ] Página de listagem com filtros por tag (curadas — ver [ADR-0008](adr/0008-tags-curadas.md)) e busca
 - [ ] Página individual de apresentação: player + descrição + metadata
 - [ ] OG tags + structured data para compartilhamento social
 - [ ] Sitemap + robots.txt
@@ -41,9 +62,9 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
 ## Fase 2 — Engajamento
 
 - [ ] Auth (Clerk ou better-auth — decidir via ADR)
-- [ ] Modelo `View`, `Vote`, `Comment`
-- [ ] Endpoints e UI otimista para votar e comentar
-- [ ] Perfil de usuário básico
+- [ ] Modelo `View` (entidade persistida — ver [ADR-0009](adr/0009-view-como-entidade-persistida.md)), `Vote`, `Comment`
+- [ ] Endpoints e UI otimista para votar e comentar (Server Actions apenas para concerns do Next — ver [ADR-0010](adr/0010-server-actions-apenas-para-concerns-do-next.md))
+- [ ] Perfil de usuário básico com URL pública `/authors/<username>` (ver [ADR-0011](adr/0011-url-publica-do-publicador.md))
 - [ ] Rate limiting (Redis no Coolify ou Upstash)
 - [ ] Moderação manual em painel admin simples
 
