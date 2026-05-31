@@ -1,12 +1,13 @@
 # ADR 0013 — Substrato de planejamento operado por agentes (GitHub Projects)
 
-- **Status:** Accepted (revisado 2026-05-27)
+- **Status:** Superseded em parte por [ADR-0014](0014-roadmap-como-source-skill-solo-dev-assistant.md) (2026-05-30). Princípios continuam válidos; calibragem operacional foi substituída.
 - **Data:** 2026-05-27
 - **Decisores:** Thiago Panini (solo)
-- **Relacionado:** [ADR-0005](0005-deploy-checks-em-tres-portoes.md) (portões de deploy), [ADR-0001](0001-monorepo-and-boundaries.md) (boundaries de domínio), [AGENTS.md](../../AGENTS.md) (regra de fonte única), [VISION.md](../VISION.md) (processo como produto), [lesson 0002](../lessons/0002-harness-basico-em-github-projects.md) (princípios evergreen do harness)
+- **Relacionado:** [ADR-0014](0014-roadmap-como-source-skill-solo-dev-assistant.md) (supersedes operação deste ADR), [ADR-0005](0005-deploy-checks-em-tres-portoes.md) (portões de deploy), [ADR-0001](0001-monorepo-and-boundaries.md) (boundaries de domínio), [AGENTS.md](../../AGENTS.md) (regra de fonte única), [VISION.md](../VISION.md) (processo como produto), [lesson 0002](../lessons/0002-harness-basico-em-github-projects.md) (princípios evergreen do harness)
 - **Histórico de refinamento:**
   - **R1 (2026-05-27)** — desenho aprofundado em sessão de grilling: harnesses múltiplos, encapsulamento em skill, portão de merge, enforcement por construção.
   - **R2 (2026-05-27)** — **revisão de fundação após pesquisa de mercado** (estado de mai/2026). Constatou-se que (a) a vitrine pública AI-first não justifica o harness pesado na Fase 0; (b) a fragilidade percebida vinha dos scripts bash GraphQL, não do board; (c) o GitHub MCP server passou a operar Projects v2; (d) o cockpit de execução é o VS Code local, não pull autônomo. As seções abaixo já refletem R2. O que R1 decidiu e R2 reverteu está registrado em **Decisões revertidas em R2**.
+  - **R3 (2026-05-30) — supersedido em parte por [ADR-0014](0014-roadmap-como-source-skill-solo-dev-assistant.md).** Após uso prático do desenho R2, sinais de atrito (materialização manual de issues/branches, board ativo como cerimônia sem retorno, MCP server eliminando fragilidade mas não cerimônia) motivaram inversão estrutural: **ROADMAP.md passou a ser single source de plano + estado** (markers `🚧`/`[x]`), operação via skill `solo-dev-assistant` + AGENTS.md intent-loop + hook PostToolUse. Board e issues do GitHub ficam deferidos (sem operação ativa) com trip-wires para reabrir. **Princípios** (partição, autonomia assimétrica, estado efêmero, lições da [lesson 0002](../lessons/0002-harness-basico-em-github-projects.md)) **continuam válidos**; apenas o eixo de partição mudou (era altitude: marcos vs tarefas; agora é tipo: plano+estado no ROADMAP, discussão em issue opcional, código no PR). Detalhes da nova calibragem e tabela de revisão linha-a-linha estão no [ADR-0014](0014-roadmap-como-source-skill-solo-dev-assistant.md). **O corpo deste ADR (R2) é preservado como registro histórico** — não foi reescrito para refletir R3; quem quiser o desenho vigente, leia o ADR-0014.
 
 ## Contexto
 

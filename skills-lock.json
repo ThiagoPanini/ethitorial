@@ -31,6 +31,12 @@
       "skillPath": "plugins/llm-application-dev/skills/prompt-engineering-patterns/SKILL.md",
       "computedHash": "2bf9fca17f1ce77dbf6c037843389b19caef4e8b4ab48f9227369953312008cc"
     },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-creator/SKILL.md",
+      "computedHash": "5ea13a6d9f0d4bb694405d79acd00cadec0d21bb138c4dd10fcf3c500cb835c2"
+    },
     "write-a-skill": {
       "source": "mattpocock/skills",
       "sourceType": "github",
