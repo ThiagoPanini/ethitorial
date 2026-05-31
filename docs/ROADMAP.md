@@ -11,7 +11,7 @@ Para a visão de longo prazo, ver [VISION.md](VISION.md). Para decisões registr
 Sem código de produto. Objetivo: base sólida de documentação, infra, automação e setup AI-first.
 
 > **Progresso (atualizado 2026-05-27):** infra base da VPS e fundação documental concluídas; borda Cloudflare e esqueleto de aplicação pendentes. Trilha auditável em [docs/ai-ops/](ai-ops/), receitas reproduzíveis em [docs/guides/](guides/).
-> **Acompanhamento ao vivo:** [GitHub Project `talkingpres — roadmap`](https://github.com/users/ThiagoPanini/projects/4).
+> **Estado de execução:** rastreado neste próprio ROADMAP como single source (markers `🚧`/`[x]`, sufixo `` `@human` ``/`` `@agent` `` na fase ativa) — board GitHub Projects deferido, ver [ADR-0014](adr/0014-roadmap-como-source-skill-solo-dev-assistant.md).
 
 ### Infra e borda
 
