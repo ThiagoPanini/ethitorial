@@ -26,7 +26,7 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
   - [ ] Fechar a origem: restringir UFW aos ranges Cloudflare, fechar portas temporárias `8000/6001/6002`, validar com checagem externa tripla
 - [ ] Backup do Postgres em R2 (bucket criado no [guide 0002](guides/0002-configurar-cloudflare-r2-mcp.md); credencial S3 + schedule no Coolify em guide futuro)
 - [ ] Runbook de restore mensal do Postgres (backup não testado não é backup)
-- [ ] Deploy "hello world" em produção respondendo em `epistemix.*`
+- [ ] Deploy "hello world" em produção respondendo em `epistemix.dev`
 
 ### CI/CD e qualidade
 
