@@ -44,6 +44,7 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
 - [x] ADRs iniciais concluídos (0001–0012)
 - [x] Sistema de documentação versionada: taxonomia ADR / lesson / guide / runbook / ai-ops, cada gênero com README e critério de uso
 - [x] Skills de autoria (`write-a-guide`, `write-a-lesson`, `write-a-skill`) para manter o padrão dos docs
+- [x] Skill `solo-dev-assistant` com comando `briefing` e hook PostToolUse de auto-commit do ROADMAP
 - [ ] CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md
 
 ## Fase 1 — Catálogo público (read-only)
