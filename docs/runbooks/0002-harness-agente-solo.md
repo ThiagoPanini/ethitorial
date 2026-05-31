@@ -2,12 +2,15 @@
 numero: 0002
 titulo: Operação do harness AI-first — loop solo
 tipo: runbook
+status: superseded por ADR-0014
 data: 2026-05-27
 tags: [ai-first, harness, agentes, planning-board, mcp, vscode, workflow]
 tldr: Referência de operação do ciclo de desenvolvimento assistido por IA como dev solo no talkingpres. O board (GitHub Projects) é visibilidade; o trabalho acontece no VS Code com Claude Code, Copilot e Codex. O board é operado via GitHub MCP server, não por scripts. Consulte durante operação; não é tutorial progressivo.
 ---
 
 # Runbook 0002 — Operação do harness AI-first (loop solo)
+
+> ⚠️ **Superseded por [ADR-0014](../adr/0014-roadmap-como-source-skill-solo-dev-assistant.md) (mai/2026).** Este runbook descreve a operação do board GitHub Projects via skill `operate-planning-board` + GitHub MCP server (desenho do [ADR-0013 R2](../adr/0013-substrato-de-planejamento-operado-por-agentes.md)), hoje **deferida**. O fluxo vigente — `docs/ROADMAP.md` como single source + skill `solo-dev-assistant` (`briefing`) + intent-loop — está na seção "Board e fluxo dos agentes" do [AGENTS.md](../../AGENTS.md). O corpo abaixo fica como registro histórico até um runbook do novo fluxo ser escrito.
 
 > Runbook de referência, não tutorial. O **porquê** está no [ADR-0013](../adr/0013-substrato-de-planejamento-operado-por-agentes.md); os **princípios evergreen** na [lesson 0002](../lessons/0002-harness-basico-em-github-projects.md); o **protocolo operacional** na skill [`operate-planning-board`](../../.agents/skills/operate-planning-board/SKILL.md).
 
