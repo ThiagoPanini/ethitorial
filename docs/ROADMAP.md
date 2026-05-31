@@ -17,7 +17,7 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
 
 - [x] Provisionar VPS Hostinger (KVM 2) e endurecer (ssh keys, ufw, fail2ban, unattended-upgrades) — ver [ai-ops 0002](ai-ops/0002-hardening-talkingpres-prod.md)
 - [x] Instalar Coolify (via template Hostinger; 4 containers saudáveis, Traefik como proxy) — ver [ai-ops 0001](ai-ops/0001-setup-inicial-talkingpres-prod.md)
-- [ ] Generalizar VPS: remover referências a `talkingpres` (usuário do sistema, chaves SSH, configs do Coolify, documentação de infra)
+- [x] Generalizar VPS: infra agnóstica `panini-vps` desacoplada de um único projeto (hostname, chave SSH, override unattended-upgrades, caderno de bootstrap, docs de infra) — ver [ADR-0016](adr/0016-vps-agnostica-multi-projeto.md) e [ai-ops 0003](ai-ops/0003-generalizar-vps-panini.md)
 - [ ] Borda Cloudflare — receita pronta em [guide 0002](guides/0002-configurar-cloudflare-r2-mcp.md), execução pendente:
   - [ ] Registrar domínio `epistemix.*` e trocar nameservers para a Cloudflare
   - [ ] Publicar Coolify em subdomínio proxied com TLS Full (strict)
