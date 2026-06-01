@@ -20,9 +20,9 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
 - [x] Generalizar VPS: infra agnóstica `panini-vps` desacoplada de um único projeto (hostname, chave SSH, override unattended-upgrades, caderno de bootstrap, docs de infra) — ver [ADR-0016](adr/0016-vps-agnostica-multi-projeto.md) e [ai-ops 0003](ai-ops/0003-generalizar-vps-panini.md)
 - [ ] Borda Cloudflare — receita pronta em [guide 0002](guides/0002-configurar-cloudflare-r2-mcp.md), execução pendente:
   - [x] Registrar domínio do produto: `epistemix.dev` (adquirido 2026-05-31)
-  - [ ] Trocar nameservers de `epistemix.dev` para a Cloudflare (zona multi-projeto — ADR-0016)
-  - [ ] Publicar Coolify em subdomínio proxied com TLS Full (strict)
-  - [ ] Criar admin do Coolify (senha direto no gerenciador de segredos)
+  - [x] Trocar nameservers de `epistemix.dev` para a Cloudflare (zona multi-projeto — ADR-0016)
+  - [x] Publicar Coolify em subdomínio proxied com TLS Full (strict) — `vps.thiagopanini.dev` (2026-05-31)
+  - [x] Criar admin do Coolify (senha direto no gerenciador de segredos)
   - [ ] Fechar a origem: restringir UFW aos ranges Cloudflare, fechar portas temporárias `8000/6001/6002`, validar com checagem externa tripla
 - [ ] Backup do Postgres em R2 (bucket criado no [guide 0002](guides/0002-configurar-cloudflare-r2-mcp.md); credencial S3 + schedule no Coolify em guide futuro)
 - [ ] Runbook de restore mensal do Postgres (backup não testado não é backup)
