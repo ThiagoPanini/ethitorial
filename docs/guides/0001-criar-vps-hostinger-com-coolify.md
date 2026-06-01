@@ -1,10 +1,10 @@
 ---
 title: Criar VPS Hostinger com Coolify e hardening base
-description: Reproduz o primeiro passo real do talkingpres: provisionar a VPS Hostinger com template Coolify, auditar o que veio instalado e aplicar o hardening base antes de criar qualquer admin.
+description: Reproduz o primeiro passo real desta infra (registrado nos ai-ops): provisionar a VPS Hostinger com template Coolify, auditar o que veio instalado e aplicar o hardening base antes de criar qualquer admin.
 nav_title: VPS Hostinger + Coolify
 ---
 
-Este guide transforma os registros reais de [setup inicial](../ai-ops/0001-setup-inicial-talkingpres-prod.md) e [hardening](../ai-ops/0002-hardening-talkingpres-prod.md) em uma receita reproduzível. A execução do talkingpres usou Hostinger KVM 2 com template "Ubuntu 24.04 with Coolify"; portanto, o passo principal não foi instalar Coolify manualmente, mas auditar o que o template entregou antes de expor qualquer credencial administrativa.
+Este guide transforma os registros reais de [setup inicial](../ai-ops/0001-setup-inicial-talkingpres-prod.md) e [hardening](../ai-ops/0002-hardening-talkingpres-prod.md) em uma receita reproduzível. A execução real (registrada nos ai-ops) usou Hostinger KVM 2 com template "Ubuntu 24.04 with Coolify"; portanto, o passo principal não foi instalar Coolify manualmente, mas auditar o que o template entregou antes de expor qualquer credencial administrativa.
 
 O escopo termina com a VPS endurecida, usuário `deploy` funcional, Coolify rodando e portas temporárias abertas apenas até a etapa Cloudflare. Não cria admin Coolify, não troca nameservers e não configura Postgres ou backup R2. Esses passos pertencem ao guide seguinte.
 
@@ -12,18 +12,18 @@ O escopo termina com a VPS endurecida, usuário `deploy` funcional, Coolify roda
 
 ## Example
 
-Como exemplo, criamos a máquina `talkingpres-prod` na Hostinger, usando o template Coolify. Vamos provisionar a VPS, corrigir o detalhe do wizard que pode pular a SSH key, auditar os containers do template, endurecer SSH/sistema e deixar a superfície mínima necessária para a próxima etapa.
+Como exemplo, criamos a máquina `panini-vps` na Hostinger, usando o template Coolify. Vamos provisionar a VPS, corrigir o detalhe do wizard que pode pular a SSH key, auditar os containers do template, endurecer SSH/sistema e deixar a superfície mínima necessária para a próxima etapa.
 
 Pré-condições:
 
 - **Ambiente local POSIX:** shell `bash`/`zsh` com `ssh`, `ssh-keygen`, `dig`, `curl`. Em Windows, use WSL2 (`wsl --install` no PowerShell admin) ou Git Bash. Operadores em PowerShell puro vão encontrar comandos locais que não existem nativamente.
 - Conta Hostinger ativa com plano VPS KVM contratado.
-- Chave SSH local dedicada, por exemplo `~/.ssh/talkingpres_ed25519`.
+- Chave SSH local dedicada, por exemplo `~/.ssh/panini_vps_ed25519`.
 - Gerenciador de segredos disponível para passphrase SSH e futuras senhas.
-- Arquivo local fora do repo para placeholders, por exemplo `~/secrets/talkingpres-bootstrap.md`.
+- Arquivo local fora do repo para placeholders, por exemplo `~/secrets/panini-vps-bootstrap.md`.
 - Segunda janela de terminal disponível para validar SSH antes de fechar sessões antigas.
 - `<SEU_EMAIL>` definido (será usado em SSH key comment e nas notificações de patches).
-- Placeholders definidos antes de colar comandos: `<SEU_IP_VPS>`, `<NOME_VPS>` (ex.: `talkingpres-prod`), `<USUARIO_DEPLOY>` (ex.: `deploy`) e `<PORTA_COOLIFY_DIRETA>` depois da auditoria.
+- Placeholders definidos antes de colar comandos: `<SEU_IP_VPS>`, `<NOME_VPS>` (ex.: `panini-vps`), `<USUARIO_DEPLOY>` (ex.: `deploy`) e `<PORTA_COOLIFY_DIRETA>` depois da auditoria.
 
 ### Passo 1: Provisionar a VPS com template Coolify
 
@@ -32,16 +32,16 @@ No hPanel da Hostinger, crie ou reinstale a VPS usando o template **Ubuntu 24.04
 Se o wizard mostrar campo de SSH key, cole o conteúdo da chave pública:
 
 ```bash
-cat ~/.ssh/talkingpres_ed25519.pub
-ssh-keygen -lf ~/.ssh/talkingpres_ed25519.pub
+cat ~/.ssh/panini_vps_ed25519.pub
+ssh-keygen -lf ~/.ssh/panini_vps_ed25519.pub
 ```
 
 Na execução real, o fluxo do template pulou silenciosamente esse campo e a VPS nasceu só com senha de root. Se isso acontecer, corrija antes de prosseguir: hPanel -> VPS -> **SSH Access** ou **SSH Keys** -> adicione a mesma chave pública.
 
-Crie um snapshot manual chamado `pre-hardening` antes de tocar em `sshd`, firewall ou boot. Depois anote o IPv4 público, o fingerprint da chave e o hostname inicial em `~/secrets/talkingpres-bootstrap.md`, então valide o primeiro acesso:
+Crie um snapshot manual chamado `pre-hardening` antes de tocar em `sshd`, firewall ou boot. Depois anote o IPv4 público, o fingerprint da chave e o hostname inicial em `~/secrets/panini-vps-bootstrap.md`, então valide o primeiro acesso:
 
 ```bash
-ssh -i ~/.ssh/talkingpres_ed25519 root@<SEU_IP_VPS>
+ssh -i ~/.ssh/panini_vps_ed25519 root@<SEU_IP_VPS>
 ```
 
 Resultado esperado:
@@ -55,16 +55,16 @@ Se o SSH pedir senha, a chave não entrou na VPS. Volte ao hPanel e cadastre a p
 
 > ✅ **Checkpoint do Passo 1 — não avance sem confirmar:**
 >
-> - [ ] IPv4 público anotado em `~/secrets/talkingpres-bootstrap.md`
+> - [ ] IPv4 público anotado em `~/secrets/panini-vps-bootstrap.md`
 > - [ ] Snapshot `pre-hardening` confirmado visualmente no painel Hostinger (não confiar em "cliquei"; abrir a lista de snapshots)
-> - [ ] Fingerprint da chave local registrado (`ssh-keygen -lf ~/.ssh/talkingpres_ed25519.pub`)
-> - [ ] `ssh -i ~/.ssh/talkingpres_ed25519 root@<SEU_IP_VPS>` autentica sem prompt de senha
+> - [ ] Fingerprint da chave local registrado (`ssh-keygen -lf ~/.ssh/panini_vps_ed25519.pub`)
+> - [ ] `ssh -i ~/.ssh/panini_vps_ed25519 root@<SEU_IP_VPS>` autentica sem prompt de senha
 >
 > Se algum item falhar, **pare aqui**. Hardening em VPS sem snapshot ou sem chave provada é caminho rápido para auto-bloqueio.
 
 ### Passo 2: Auditar o template antes de criar admin Coolify
 
-O template Coolify já deixa serviços rodando. Antes de abrir a UI e criar o primeiro admin, audite o estado entregue. Se a UI ou a doc da Hostinger mencionar outra porta, confira o estado real com `ss` e `docker ps`; na execução do talkingpres e na documentação self-hosted do Coolify, o dashboard direto estava na `8000`, enquanto a documentação atual da Hostinger menciona `3000`.
+O template Coolify já deixa serviços rodando. Antes de abrir a UI e criar o primeiro admin, audite o estado entregue. Se a UI ou a doc da Hostinger mencionar outra porta, confira o estado real com `ss` e `docker ps`; na execução real registrada e na documentação self-hosted do Coolify, o dashboard direto estava na `8000`, enquanto a documentação atual da Hostinger menciona `3000`.
 
 ```bash
 sudo docker ps --filter 'name=coolify' --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
@@ -75,7 +75,7 @@ sudo ls -la /data/coolify | head
 sudo docker exec coolify-db psql -U coolify -d coolify -tAc 'select count(*) from users;'
 ```
 
-Resultado observado no talkingpres:
+Resultado observado na execução real:
 
 - `coolify`, `coolify-db`, `coolify-redis` e `coolify-realtime` saudáveis.
 - Coolify `4.1.0`.
@@ -105,7 +105,7 @@ apt-mark hold cloud-init
 Defina identidade da máquina e crie o usuário operacional:
 
 ```bash
-hostnamectl set-hostname talkingpres-prod
+hostnamectl set-hostname panini-vps
 timedatectl set-timezone UTC
 
 adduser --disabled-password --gecos "" deploy
@@ -134,7 +134,7 @@ chmod 600 /home/deploy/.ssh/authorized_keys
 No **Terminal B**, prove o novo caminho antes de fechar a sessão root do Terminal A:
 
 ```bash
-ssh -i ~/.ssh/talkingpres_ed25519 deploy@<SEU_IP_VPS>
+ssh -i ~/.ssh/panini_vps_ed25519 deploy@<SEU_IP_VPS>
 sudo whoami
 ```
 
@@ -178,8 +178,8 @@ sudo systemctl restart ssh
 Valide em um novo terminal:
 
 ```bash
-ssh -i ~/.ssh/talkingpres_ed25519 root@<SEU_IP_VPS>
-ssh -i ~/.ssh/talkingpres_ed25519 deploy@<SEU_IP_VPS>
+ssh -i ~/.ssh/panini_vps_ed25519 root@<SEU_IP_VPS>
+ssh -i ~/.ssh/panini_vps_ed25519 deploy@<SEU_IP_VPS>
 ```
 
 O primeiro comando deve falhar com `Permission denied (publickey)`. O segundo deve abrir sessão como `deploy`.
@@ -229,7 +229,7 @@ sudo fail2ban-client status sshd
 Configure unattended upgrades security-only:
 
 ```bash
-sudo tee /etc/apt/apt.conf.d/52talkingpres-unattended-upgrades > /dev/null <<'EOF'
+sudo tee /etc/apt/apt.conf.d/52panini-vps-unattended-upgrades > /dev/null <<'EOF'
 Unattended-Upgrade::Allowed-Origins {
     "${distro_id}:${distro_codename}-security";
     "${distro_id}ESMApps:${distro_codename}-apps-security";
@@ -261,7 +261,7 @@ sudo ufw status verbose
 sudo docker ps --filter 'name=coolify' --format 'table {{.Names}}\t{{.Status}}'
 ```
 
-Estado esperado: hostname `talkingpres-prod`, usuário `deploy`, sudo funcional, UFW ativo, fail2ban ativo e containers Coolify saudáveis.
+Estado esperado: hostname `panini-vps`, usuário `deploy`, sudo funcional, UFW ativo, fail2ban ativo e containers Coolify saudáveis.
 
 ## Critério de sucesso
 

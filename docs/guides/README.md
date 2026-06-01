@@ -26,6 +26,7 @@ Cada guide deve manter:
 
 - [0001 — Criar VPS Hostinger com Coolify e hardening base](0001-criar-vps-hostinger-com-coolify.md)
 - [0002 — Criar conta Cloudflare e preparar DNS, R2 e MCP](0002-configurar-cloudflare-r2-mcp.md)
+- [0003 — Publicar epistemix.dev em produção (Cloudflare + Coolify)](0003-publicar-epistemix-dev-em-producao.md)
 
 ## Aguardando execução
 

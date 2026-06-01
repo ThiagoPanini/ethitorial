@@ -17,6 +17,8 @@ referencias:
 
 # 20260524 — Setup inicial da VPS talkingpres-prod com template Coolify
 
+> 📌 **Registro histórico.** Nesta data a máquina se chamava `talkingpres-prod` e a chave era `talkingpres_ed25519` — nomes corretos para a época. Em 2026-05-31 a VPS virou infra agnóstica `panini-vps` (ver [ai-ops 0003](0003-generalizar-vps-panini.md) e [ADR-0016](../adr/0016-vps-agnostica-multi-projeto.md)). Este registro não é reescrito: preserva o que era verdade na data.
+
 Registro narrativo da sessão em que a VPS de produção do talkingpres nasceu. Conceitos gerais sobre por que cada decisão faz sentido vivem na [lição 0001 — Hardening de VPS Linux](../lessons/0001-hardening-de-vps-linux.md). Este documento registra **o que efetivamente fizemos nesta máquina específica nesta data específica**.
 
 ## Cenário

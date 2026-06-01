@@ -1,5 +1,9 @@
 **prompts
 
+# Local infra/secrets scratch — NUNCA commitar (contém IP de origem da VPS, notas de bootstrap).
+# Caderno do panini-vps vive aqui para edição fácil; o repo é público, então jamais versionar.
+.local/
+
 # Python
 __pycache__/
 *.py[cod]

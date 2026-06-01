@@ -5,7 +5,7 @@ tipo: runbook
 status: superseded por ADR-0014
 data: 2026-05-27
 tags: [ai-first, harness, agentes, planning-board, mcp, vscode, workflow]
-tldr: Referência de operação do ciclo de desenvolvimento assistido por IA como dev solo no talkingpres. O board (GitHub Projects) é visibilidade; o trabalho acontece no VS Code com Claude Code, Copilot e Codex. O board é operado via GitHub MCP server, não por scripts. Consulte durante operação; não é tutorial progressivo.
+tldr: Referência de operação do ciclo de desenvolvimento assistido por IA como dev solo no epistemix. O board (GitHub Projects) é visibilidade; o trabalho acontece no VS Code com Claude Code, Copilot e Codex. O board é operado via GitHub MCP server, não por scripts. Consulte durante operação; não é tutorial progressivo.
 ---
 
 # Runbook 0002 — Operação do harness AI-first (loop solo)
@@ -156,7 +156,7 @@ Decisão arquitetural nova exige ADR antes de código (AGENTS.md). Verifique o �
 ## Links
 
 - Board: https://github.com/users/ThiagoPanini/projects/4
-- Repo: https://github.com/ThiagoPanini/talkingpres
+- Repo: https://github.com/ThiagoPanini/epistemix
 - Skill: `.agents/skills/operate-planning-board/SKILL.md`
 - ADR-0013: `docs/adr/0013-substrato-de-planejamento-operado-por-agentes.md`
 - ADR-0005: `docs/adr/0005-deploy-checks-em-tres-portoes.md`
