@@ -83,23 +83,28 @@ CLOUDFLARE_ZONE_ID=<...>
 
 Se você desativou DNSSEC para migrar, reative pelo Cloudflare depois que a zona estiver `Active`.
 
-### Passo 2a: Publicar Coolify em subdomínio proxied
+### Passo 2a: Publicar Coolify em subdomínio — padrão cinza → laranja
 
-Na zona Cloudflare, crie um DNS record:
+**Não crie o record já como Proxied.** O padrão seguro é:
+
+```text
+1. Cria como DNS Only (cinza)  ── Traefik resolve o challenge Let's Encrypt pela porta 80
+2. Cert Let's Encrypt emitido  ── proof: openssl s_client confirma cert válido na origem
+3. Muda para Proxied (laranja) ── IP da origem some do DNS público
+4. SSL/TLS → Full (strict)     ── cert válido na origem ⇒ sem erro 526
+```
+
+Se você ligar o proxy **antes** do cert emitir, o challenge HTTP-01 do Let's Encrypt não chega ao Traefik (a Cloudflare intercepta o tráfego) e você toma **erro 526 — Invalid SSL Certificate**. Difícil de diagnosticar remotamente e com rollback trabalhoso.
+
+Na zona Cloudflare, crie o DNS record:
 
 - **Type:** `A`
 - **Name:** parte curta do subdomínio, por exemplo `painel`
 - **IPv4 address:** `<SEU_IP_VPS>`
-- **Proxy status:** **Proxied** (nuvem laranja)
+- **Proxy status:** **DNS Only (cinza)** ← obrigatório neste momento
 - **TTL:** Auto
 
-Valide que DNS público não revela a origem:
-
-```bash
-dig +short <SUBDOMINIO_COOLIFY>
-```
-
-Resultado esperado: IPs Cloudflare, não `<SEU_IP_VPS>`.
+Aguarde a propagação DNS (verifique com `dig +short <SUBDOMINIO_COOLIFY> @1.1.1.1` — deve retornar `<SEU_IP_VPS>`).
 
 Agora crie o primeiro admin do Coolify pela rota temporária `http://<SEU_IP_VPS>:<PORTA_COOLIFY_DIRETA>`. Esta é uma **janela curta de exposição administrativa** (idealmente menos de 10 minutos): a rota `/register` está pública na internet enquanto o admin não foi criado e a origem não foi fechada. Tenha o gerenciador de senhas aberto antes de clicar.
 
@@ -124,13 +129,26 @@ Acesse primeiro por HTTP para permitir que o Traefik responda ao challenge e emi
 curl -I http://<SUBDOMINIO_COOLIFY>
 ```
 
-Aguarde alguns minutos e valide HTTPS:
+Aguarde alguns minutos e valide HTTPS — use `openssl s_client` (mais confiável que `curl -vI | grep`):
 
 ```bash
-curl -vI https://<SUBDOMINIO_COOLIFY> 2>&1 | grep -Ei 'ssl|tls|http/'
+echo | openssl s_client -connect <SEU_IP_VPS>:443 -servername <SUBDOMINIO_COOLIFY> 2>/dev/null \
+  | openssl x509 -noout -issuer -subject -dates
 ```
 
-Com o certificado de origem válido, vá em Cloudflare -> zona -> **SSL/TLS -> Overview** e selecione **Full (strict)**. Em **Edge Certificates**, habilite:
+Esperado: `issuer=... Let's Encrypt ...`, `subject=CN = <SUBDOMINIO_COOLIFY>`, `notAfter` ~90 dias no futuro.
+
+**Só agora**, com o cert válido confirmado, mude o record para **Proxied (laranja)** na Cloudflare.
+
+Valide que o IP da origem não aparece mais no DNS público:
+
+```bash
+dig +short <SUBDOMINIO_COOLIFY>
+```
+
+Resultado esperado: IPs Cloudflare, não `<SEU_IP_VPS>`.
+
+Com o record já **Proxied (laranja)** e o certificado de origem válido, vá em Cloudflare -> zona -> **SSL/TLS -> Overview** e selecione **Full (strict)**. Em **Edge Certificates**, habilite:
 
 - **Always Use HTTPS:** On
 - **Minimum TLS Version:** TLS 1.2

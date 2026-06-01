@@ -35,6 +35,8 @@ Se você ligar a **nuvem laranja (proxied)** *antes* de o Coolify emitir o certi
 > O challenge HTTP-01 roda sobre HTTP na porta 80 e **ignora HSTS** — por isso funciona mesmo o `.dev` sendo HSTS-preload ([pegadinhas](#apêndice-b--pegadinhas-confirmadas)). A janela "cinza" expõe o IP de origem por minutos; é o mesmo trade-off da criação do admin no guide 0002. Fechamos a origem no Passo 5.
 >
 > ⚠️ **Registros do portfólio Vercel (Passo 2) são exceção:** ficam **sempre cinza** e nunca passam pela VPS — a Vercel faz o próprio TLS. O padrão acima vale só para os hosts que apontam para a VPS (`vps.thiagopanini.dev`, `epistemix.dev`, `www`).
+>
+> ⚠️ **Segunda armadilha — importação automática da Cloudflare:** ao adicionar uma zona existente, a Cloudflare importa todos os records (incluindo wildcards) e frequentemente os marca como Proxied. Isso bloqueia o padrão cinza→laranja descrito acima — wildcards Proxied sobrepõem registros específicos que você criar. Veja o Passo 2b para a lista de limpeza obrigatória pós-importação.
 
 ## Example
 
@@ -116,20 +118,44 @@ Em **Vercel → Project do portfólio → Settings → Domains**, anote exatamen
 
 Capture também quaisquer `TXT` de verificação (Vercel, Google, etc.).
 
-### 2b. Adicionar a zona na Cloudflare e recriar os records
+### 2b. Adicionar a zona na Cloudflare e limpar os records importados
 
-1. Cloudflare → **Add a site** → `thiagopanini.dev` → **Free** → **full setup**. Ela tenta **importar** os records — confira que apex, `www` e TXTs vieram.
-2. Garanta que os records do portfólio batem com o Passo 2a, **todos cinza (DNS Only)**:
+1. Cloudflare → **Add a site** → `thiagopanini.dev` → **Free** → **full setup**. A Cloudflare tenta **importar** os records da zona atual automaticamente — isso parece conveniente, mas **é uma armadilha**.
+
+> ⚠️ **Cilada da importação automática — leitura obrigatória antes de avançar**
+>
+> A Cloudflare importa os records do DNS atual, mas com dois problemas frequentes que precisam ser corrigidos manualmente:
+>
+> **Problema 1 — Wildcards importados como Proxied:** se a zona anterior tiver um registro curinga `*.thiagopanini.dev` (comum em configurações Vercel), ele é importado com proxy laranja. **Wildcards proxied tem prioridade sobre registros específicos** — qualquer subdomain novo que você criar (como `vps`) vai resolver para os IPs do wildcard em vez do IP que você definiu. Você criará o `vps` record correto, mas ele nunca propagará enquanto o wildcard estiver lá.
+>
+> **Problema 2 — Apex/www e outros registros importados como Proxied:** hosts servidos pela Vercel precisam ficar cinza. A Cloudflare importa sem saber que eles são da Vercel.
+>
+> **Ação obrigatória:** após o onboarding, antes de trocar os nameservers, audite e corrija **todos** os records importados conforme a tabela abaixo.
+
+2. **Audite e corrija os records importados** — abra a aba DNS da zona e execute esta lista:
+
+| Ação | O que procurar | Correção |
+|---|---|---|
+| **Deletar** | Qualquer record `*.thiagopanini.dev` (wildcard) | Delete todos — não são necessários |
+| **Cinza** | `thiagopanini.dev` A records (apex) | Mude para **DNS only** |
+| **Cinza** | `www.thiagopanini.dev` records | Mude para **DNS only** |
+| **Cinza** | `_domainconnect` CNAME | Mude para **DNS only** |
+| **Verificar** | Records `CAA` | Se existir CAA, garanta que inclua `0 issue "letsencrypt.org"` — sem isso, o Let's Encrypt não consegue emitir cert |
+
+3. Garanta que os records do portfólio batem com o Passo 2a, **todos cinza (DNS Only)**:
 
 | Type | Name | Conteúdo | Proxy |
 |---|---|---|---|
-| A | `@` | `76.76.21.21` *(ou o que a Vercel mostrar)* | **DNS only (cinza)** |
-| CNAME | `www` | `cname.vercel-dns.com` *(ou o do projeto)* | **DNS only (cinza)** |
+| A | `@` | `216.198.79.1` e `64.29.17.1` *(IPs Vercel reais da sua conta)* | **DNS only (cinza)** |
+| A | `www` | `216.198.79.65` e `64.29.17.65` *(IPs Vercel reais da sua conta)* | **DNS only (cinza)** |
 | TXT | … | *(verificações que existirem)* | n/a |
+| CAA | `@` | `0 issue "letsencrypt.org"` *(se não existir, crie)* | n/a |
 
 > ⚠️ **Nunca proxie (laranja) um host servido pela Vercel.** Vercel faz TLS/CDN próprios; proxiar dá conflito de cert e loop. Portfólio = sempre cinza.
+>
+> 💡 **Os IPs Vercel reais podem variar.** Os valores acima (`216.198.79.x`, `64.29.17.x`) são os que a Vercel usava em maio/2026 para `thiagopanini.dev`. Sempre confirme no painel Vercel → Domains quais IPs a Vercel pede para o seu domínio.
 
-3. Anote os **2 nameservers** que a Cloudflare deu para `thiagopanini.dev`.
+4. Anote os **2 nameservers** que a Cloudflare deu para `thiagopanini.dev`.
 
 ### 2c. Trocar os nameservers na Vercel
 
@@ -220,10 +246,27 @@ ssh panini-vps 'sudo docker logs coolify-proxy 2>&1 | grep -i acme | tail -20'
 **Proof — cert na origem (ainda cinza):**
 
 ```bash
-curl -vI https://vps.thiagopanini.dev 2>&1 | grep -Ei 'subject|issuer|http/'
+# Comando confiável para verificar cert — grep no curl falha silenciosamente em alguns ambientes
+echo | openssl s_client -connect <SEU_IP_VPS>:443 -servername vps.thiagopanini.dev 2>/dev/null \
+  | openssl x509 -noout -issuer -subject -dates
 ```
 
-Esperado: cert emitido para `vps.thiagopanini.dev` por `Let's Encrypt`, `HTTP/2 200`. **Agora** mude o record `vps` para **Proxied (laranja)**.
+Esperado:
+```
+issuer=C = US, O = Let's Encrypt, CN = ...
+subject=CN = vps.thiagopanini.dev
+notBefore=...
+notAfter=... (90 dias)
+```
+
+> ⚠️ **Evite `curl -vI ... | grep -Ei 'subject|issuer'`** para verificar certs — o grep captura a saída do TLS handshake do curl, que é formatada diferente em cada versão/ambiente e frequentemente retorna vazio mesmo com cert válido. O `openssl s_client` conecta diretamente e é definitivo.
+>
+> Se o cert ainda não emitiu, monitore os logs do Traefik:
+> ```bash
+> ssh panini-vps 'sudo docker logs coolify-proxy 2>&1 | grep -i acme | tail -20'
+> ```
+
+**Agora** mude o record `vps` para **Proxied (laranja)**.
 
 **Proof — origem escondida:**
 
@@ -264,7 +307,8 @@ https://epistemix.dev,https://www.epistemix.dev
 
 ```bash
 curl -sI https://epistemix.dev | head -1                 # HTTP/2 200
-curl -vI https://epistemix.dev 2>&1 | grep -i 'issuer'    # Let's Encrypt
+echo | openssl s_client -connect <SEU_IP_VPS>:443 -servername epistemix.dev 2>/dev/null \
+  | openssl x509 -noout -issuer -subject -dates          # Let's Encrypt, 90 dias
 ```
 
 ### 4c. Ligar o proxy e fechar o TLS
@@ -354,11 +398,36 @@ Custo: o painel fica acoplado à zona do produto (menos organizado). É o caminh
 ## Apêndice B — Pegadinhas confirmadas
 
 - **526 (Invalid SSL Certificate):** proxy ligado antes do cert da origem. Use cinza→laranja. ([Coolify #6271](https://github.com/coollabsio/coolify/issues/6271), [Cloudflare 526](https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-526/))
-- **Proxiar a Vercel quebra:** host servido pela Vercel (apex/www do portfólio) deve ficar **cinza**; laranja gera conflito de cert. ([Vercel — Managing DNS](https://vercel.com/docs/domains/managing-dns-records))
+
+- **Wildcard importado como Proxied bloqueia novos subdomínios:** quando você adiciona uma zona com wildcard existente (`*.thiagopanini.dev`), a Cloudflare importa o wildcard com proxy laranja. Qualquer novo registro `A` específico que você crie (ex.: `vps`) fica obscurecido — o wildcard tem precedência e resolve para os IPs do wildcard em vez do IP que você definiu. **Diagnóstico:** `dig +short vps.thiagopanini.dev @1.1.1.1` retorna IPs inesperados (ex.: Vercel) em vez do IP da VPS. **Correção:** delete todos os records wildcard (`*.thiagopanini.dev`).
+
+- **Proxiar a Vercel quebra:** host servido pela Vercel (apex/www do portfólio) deve ficar **cinza**; laranja gera conflito de cert. A Cloudflare importa esses records sem saber que são da Vercel — verifique o proxy status de todos os records importados. ([Vercel — Managing DNS](https://vercel.com/docs/domains/managing-dns-records))
+
+- **CAA records podem bloquear Let's Encrypt silenciosamente:** se a zona tiver records `CAA` restringindo quais CAs podem emitir certificado, e `letsencrypt.org` não estiver listado, o Traefik vai falhar ao tentar o challenge sem emitir erro visível no Coolify. **Diagnóstico:** `dig CAA thiagopanini.dev +short` — se retornar apenas `sectigo.com` e `pki.goog`, adicione `0 issue "letsencrypt.org"`. ([CAA — RFC 8659](https://www.rfc-editor.org/rfc/rfc8659))
+
+- **DNS em camadas: WSL / Windows / Chrome / VPN com cache independente:** cada camada mantém seu próprio cache DNS e expira em momentos diferentes. Após trocar um record no Cloudflare, `dig @1.1.1.1` pode confirmar o novo valor enquanto o browser ainda retorna o antigo. Diagnóstico por camada:
+  - **Autoritativo (fonte da verdade):** `dig +short vps.thiagopanini.dev @1.1.1.1` — se está errado aqui, o problema é no Cloudflare
+  - **WSL:** `dig +short vps.thiagopanini.dev` — usa o resolver em `/etc/resolv.conf` (geralmente `10.255.255.254` no WSL2)
+  - **Windows:** `powershell.exe -Command "Resolve-DnsName vps.thiagopanini.dev"` ou `ipconfig /flushdns` para limpar
+  - **Chrome:** `chrome://net-internals/#dns` → "Clear host cache"; também limpe sockets em `chrome://net-internals/#sockets`
+  - **VPN (NordVPN, etc.):** a VPN usa resolvers próprios que cachearão os records antigos pelo TTL. O único remédio é aguardar o TTL expirar (~15-30min) ou configurar DNS customizado na VPN apontando para `1.1.1.1`
+
+- **`server: Vercel` no header é diagnóstico definitivo:** se `curl -sI https://vps.thiagopanini.dev | grep server` retornar `server: Vercel`, a requisição não está chegando à VPS — o DNS ainda aponta para Vercel. Use `dig +short vps.thiagopanini.dev @1.1.1.1` para confirmar e procure wildcards ou records errados na zona Cloudflare.
+
+- **`curl -vI ... | grep 'subject|issuer'` retorna vazio:** o grep captura a linha do TLS handshake do curl, que varia por versão e nem sempre contém essas palavras. Use `openssl s_client` como único método confiável para inspecionar cert de origem:
+  ```bash
+  echo | openssl s_client -connect <IP>:443 -servername <HOST> 2>/dev/null \
+    | openssl x509 -noout -issuer -subject -dates
+  ```
+
 - **Delegação de subdomínio é Enterprise:** no Free não dá pra ter `vps.thiagopanini.dev` como zona isolada — daí mover a zona inteira. ([Cloudflare — subdomain setup](https://developers.cloudflare.com/dns/zone-setups/subdomain-setup/setup/))
+
 - **`.dev` é HSTS-preload:** navegador força HTTPS sempre. Não atrapalha o LE (HTTP-01 na porta 80 ignora HSTS); só significa que todo host `.dev` precisa de TLS válido — que a Cloudflare proxied entrega na borda.
+
 - **Docker × UFW:** o Docker injeta regras de iptables antes do UFW; `ufw status` pode mentir. Por isso a validação externa tripla é obrigatória (guide 0002 → Passo 2b; [ufw-docker](https://github.com/chaifeng/ufw-docker)).
+
 - **Janela cinza expõe o IP:** entre criar o record cinza e fechar a origem (Passo 5), o IP da VPS fica resolvível. Minimize; feche a origem assim que os certs emitirem.
+
 - **Coolify domain precisa de `https://`:** sem o prefixo, não provisiona TLS. ([Coolify — DNS Configuration](https://coolify.io/docs/knowledge-base/dns-configuration))
 
 ## References
