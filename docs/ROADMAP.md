@@ -18,15 +18,15 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
 - [x] Provisionar VPS Hostinger (KVM 2) e endurecer (ssh keys, ufw, fail2ban, unattended-upgrades) — ver [ai-ops 0002](ai-ops/0002-hardening-talkingpres-prod.md)
 - [x] Instalar Coolify (via template Hostinger; 4 containers saudáveis, Traefik como proxy) — ver [ai-ops 0001](ai-ops/0001-setup-inicial-talkingpres-prod.md)
 - [x] Generalizar VPS: infra agnóstica `panini-vps` desacoplada de um único projeto (hostname, chave SSH, override unattended-upgrades, caderno de bootstrap, docs de infra) — ver [ADR-0016](adr/0016-vps-agnostica-multi-projeto.md) e [ai-ops 0003](ai-ops/0003-generalizar-vps-panini.md)
-- [ ] Borda Cloudflare — receita pronta em [guide 0002](guides/0002-configurar-cloudflare-r2-mcp.md), execução pendente:
+- [x] Borda Cloudflare — executada (guides [0002](guides/0002-configurar-cloudflare-r2-mcp.md) + [0003](guides/0003-publicar-epistemix-dev-em-producao.md)):
   - [x] Registrar domínio do produto: `epistemix.dev` (adquirido 2026-05-31)
   - [x] Trocar nameservers de `epistemix.dev` para a Cloudflare (zona multi-projeto — ADR-0016)
   - [x] Publicar Coolify em subdomínio proxied com TLS Full (strict) — `vps.thiagopanini.dev` (2026-05-31)
   - [x] Criar admin do Coolify (senha direto no gerenciador de segredos)
-  - [ ] Fechar a origem: restringir UFW aos ranges Cloudflare, fechar portas temporárias `8000/6001/6002`, validar com checagem externa tripla
+  - [x] Fechar a origem: via firewall **Hostinger** (UFW furado pelo Docker), só `22` + `80/443` dos ranges Cloudflare; `8000/6001/6002/8080` fechadas; validada por checagem externa tripla — ver [ai-ops 0004](ai-ops/0004-publicar-epistemix-dev.md)
 - [ ] Backup do Postgres em R2 (bucket criado no [guide 0002](guides/0002-configurar-cloudflare-r2-mcp.md); credencial S3 + schedule no Coolify em guide futuro)
 - [ ] Runbook de restore mensal do Postgres (backup não testado não é backup)
-- [ ] Deploy "hello world" em produção respondendo em `epistemix.dev`
+- [x] Deploy "hello world" em produção respondendo em `epistemix.dev` — `nginxdemos/hello`, TLS Full (strict) — ver [ai-ops 0004](ai-ops/0004-publicar-epistemix-dev.md) e [guide 0003](guides/0003-publicar-epistemix-dev-em-producao.md)
 
 ### CI/CD e qualidade
 
