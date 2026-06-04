@@ -1,0 +1,28 @@
+{
+  "//": "Template dos MCP servers do epistemix. Copie para .mcp.json (gitignored) e preencha os segredos.",
+  "//setup": "Passo a passo em docs/guides/0004 (Hostinger), 0005 (Coolify) e 0006 (Cloudflare).",
+  "mcpServers": {
+    "hostinger-vps": {
+      "//": "Token da API Hostinger via env. Ver docs/guides/0004-configurar-hostinger-vps-mcp.md.",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "hostinger-vps-mcp"],
+      "env": {}
+    },
+    "coolify": {
+      "//": "COOLIFY_ACCESS_TOKEN é segredo — gere no painel do Coolify, NUNCA commite. Ver docs/guides/0005-configurar-coolify-mcp.md.",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@masonator/coolify-mcp"],
+      "env": {
+        "COOLIFY_BASE_URL": "https://vps.thiagopanini.dev",
+        "COOLIFY_ACCESS_TOKEN": "<COLE_O_TOKEN_DO_COOLIFY_AQUI>"
+      }
+    },
+    "cloudflare": {
+      "//": "MCP remoto (http) — autenticação via OAuth no primeiro uso, sem token no arquivo. Ver docs/guides/0006-configurar-cloudflare-mcp.md.",
+      "type": "http",
+      "url": "https://mcp.cloudflare.com/mcp"
+    }
+  }
+}

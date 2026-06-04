@@ -42,3 +42,4 @@ Não edite o ADR original. Crie um novo ADR de revisão que referencia o anterio
 - [0014 — Substrato de planejamento via ROADMAP.md como single source, operado pela skill `solo-dev-assistant`](0014-roadmap-como-source-skill-solo-dev-assistant.md)
 - [0015 — Modelo de domínio epistemix: Section, Source, Artifact](0015-epistemix-domain-model.md)
 - [0016 — VPS agnóstica: infra desacoplada de um único projeto](0016-vps-agnostica-multi-projeto.md)
+- [0017 — Desenvolvimento autônomo (AFK): HITL nas bordas, AFK no meio](0017-desenvolvimento-autonomo-afk.md)

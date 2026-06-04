@@ -13,6 +13,7 @@ Hub pessoal open source de aprendizado que centraliza artefatos intelectuais (po
 **Glossário e invariantes de domínio:** [docs/CONTEXT.md](docs/CONTEXT.md)
 **Arquitetura:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 **Decisões registradas:** [docs/adr/](docs/adr/)
+**Autonomia dos agentes (AFK):** [ADR-0017](docs/adr/0017-desenvolvimento-autonomo-afk.md) — ler antes de operar MCPs ou implementar feature
 
 ## Stack (decisões registradas em ADRs)
 
@@ -75,6 +76,7 @@ docker compose up -d postgres
 ## O que fazer
 
 - Antes de codificar feature nova: ler [docs/CONTEXT.md](docs/CONTEXT.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) e ADRs relevantes.
+- Feature nova da Fase 1+: destile o alinhamento num spec em [docs/specs/](docs/specs/) (objetivo + critério de aceite + vertical slices) antes de implementar — ver [ADR-0017](docs/adr/0017-desenvolvimento-autonomo-afk.md).
 - Decisão arquitetural nova: registre um ADR em `docs/adr/NNNN-titulo.md` antes de implementar.
 - Mudança em invariante de domínio ou glossário: atualize `docs/CONTEXT.md` no mesmo PR.
 - Mudança de comando, layout ou convenção: atualize este `AGENTS.md` no mesmo PR.
@@ -86,7 +88,8 @@ docker compose up -d postgres
 - Não introduzir features da Fase 4 (voz/RAG) antes da Fase 3 estar fechada. Veja [docs/ROADMAP.md](docs/ROADMAP.md).
 - Não acoplar lógica entre boundaries (`catalog`, `identity`, `engagement`, `narration`, `shared`, `platform`). Comunicação via interfaces explícitas, não imports diretos cross-domain.
 - Não usar `--no-verify`, `--force` ou desabilitar CI para fechar PR. Falha no hook = consertar a causa.
-- Não commitar segredos. Use `.env.example`. CI roda `gitleaks` em todo PR.
+- Não commitar segredos. Use `.env.example` / `.mcp.json.example`. CI roda `gitleaks` em todo PR. O `.mcp.json` real é gitignored.
+- Não executar operação 🔴 de MCP (DNS, firewall, destruir/recriar VM, restore, senhas, deletar recursos, `stop_all_apps`, drop de database) nem mergear na `main` sem o operador — proponha e pare. Ver [ADR-0017](docs/adr/0017-desenvolvimento-autonomo-afk.md).
 - Não criar dependência paga adicional sem registrar ADR justificando.
 
 ## Skills disponíveis para uso (Claude Code)
@@ -96,8 +99,10 @@ Já configuradas em `.agents/skills/`:
 - `find-skills` — descobre outras skills disponíveis
 - `frontend-design` — apoio à parte visual (CodeWiki-like)
 - `grill-me` — entrevistas para refinar planos
-- `grill-with-docs` — grilling sobre documentação versionada
-- `git-commit` — fluxo de commits
+- `grill-with-docs` — grilling de plano contra a documentação versionada (atualiza CONTEXT.md/ADRs inline)
+- `prompt-engineering-patterns` — padrões para escrever prompts e instruções
+- `skill-creator` — criar, editar e avaliar skills
+- `solo-dev-assistant` — wrapper de processo solo: `briefing` (digest de sessão), `start`, `cycle`
 
 Skills nativas do Claude Code para usar regularmente: `init`, `verify`, `simplify`, `review`, `security-review`, `claude-api`, `update-config`.
 
@@ -112,6 +117,29 @@ Plano e estado de execução vivem no **[docs/ROADMAP.md](docs/ROADMAP.md)** com
 **Intent-loop:** quando o operador expressar intenção de pegar uma tarefa ("vou pegar X"), localize o bullet em `docs/ROADMAP.md`, **proponha** a edição ("marco X como 🚧, confirma?") e edite após confirmação — mesma cerimônia para `[x]` ao concluir e para `(aguardando: ...)` ao bloquear. Em Claude Code o **hook PostToolUse** auto-comita a transição com prefixo `chore(roadmap):`; em Codex/Copilot, comite manualmente com o mesmo prefixo.
 
 **Issues** ficam deferidas: crie à mão só quando a tarefa exigir discussão estendida ou link de PR (`Closes #N`). Princípios evergreen do desenho: [lesson 0002](docs/lessons/0002-harness-basico-em-github-projects.md).
+
+## Autonomia dos agentes (AFK)
+
+Modelo completo em [ADR-0017](docs/adr/0017-desenvolvimento-autonomo-afk.md). Resumo operacional — **HITL nas bordas, AFK no meio**.
+
+Princípio raiz: **reversível e de baixo impacto → o agente faz sozinho; irreversível, destrutivo ou que toca produção de forma não-recuperável → o agente propõe e para. Na dúvida, trate como 🔴.**
+
+### Ops via MCP (Hostinger / Coolify / Cloudflare) — semáforo
+
+Classifique **pelo efeito**, não decorando a lista de tools:
+
+- 🟢 **Verde — faz sempre, sozinho.** Leitura e diagnóstico: `get*`/`list*`/`*logs*`/`*metrics*`/`diagnose_*`/`search`. Sem efeito colateral.
+- 🟡 **Amarelo — faz sozinho e registra em [docs/ai-ops/](docs/ai-ops/).** Efeito reversível: criar recurso, snapshot, env var não-secreta, `deploy`/`redeploy`/`restart` de app existente, purge de cache.
+- 🔴 **Vermelho — propõe e espera o operador.** Irreversível/destrutivo/produção: DNS/nameservers, firewall, recriar/destruir/comprar VM, restaurar backup por cima, senhas, `delete*` de recurso, `stop_all_apps`, drop de database, **segredos** e **merge na `main`**. Para segredos, faça a parte sem segredo e **documente o comando** para o operador aplicar — não trave a sessão.
+
+### Feature-dev — fluxo AFK
+
+1. 🔴 **Alinhar** (`grill-me`/`grill-with-docs`) — o operador define o *o quê*.
+2. 🟡 **PRD-lite** em `docs/specs/NNNN-<feature>.md` — objetivo + critério de aceite + **vertical slices** (fatias que atravessam schema→API→UI→testes→e2e). Ver [docs/specs/](docs/specs/).
+3. 🟢 **Implementar** — cada slice num **git worktree** dedicado, com TDD, até **PR verde**. Pode encadear slices como PRs separados. **Não mergeia.**
+4. 🔴 **Revisar e mergear** — sempre humano (ver [ADR-0005](docs/adr/0005-deploy-checks-em-tres-portoes.md)).
+
+> ⚠️ O AFK de feature só é executável quando a **Fase 0 fechar** (skeleton + CI + Lefthook + branch protection) — antes disso não há portão real para o loop se auto-verificar.
 
 ## Para Claude Code, especificamente
 
