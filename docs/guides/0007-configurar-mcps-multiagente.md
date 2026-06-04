@@ -1,6 +1,6 @@
 ---
 title: Configurar MCPs de infraestrutura no Claude Code, Codex e Copilot
-description: Padroniza Hostinger, Coolify e Cloudflare nos três agentes locais, com .env como fonte única de segredos, allowlist por processo, versões pinadas e OAuth separado por cliente.
+description: Padroniza Hostinger, Coolify e Cloudflare nos três agentes locais, com configs gitignored, versões pinadas e OAuth separado por cliente.
 nav_title: MCPs multiagente
 ---
 
@@ -20,30 +20,22 @@ Estado esperado:
 
 Todos usam:
 
-- `.env` como fonte única de `HOSTINGER_API_TOKEN` e `COOLIFY_ACCESS_TOKEN`;
-- `scripts/run-mcp-with-env.mjs` para entregar apenas o segredo permitido a cada MCP stdio;
+- `.env` para `HOSTINGER_API_TOKEN`, lido diretamente pelo MCP oficial via dotenv;
+- `COOLIFY_ACCESS_TOKEN` inline somente nos três configs reais e gitignored, porque o MCP comunitário não lê `.env`;
 - `hostinger-api-mcp@0.2.5` e `@masonator/coolify-mcp@2.12.0` pinados;
 - `https://mcp.cloudflare.com/mcp` com OAuth independente por cliente.
 
-### Passo 1: Preparar a fonte única de segredos
+Esta assimetria é deliberadamente temporária: evita um runner próprio enquanto os três clientes não compartilham uma integração portável com gerenciador de segredos. O custo aceito é duplicar o token Coolify em três arquivos locais.
 
-Copie `.env.example` para `.env` e preencha exatamente:
+### Passo 1: Preparar o token Hostinger
+
+Copie `.env.example` para `.env` e preencha:
 
 ```text
 HOSTINGER_API_TOKEN=<segredo>
-COOLIFY_ACCESS_TOKEN=<segredo>
 ```
 
-Não use aliases nem coloque tokens nos arquivos de configuração MCP. O runner lê o `.env` sem executar seu conteúdo, remove todas as chaves do `.env` herdadas pelo processo e encaminha somente a allowlist declarada antes de `--`.
-
-Exemplo:
-
-```bash
-node scripts/run-mcp-with-env.mjs COOLIFY_ACCESS_TOKEN -- \
-  npx -y @masonator/coolify-mcp@2.12.0
-```
-
-O processo do Coolify recebe `COOLIFY_ACCESS_TOKEN`, mas não recebe `HOSTINGER_API_TOKEN`. Os MCPs rodam em `.local/mcp-runtime`, longe do `.env`, para impedir carregamento indireto por pacotes que usam `dotenv`.
+Não use aliases. O `hostinger-api-mcp` carrega o `.env` do diretório do projeto via dotenv; não é necessário executar `source .env` nem repetir o token nos configs MCP.
 
 ### Passo 2: Materializar as três configurações locais
 
@@ -55,6 +47,20 @@ cp .vscode/mcp.json.example .vscode/mcp.json
 
 Os três destinos são gitignored. Os templates são versionados e não contêm segredos.
 
+Gere ou recupere um token em **Coolify -> Settings -> API / Keys & Tokens**. Comece read-only. Em cada config real, substitua `<COLE_O_TOKEN_DO_COOLIFY>` pelo mesmo valor:
+
+| Config real | Campo |
+|---|---|
+| `.mcp.json` | `mcpServers.coolify.env.COOLIFY_ACCESS_TOKEN` |
+| `.codex/config.toml` | `mcp_servers.coolify.env.COOLIFY_ACCESS_TOKEN` |
+| `.vscode/mcp.json` | `servers.coolify.env.COOLIFY_ACCESS_TOKEN` |
+
+Não coloque o token nos templates, no `.env` ou em comando de shell. Confirme que os configs reais continuam ignorados:
+
+```bash
+git check-ignore .mcp.json .codex/config.toml .vscode/mcp.json
+```
+
 No Codex, o projeto precisa estar confiável para carregar `.codex/config.toml`. A configuração vale para CLI e extensão IDE. No Copilot, `.vscode/mcp.json` executa no ambiente remoto do workspace WSL e disponibiliza as ferramentas no modo Agent.
 
 ### Passo 3: Autenticar Cloudflare e validar em leitura
@@ -65,19 +71,14 @@ OAuth da Cloudflare não é compartilhado entre clientes:
 2. Codex: execute `codex mcp login cloudflare` e conclua o fluxo no browser.
 3. Copilot/VS Code: abra `.vscode/mcp.json`, inicie `cloudflare` e conclua o prompt de autenticação.
 
-Valide primeiro os MCPs stdio:
+Valide os clientes:
 
 ```bash
-node scripts/run-mcp-with-env.mjs HOSTINGER_API_TOKEN -- \
-  npx -y --package hostinger-api-mcp@0.2.5 hostinger-vps-mcp
-
-node scripts/run-mcp-with-env.mjs COOLIFY_ACCESS_TOKEN -- \
-  npx -y @masonator/coolify-mcp@2.12.0
-
+claude mcp list
 codex mcp list
 ```
 
-Depois, em cada agente, faça somente leitura:
+No VS Code, abra `.vscode/mcp.json` e inicie os três servers. Depois, em cada agente, faça somente leitura:
 
 ```text
 Liste a VPS Hostinger, os projetos/servidores do Coolify e as zonas Cloudflare.
@@ -87,8 +88,9 @@ Retorne apenas identificadores, nomes e status. Não altere nada.
 ## Critério de sucesso
 
 - Os três templates versionados não contêm tokens.
-- Os três configs reais estão ignorados pelo Git.
-- `scripts/run-mcp-with-env.mjs` falha quando a variável permitida está ausente e não entrega o outro segredo ao processo filho.
+- Os três configs reais estão ignorados pelo Git e não contêm `<COLE_O_TOKEN_DO_COOLIFY>`.
+- Hostinger conecta nos três clientes lendo `HOSTINGER_API_TOKEN` do `.env`.
+- Coolify conecta nos três clientes recebendo `COOLIFY_ACCESS_TOKEN` somente do config real correspondente.
 - Codex lista `hostinger-vps`, `coolify` e `cloudflare`.
 - Copilot Chat local mostra os três servidores no seletor de ferramentas.
 - Cada cliente conclui seu próprio OAuth Cloudflare.

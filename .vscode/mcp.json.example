@@ -2,12 +2,8 @@
   "servers": {
     "hostinger-vps": {
       "type": "stdio",
-      "command": "node",
+      "command": "npx",
       "args": [
-        "scripts/run-mcp-with-env.mjs",
-        "HOSTINGER_API_TOKEN",
-        "--",
-        "npx",
         "-y",
         "--package",
         "hostinger-api-mcp@0.2.5",
@@ -16,17 +12,14 @@
     },
     "coolify": {
       "type": "stdio",
-      "command": "node",
+      "command": "npx",
       "args": [
-        "scripts/run-mcp-with-env.mjs",
-        "COOLIFY_ACCESS_TOKEN",
-        "--",
-        "npx",
         "-y",
         "@masonator/coolify-mcp@2.12.0"
       ],
       "env": {
-        "COOLIFY_BASE_URL": "https://vps.thiagopanini.dev"
+        "COOLIFY_BASE_URL": "https://vps.thiagopanini.dev",
+        "COOLIFY_ACCESS_TOKEN": "<COLE_O_TOKEN_DO_COOLIFY>"
       }
     },
     "cloudflare": {

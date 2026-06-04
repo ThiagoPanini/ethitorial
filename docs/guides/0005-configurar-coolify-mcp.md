@@ -1,10 +1,10 @@
 ---
 title: Configurar o Coolify MCP local para operar deploys na VPS
-description: Instala o MCP server da comunidade @masonator/coolify-mcp, conecta-o a um cliente MCP local (Claude Code) com config sem segredo (token via .env exportado), aponta para o painel Coolify proxied e valida com operações read-only sobre projetos/aplicações antes de liberar qualquer escrita (deploy, restart, stop).
+description: Instala o MCP server da comunidade @masonator/coolify-mcp, conecta-o a um cliente MCP local com token inline no config gitignored, aponta para o painel Coolify proxied e valida com operações read-only antes de liberar qualquer escrita.
 nav_title: Coolify MCP
 ---
 
-> 🔄 **Setup atual: multiagente.** Este guide descreve o setup inicial single-agent. ⚠️ A instrução de `source .env` no shell e a de **colar o token no `env` do `.mcp.json`** foram **superadas**: hoje o token fica só no `.env` e é entregue ao processo do Coolify por `scripts/run-mcp-with-env.mjs` (isolado dos demais segredos). Para configurar, siga o [guide 0007](0007-configurar-mcps-multiagente.md).
+> 🔄 **Setup atual: multiagente.** Este guide descreve o setup inicial single-agent. O setup vigente fixa a versão e, como o server não lê `.env`, cola o token Coolify no campo `env` de cada config real e gitignored. Para configurar os três clientes locais, siga o [guide 0007](0007-configurar-mcps-multiagente.md).
 
 Este guide conecta um agente de IA ao painel Coolify da VPS via API, expondo as operações de PaaS (projetos, aplicações, deploys, bancos, serviços) como ferramentas tipadas. O objetivo é operação de deploy assistida com a mesma disciplina de borda do [guide 0004](0004-configurar-hostinger-vps-mcp.md): leitura primeiro, escrita só com plano e confirmação.
 
@@ -16,7 +16,7 @@ O escopo **não** inclui executar deploys/destruições. O guide deixa o MCP pro
 
 ## Example
 
-Como exemplo, vamos registrar o `coolify` no Claude Code como server de escopo de projeto (config sem token, gitignored), apontar o token via `.env` exportado e provar conectividade listando projetos/servidores em modo read-only contra o painel proxied em `https://vps.thiagopanini.dev`.
+Como exemplo, vamos registrar o `coolify` no Claude Code como server de escopo de projeto, colocar o token somente no config real gitignored e provar conectividade listando projetos/servidores em modo read-only contra o painel proxied em `https://vps.thiagopanini.dev`.
 
 Pré-condições:
 
@@ -25,40 +25,25 @@ Pré-condições:
 - **Painel Coolify já no ar** e acessível pelo domínio público (proxied na Cloudflare — ver [ADR-0006](../adr/0006-cloudflare-na-frente-da-vps.md)).
 - Placeholders: `<COOLIFY_ACCESS_TOKEN>` (gerado no painel), `<COOLIFY_BASE_URL>` (= `https://vps.thiagopanini.dev`).
 
-### Passo 1: Gerar o token (read-only primeiro) e colocá-lo no `.env`
+### Passo 1: Gerar o token read-only
 
 Gere um token em **Coolify -> Settings -> API / Keys & Tokens**. O Coolify deixa escolher permissões — **comece com um token read-only** para provar conectividade sem risco; só escale para escrita depois que a leitura estiver verde.
 
-```bash
-cp .env.example .env   # se ainda não existir
-# edite .env e preencha:
-# COOLIFY_ACCESS_TOKEN=<COOLIFY_ACCESS_TOKEN>
-```
+> ⚠️ **Fricção comum: este server NÃO lê `.env` sozinho.** O `@masonator/coolify-mcp` lê `COOLIFY_ACCESS_TOKEN` somente do env do processo — confirmado: o pacote não declara `dotenv` nas deps, diferente do MCP da Hostinger. Como Claude Code, Codex e Copilot não compartilham uma expansão portável de segredo, a convenção temporária do repo é colar o token no campo `env` de cada config real e gitignored. Não coloque o token em template versionado, `.env` ou comando de shell.
 
-> ⚠️ **Fricção comum: este server NÃO lê `.env` sozinho.** O `@masonator/coolify-mcp` lê do **env do processo** (`COOLIFY_ACCESS_TOKEN`) — confirmado: o pacote não declara `dotenv` nas deps, diferente do MCP da Hostinger. Como entregar o token depende de **como o Claude Code é lançado**:
->
-> - **CLI (terminal):** exporte o `.env` antes de subir:
->   ```bash
->   set -a; source .env; set +a   # exporta tudo do .env para o ambiente
->   claude
->   ```
-> - **VS Code (extensão):** o Claude Code não herda um shell com `source .env`. Cole o token direto no **`env` do `.mcp.json`** (que é gitignored — mesma proteção do `.env`), trocando o placeholder `${COOLIFY_ACCESS_TOKEN:-}` pelo valor. É uma exceção consciente ao "config sem segredo", válida porque o arquivo não é versionado e o server não lê `.env`.
+### Passo 2: Registrar o server e materializar o token
 
-Proof: `grep -c '^COOLIFY_ACCESS_TOKEN=' .env` retorna `1`; e, após o `source`, `printenv COOLIFY_ACCESS_TOKEN` mostra o valor.
-
-### Passo 2: Registrar o server no cliente (config sem segredo)
-
-Registre o server apontando para o painel proxied. O token **não** vai literal na config — usamos expansão `${VAR}` do Claude Code, com default vazio para não derrubar o `.mcp.json` inteiro caso a var não esteja exportada ainda.
+Registre o server apontando para o painel proxied e usando a versão pinada:
 
 ```bash
 # Claude Code (escopo de projeto -> grava ./.mcp.json):
 claude mcp add coolify -s project \
   --env COOLIFY_BASE_URL=https://vps.thiagopanini.dev \
-  --env 'COOLIFY_ACCESS_TOKEN=${COOLIFY_ACCESS_TOKEN:-}' \
-  -- npx -y @masonator/coolify-mcp
+  --env COOLIFY_ACCESS_TOKEN='<COLE_O_TOKEN_DO_COOLIFY>' \
+  -- npx -y @masonator/coolify-mcp@2.12.0
 ```
 
-O resultado no `.mcp.json` (token-free):
+Depois, edite o `.mcp.json` gitignored e substitua o placeholder pelo token. O resultado estrutural:
 
 ```json
 {
@@ -66,28 +51,25 @@ O resultado no `.mcp.json` (token-free):
     "coolify": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@masonator/coolify-mcp"],
+      "args": ["-y", "@masonator/coolify-mcp@2.12.0"],
       "env": {
         "COOLIFY_BASE_URL": "https://vps.thiagopanini.dev",
-        "COOLIFY_ACCESS_TOKEN": "${COOLIFY_ACCESS_TOKEN:-}"
+        "COOLIFY_ACCESS_TOKEN": "<TOKEN_REAL_SOMENTE_NO_CONFIG_GITIGNORED>"
       }
     }
   }
 }
 ```
 
-> 💡 **Por que `:-` (default vazio).** Se uma var sem default não estiver setada, o Claude Code **falha ao parsear o `.mcp.json` inteiro** — derrubaria também `hostinger-vps` e `cloudflare`. Com `${COOLIFY_ACCESS_TOKEN:-}`, só o server `coolify` falha auth até você exportar o token; os outros seguem vivos.
-
-> ⚠️ **Convenção do repo: `.mcp.json` fora do git.** Mesmo sem segredo dentro, o arquivo referencia infra pessoal e está no `.gitignore` (mesma regra dos guides [0002](0002-configurar-cloudflare-r2-mcp.md) e [0004](0004-configurar-hostinger-vps-mcp.md)). Confirme: `git check-ignore .mcp.json` imprime `.mcp.json`.
+> ⚠️ **Convenção do repo: `.mcp.json` fora do git.** O arquivo contém o token Coolify e está no `.gitignore` (mesma regra dos guides [0002](0002-configurar-cloudflare-r2-mcp.md) e [0004](0004-configurar-hostinger-vps-mcp.md)). Confirme: `git check-ignore .mcp.json` imprime `.mcp.json`.
 
 Proof: `claude mcp get coolify` mostra `Scope: Project config` e `Type: stdio`.
 
 ### Passo 3: Validar conectividade e listar projetos (read-only)
 
-Suba o Claude Code **com o token exportado** (Passo 1) e confirme que o server conecta:
+Confirme que o server conecta:
 
 ```bash
-set -a; source .env; set +a
 claude mcp list
 # esperado: coolify: npx -y @masonator/coolify-mcp - ✓ Connected
 ```
@@ -119,8 +101,8 @@ Só confirme se o alvo for o recurso certo, sem deploy/stop/delete acidental. O 
 Considere este guide concluído apenas se todos os checks passarem:
 
 - `node -v` ≥ 20 e `npx -y @masonator/coolify-mcp` sobe sem erro de pacote.
-- `.env` tem `COOLIFY_ACCESS_TOKEN` preenchido e está no `.gitignore`; `printenv COOLIFY_ACCESS_TOKEN` mostra o valor após `source`.
-- `.mcp.json` existe, usa `${COOLIFY_ACCESS_TOKEN:-}` (sem segredo) e `git check-ignore .mcp.json` confirma que está ignorado.
+- `.mcp.json` existe, contém o token real no campo `env`, não contém placeholder e `git check-ignore .mcp.json` confirma que está ignorado.
+- Nenhum template ou arquivo versionado contém o token real.
 - `claude mcp list` mostra `coolify - ✓ Connected`.
 - O overview read-only retorna versão + servidores + projetos esperados (`isError: false`).
 - Nenhum deploy/stop/delete foi executado sem plano + confirmação.

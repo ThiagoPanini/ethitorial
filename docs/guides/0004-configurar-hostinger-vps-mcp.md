@@ -4,7 +4,7 @@ description: Instala o MCP server oficial da Hostinger (hostinger-vps-mcp), cone
 nav_title: Hostinger VPS MCP
 ---
 
-> 🔄 **Setup atual: multiagente.** Este guide descreve a configuração inicial single-agent (Claude Code, token via `.env`/dotenv, comando não-pinado). O setup vigente — cross-harness (Claude Code + Codex + Copilot), com segredo só no `.env` entregue por `scripts/run-mcp-with-env.mjs` e versão pinada — está no [guide 0007](0007-configurar-mcps-multiagente.md). Use este aqui para o contexto do provedor; siga o 0007 para configurar.
+> 🔄 **Setup atual: multiagente.** Este guide descreve a configuração inicial single-agent (Claude Code, token via `.env`/dotenv, comando não-pinado). O setup vigente — cross-harness (Claude Code + Codex + Copilot), com o token Hostinger lido diretamente do `.env` pelo pacote e versão pinada — está no [guide 0007](0007-configurar-mcps-multiagente.md). Use este aqui para o contexto do provedor; siga o 0007 para configurar.
 
 Este guide conecta um agente de IA à VPS Hostinger via API oficial, usando o **MCP server mantido pela própria Hostinger**. O objetivo é gerência operacional assistida (listar, status, métricas, backups, firewall) com a mesma disciplina de borda do [guide 0002](0002-configurar-cloudflare-r2-mcp.md): leitura primeiro, escrita só com plano e confirmação.
 

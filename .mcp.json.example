@@ -1,16 +1,12 @@
 {
-  "//": "Template local do Claude Code. Copie para .mcp.json (gitignored). Segredos ficam somente no .env.",
+  "//": "Template local do Claude Code. Copie para .mcp.json (gitignored), depois cole somente o token Coolify na copia.",
   "//setup": "Setup multiagente em docs/guides/0007-configurar-mcps-multiagente.md.",
   "mcpServers": {
     "hostinger-vps": {
-      "//": "O runner entrega somente HOSTINGER_API_TOKEN ao MCP oficial pinado.",
+      "//": "O MCP oficial pinado le HOSTINGER_API_TOKEN do .env via dotenv.",
       "type": "stdio",
-      "command": "node",
+      "command": "npx",
       "args": [
-        "scripts/run-mcp-with-env.mjs",
-        "HOSTINGER_API_TOKEN",
-        "--",
-        "npx",
         "-y",
         "--package",
         "hostinger-api-mcp@0.2.5",
@@ -19,19 +15,16 @@
       "env": {}
     },
     "coolify": {
-      "//": "O runner entrega somente COOLIFY_ACCESS_TOKEN ao MCP comunitario pinado.",
+      "//": "Este MCP nao le .env. Cole o token somente na copia .mcp.json, que e gitignored.",
       "type": "stdio",
-      "command": "node",
+      "command": "npx",
       "args": [
-        "scripts/run-mcp-with-env.mjs",
-        "COOLIFY_ACCESS_TOKEN",
-        "--",
-        "npx",
         "-y",
         "@masonator/coolify-mcp@2.12.0"
       ],
       "env": {
-        "COOLIFY_BASE_URL": "https://vps.thiagopanini.dev"
+        "COOLIFY_BASE_URL": "https://vps.thiagopanini.dev",
+        "COOLIFY_ACCESS_TOKEN": "<COLE_O_TOKEN_DO_COOLIFY>"
       }
     },
     "cloudflare": {
