@@ -4,6 +4,8 @@ description: Instala o MCP server da comunidade @masonator/coolify-mcp, conecta-
 nav_title: Coolify MCP
 ---
 
+> 🔄 **Setup atual: multiagente.** Este guide descreve o setup inicial single-agent. ⚠️ A instrução de `source .env` no shell e a de **colar o token no `env` do `.mcp.json`** foram **superadas**: hoje o token fica só no `.env` e é entregue ao processo do Coolify por `scripts/run-mcp-with-env.mjs` (isolado dos demais segredos). Para configurar, siga o [guide 0007](0007-configurar-mcps-multiagente.md).
+
 Este guide conecta um agente de IA ao painel Coolify da VPS via API, expondo as operações de PaaS (projetos, aplicações, deploys, bancos, serviços) como ferramentas tipadas. O objetivo é operação de deploy assistida com a mesma disciplina de borda do [guide 0004](0004-configurar-hostinger-vps-mcp.md): leitura primeiro, escrita só com plano e confirmação.
 
 Diferente da Hostinger e da Cloudflare, **não há MCP oficial da Coolify**. Usamos o server da comunidade mais maduro, `@masonator/coolify-mcp` — 42 ferramentas *token-optimized*. Isso importa: a API do Coolify é muito verbosa (uma única aplicação traz ~91 campos; listar 20+ apps passa de 200KB e estoura o context window). O server resume por padrão e adiciona busca por domínio/IP em vez de só UUID.

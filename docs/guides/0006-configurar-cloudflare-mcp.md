@@ -4,6 +4,8 @@ description: Conecta o Claude Code ao MCP server remoto oficial da Cloudflare (m
 nav_title: Cloudflare MCP
 ---
 
+> 🔄 **Setup atual: multiagente.** O caminho OAuth descrito aqui continua válido. Para a config cross-harness (Claude Code + Codex + Copilot) e como cada cliente autentica seu próprio OAuth, veja o [guide 0007](0007-configurar-mcps-multiagente.md).
+
 Este guide conecta um agente de IA ao plano de controle da Cloudflare — DNS, zonas, WAF, cache, regras — via **MCP server remoto oficial**, mantido pela própria Cloudflare. Fecha o tripé de bordas do epistemix junto com [Hostinger (VPS)](0004-configurar-hostinger-vps-mcp.md) e [Coolify (PaaS)](0005-configurar-coolify-mcp.md).
 
 A diferença estrutural vs. os outros dois: aqui **não há server stdio local nem token em `.env`**. A Cloudflare hospeda os servers; o cliente fala HTTP e autentica por **OAuth** (uma autorização no browser, depois renova sozinho). Disciplina de borda igual: a Cloudflare está **na frente da produção** ([ADR-0006](../adr/0006-cloudflare-na-frente-da-vps.md)), então leitura primeiro, escrita só com plano e confirmação.

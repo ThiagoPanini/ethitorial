@@ -1,0 +1,21 @@
+# Template local do Codex. Copie para .codex/config.toml, que e gitignored.
+# Os segredos ficam somente no .env e sao filtrados pelo runner allowlist.
+
+[mcp_servers.hostinger-vps]
+command = "node"
+args = ["scripts/run-mcp-with-env.mjs", "HOSTINGER_API_TOKEN", "--", "npx", "-y", "--package", "hostinger-api-mcp@0.2.5", "hostinger-vps-mcp"]
+startup_timeout_sec = 30
+default_tools_approval_mode = "prompt"
+
+[mcp_servers.coolify]
+command = "node"
+args = ["scripts/run-mcp-with-env.mjs", "COOLIFY_ACCESS_TOKEN", "--", "npx", "-y", "@masonator/coolify-mcp@2.12.0"]
+startup_timeout_sec = 30
+default_tools_approval_mode = "prompt"
+
+[mcp_servers.coolify.env]
+COOLIFY_BASE_URL = "https://vps.thiagopanini.dev"
+
+[mcp_servers.cloudflare]
+url = "https://mcp.cloudflare.com/mcp"
+default_tools_approval_mode = "prompt"

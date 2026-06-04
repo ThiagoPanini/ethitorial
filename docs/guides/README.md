@@ -30,6 +30,7 @@ Cada guide deve manter:
 - [0004 — Configurar o Hostinger MCP local para gerenciar a VPS](0004-configurar-hostinger-vps-mcp.md)
 - [0005 — Configurar o Coolify MCP local para operar deploys na VPS](0005-configurar-coolify-mcp.md)
 - [0006 — Configurar o Cloudflare MCP remoto para gerenciar DNS e edge](0006-configurar-cloudflare-mcp.md)
+- [0007 — Configurar MCPs de infraestrutura no Claude Code, Codex e Copilot](0007-configurar-mcps-multiagente.md)
 
 ## Aguardando execução
 

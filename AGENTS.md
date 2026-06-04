@@ -63,6 +63,15 @@ cd apps/web && pnpm install && pnpm dev
 docker compose up -d postgres
 ```
 
+## MCPs locais (Claude Code, Codex e Copilot)
+
+- Segredos de Hostinger e Coolify vivem somente no `.env`, usando os nomes de `.env.example`.
+- Configs reais são locais e gitignored: `.mcp.json` (Claude Code), `.codex/config.toml` (Codex) e `.vscode/mcp.json` (Copilot Chat local).
+- Templates versionados: `.mcp.json.example`, `.codex/config.toml.example` e `.vscode/mcp.json.example`.
+- MCPs stdio passam por `scripts/run-mcp-with-env.mjs`, que entrega apenas o segredo permitido a cada processo; Cloudflare autentica por OAuth separadamente em cada cliente.
+- O Copilot cloud/coding agent não recebe estes MCPs de produção. Ele executa ferramentas autonomamente e não compartilha o ambiente local.
+- Setup e validação: [guide 0007](docs/guides/0007-configurar-mcps-multiagente.md).
+
 ## Convenções de código
 
 - **Python:** `ruff format` + `ruff check` + `pyright`. Async-first (FastAPI). `uv` para deps. SQLModel para modelos.

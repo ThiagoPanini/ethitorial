@@ -1,9 +1,6 @@
 {
-  "//": "Template local do Claude Code. Copie para .mcp.json (gitignored). Segredos ficam somente no .env.",
-  "//setup": "Setup multiagente em docs/guides/0007-configurar-mcps-multiagente.md.",
-  "mcpServers": {
+  "servers": {
     "hostinger-vps": {
-      "//": "O runner entrega somente HOSTINGER_API_TOKEN ao MCP oficial pinado.",
       "type": "stdio",
       "command": "node",
       "args": [
@@ -15,11 +12,9 @@
         "--package",
         "hostinger-api-mcp@0.2.5",
         "hostinger-vps-mcp"
-      ],
-      "env": {}
+      ]
     },
     "coolify": {
-      "//": "O runner entrega somente COOLIFY_ACCESS_TOKEN ao MCP comunitario pinado.",
       "type": "stdio",
       "command": "node",
       "args": [
@@ -35,7 +30,6 @@
       }
     },
     "cloudflare": {
-      "//": "MCP remoto (http) — autenticação via OAuth no primeiro uso, sem token no arquivo. Ver docs/guides/0006-configurar-cloudflare-mcp.md.",
       "type": "http",
       "url": "https://mcp.cloudflare.com/mcp"
     }
