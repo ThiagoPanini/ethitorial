@@ -11,7 +11,7 @@ dividas:
   - `.local/hostinger-firewall.py` cria um firewall NOVO a cada run (gerou o órfão `303231`, já deletado). Ajustar para reusar por nome se for virar utilitário recorrente.
   - UFW (allowlist Cloudflare + timer mensal de re-sync) ficou redundante sob o firewall Hostinger; mantido como defesa-em-profundidade. Decidir se simplifica.
   - anotar `CLOUDFLARE_ACCOUNT_ID` + zone IDs (`epistemix.dev`, `thiagopanini.dev`) no `.local/panini-vps-bootstrap.md`.
-  - token da API Hostinger (`.env`, gitignored) — revogar após o bootstrap; foi usado só para criar as regras de firewall.
+  - token da API Hostinger (`.env`, gitignored) — **mantido** (decisão 2026-06): reutilizado pelos MCPs de operação (Hostinger/Coolify/Cloudflare); criado originalmente só para as regras de firewall, agora é credencial operacional permanente. Rotacionar se vazar.
 referencias:
   guide: ../guides/0003-publicar-epistemix-dev-em-producao.md
   adr: ../adr/0016-vps-agnostica-multi-projeto.md
@@ -63,4 +63,4 @@ Registro narrativo da sessão que executou os **Passos 4 e 5** do [guide 0003](.
 
 ## Dívidas
 
-Ver frontmatter. Destaques: **renovação do cert LE** (porta 80 agora CF-only — validar o ACME pass-through antes de ~30/Ago e anotar no runbook); firewall `303222` órfão a revisar; revogar o token da API Hostinger; anotar zone IDs no `.local/`.
+Ver frontmatter. Destaques: **renovação do cert LE** (porta 80 agora CF-only — validar o ACME pass-through antes de ~30/Ago e anotar no runbook); firewall `303222` órfão a revisar; token da API Hostinger **mantido** (reutilizado pelos MCPs, não revogar); anotar zone IDs no `.local/`.
