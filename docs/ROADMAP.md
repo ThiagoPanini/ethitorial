@@ -68,7 +68,10 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
 
 ## Fase 2 — Engajamento
 
+> Aqui entram **Postgres + Alembic + `apps/api`** pela primeira vez: engagement é o primeiro estado dinâmico real. `View`/`Vote`/`Comment` referenciam `Artifact` por slug (o catálogo segue MDX-native até a Fase 3). Ver [ADR-0018](adr/0018-catalogo-mdx-native-na-fase-1.md).
+
 - [ ] Auth (Clerk ou better-auth — decidir via ADR)
+- [ ] Primeira migration Alembic + Postgres no Coolify + backup `pg_dump` → R2 (deferido da Fase 0) + runbook de restore
 - [ ] Modelo `View` (entidade persistida sobre `Artifact` — ver [ADR-0009](adr/0009-view-como-entidade-persistida.md) e [ADR-0015](adr/0015-epistemix-domain-model.md)), `Vote`, `Comment`
 - [ ] Endpoints e UI otimista para votar e comentar (Server Actions apenas para concerns do Next — ver [ADR-0010](adr/0010-server-actions-apenas-para-concerns-do-next.md))
 - [ ] Perfil de usuário básico com URL pública `/authors/<username>` (ver [ADR-0011](adr/0011-url-publica-do-publicador.md))
