@@ -8,3 +8,4 @@ Para reproduzir uma configuração nova, use um [guide](../guides/). Para entend
 
 - [0001 — Operação básica da VPS](0001-operacao-vps.md)
 - [0002 — Operação do harness AI-first (loop solo)](0002-harness-agente-solo.md)
+- [0003 — Deploy e cutover do epistemix no Coolify](0003-deploy-cutover-coolify.md)
