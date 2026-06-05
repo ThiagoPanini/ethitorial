@@ -34,6 +34,8 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
 - [x] CI: GitHub Actions com lint + typecheck + testes em PR (`pr-checks.yml`, jobs web/api/security)
 - [x] Branch protection na `main`: PR obrigatório, checks verdes, sem force-push, história linear, approvals=0 (ruleset; emenda solo no ADR-0005)
 - [x] Secret scanning (`gitleaks`): pre-commit (Lefthook) + job `security` do `pr-checks.yml`
+- [x] Portão 1 (Lefthook): pre-commit (gitleaks), commit-msg (commitlint), pre-push (ruff/pyright/biome/tsc/pytest)
+- [x] Portão 3 (`deploy.yml`): build+push das imagens para GHCR no merge + redeploy no Coolify (guardado por `COOLIFY_TOKEN`) — ver [runbook 0003](runbooks/0003-deploy-cutover-coolify.md)
 
 ### Código e ambiente local
 
