@@ -1,0 +1,66 @@
+name: pr-checks
+
+# Portão 2 (ADR-0005) — o GATE REAL antes do merge na main.
+# Enxuto por enquanto: lint + typecheck + test + secret scan. Preview-deploy,
+# e2e, coverage gate e bandit/npm-audit entram quando houver código que os
+# justifique.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: lint (biome)
+        run: pnpm exec biome check apps/web
+      - name: typecheck (tsc)
+        run: pnpm --filter @epistemix/web typecheck
+
+  api:
+    name: api
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: format (ruff)
+        run: uv run ruff format --check .
+      - name: lint (ruff)
+        run: uv run ruff check .
+      - name: typecheck (pyright)
+        run: uv run pyright --warnings
+      - name: test (pytest)
+        run: uv run pytest -m "not integration" -q
+
+  security:
+    name: security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
