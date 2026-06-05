@@ -4,7 +4,7 @@ description: Cria a conta Cloudflare, ativa a zona do domínio, publica o Coolif
 nav_title: Cloudflare + R2 + MCP
 ---
 
-Este guide é a segunda etapa da trilha real do talkingpres: depois da VPS Hostinger com Coolify existir e estar endurecida, a borda precisa sair do registrar/DNS anterior e passar para Cloudflare. O objetivo é preparar a fundação: zona DNS ativa, subdomínio do Coolify atrás do proxy, TLS em modo estrito, origem fechada com validação externa tripla, bucket R2 criado e MCP disponível para agentes.
+Este guide é a segunda etapa da trilha real desta infra: depois da VPS Hostinger com Coolify existir e estar endurecida, a borda precisa sair do registrar/DNS anterior e passar para Cloudflare. O objetivo é preparar a fundação: zona DNS ativa, subdomínio do Coolify atrás do proxy, TLS em modo estrito, origem fechada com validação externa tripla, bucket R2 criado e MCP disponível para agentes.
 
 O escopo **não** inclui configurar backup Postgres no Coolify. Aqui o R2 fica pronto; o backup, retenção e restore entram em um guide futuro, quando a Cloudflare já tiver sido criada e validada.
 
@@ -14,11 +14,11 @@ O escopo **não** inclui configurar backup Postgres no Coolify. Aqui o R2 fica p
 >
 > Cloudflare Tunnel resolve o mesmo problema de forma estrutural: a VPS estabelece conexão *outbound* para Cloudflare; nenhum IP de origem é exposto e nenhuma porta inbound precisa estar aberta. A complexidade migra para gerenciar o daemon `cloudflared`.
 >
-> Este guide segue o caminho convencional por consistência com a trilha real do talkingpres. A decisão deve ser revisitada na próxima atualização do [ADR-0006](../adr/0006-cloudflare-na-frente-da-vps.md). Para projetos novos, considere Tunnel desde o início.
+> Este guide segue o caminho convencional por consistência com a trilha real registrada nos ai-ops. A decisão deve ser revisitada na próxima atualização do [ADR-0006](../adr/0006-cloudflare-na-frente-da-vps.md). Para projetos novos, considere Tunnel desde o início.
 
 ## Example
 
-Como exemplo, vamos adicionar `<SEU_DOMINIO>` à Cloudflare, criar `painel.<SEU_DOMINIO>` apontando para a VPS, fechar a origem e validar externamente, preparar o bucket `talkingpres-backups` no R2 e conectar um agente ao Cloudflare API MCP. O resultado esperado é: painel Coolify acessível por `https://<SUBDOMINIO_COOLIFY>`, origem fechada e provada por três checagens independentes, `CLOUDFLARE_ACCOUNT_ID`/`CLOUDFLARE_ZONE_ID` anotados fora do repo, e bucket R2 privado criado.
+Como exemplo, vamos adicionar `<SEU_DOMINIO>` à Cloudflare, criar `painel.<SEU_DOMINIO>` apontando para a VPS, fechar a origem e validar externamente, preparar o bucket `panini-vps-backups` no R2 e conectar um agente ao Cloudflare API MCP. O resultado esperado é: painel Coolify acessível por `https://<SUBDOMINIO_COOLIFY>`, origem fechada e provada por três checagens independentes, `CLOUDFLARE_ACCOUNT_ID`/`CLOUDFLARE_ZONE_ID` anotados fora do repo, e bucket R2 privado criado.
 
 Pré-condições:
 
@@ -27,8 +27,8 @@ Pré-condições:
 - Domínio registrado e acesso ao registrar para trocar nameservers.
 - Acesso ao hPanel da Hostinger e ao IP público da VPS.
 - **Conta Cloudflare com payment method confirmado** — R2 exige billing configurado mesmo para criar bucket dentro do free tier. Se ainda não confirmou, faça isso antes de começar para evitar pausa no meio do Passo 3.
-- Bitwarden ou gerenciador equivalente pronto para `talkingpres/coolify-admin` e tokens Cloudflare.
-- Placeholders anotados em `~/secrets/talkingpres-bootstrap.md`: `<SEU_DOMINIO>`, `<SUBDOMINIO_COOLIFY>`, `<SEU_IP_VPS>`, `<PORTA_COOLIFY_DIRETA>`, `<R2_BUCKET_BACKUPS>`.
+- Bitwarden ou gerenciador equivalente pronto para `panini-vps/coolify-admin` e tokens Cloudflare.
+- Placeholders anotados em `~/secrets/panini-vps-bootstrap.md`: `<SEU_DOMINIO>`, `<SUBDOMINIO_COOLIFY>`, `<SEU_IP_VPS>`, `<PORTA_COOLIFY_DIRETA>`, `<R2_BUCKET_BACKUPS>`.
 
 ### Passo 1: Criar conta Cloudflare e ativar a zona
 
@@ -36,7 +36,7 @@ Crie a conta em Cloudflare Dashboard e adicione o domínio raiz, por exemplo `<S
 
 No onboarding:
 
-- Informe apenas o domínio apex, por exemplo `talkingpres.com`.
+- Informe apenas o domínio apex, por exemplo `epistemix.com`.
 - Escolha o plano Free, salvo decisão registrada em ADR.
 - Revise os DNS records importados automaticamente antes de trocar nameservers.
 - Anote os dois nameservers que a Cloudflare atribuir.
@@ -83,23 +83,28 @@ CLOUDFLARE_ZONE_ID=<...>
 
 Se você desativou DNSSEC para migrar, reative pelo Cloudflare depois que a zona estiver `Active`.
 
-### Passo 2a: Publicar Coolify em subdomínio proxied
+### Passo 2a: Publicar Coolify em subdomínio — padrão cinza → laranja
 
-Na zona Cloudflare, crie um DNS record:
+**Não crie o record já como Proxied.** O padrão seguro é:
+
+```text
+1. Cria como DNS Only (cinza)  ── Traefik resolve o challenge Let's Encrypt pela porta 80
+2. Cert Let's Encrypt emitido  ── proof: openssl s_client confirma cert válido na origem
+3. Muda para Proxied (laranja) ── IP da origem some do DNS público
+4. SSL/TLS → Full (strict)     ── cert válido na origem ⇒ sem erro 526
+```
+
+Se você ligar o proxy **antes** do cert emitir, o challenge HTTP-01 do Let's Encrypt não chega ao Traefik (a Cloudflare intercepta o tráfego) e você toma **erro 526 — Invalid SSL Certificate**. Difícil de diagnosticar remotamente e com rollback trabalhoso.
+
+Na zona Cloudflare, crie o DNS record:
 
 - **Type:** `A`
 - **Name:** parte curta do subdomínio, por exemplo `painel`
 - **IPv4 address:** `<SEU_IP_VPS>`
-- **Proxy status:** **Proxied** (nuvem laranja)
+- **Proxy status:** **DNS Only (cinza)** ← obrigatório neste momento
 - **TTL:** Auto
 
-Valide que DNS público não revela a origem:
-
-```bash
-dig +short <SUBDOMINIO_COOLIFY>
-```
-
-Resultado esperado: IPs Cloudflare, não `<SEU_IP_VPS>`.
+Aguarde a propagação DNS (verifique com `dig +short <SUBDOMINIO_COOLIFY> @1.1.1.1` — deve retornar `<SEU_IP_VPS>`).
 
 Agora crie o primeiro admin do Coolify pela rota temporária `http://<SEU_IP_VPS>:<PORTA_COOLIFY_DIRETA>`. Esta é uma **janela curta de exposição administrativa** (idealmente menos de 10 minutos): a rota `/register` está pública na internet enquanto o admin não foi criado e a origem não foi fechada. Tenha o gerenciador de senhas aberto antes de clicar.
 
@@ -109,7 +114,7 @@ Se a Hostinger oferecer firewall no painel para esta VPS, limite temporariamente
 >
 > A criação do admin Coolify produz credencial sensível que **deve** ir direto para o cofre, sem escala em buffer transitório (scrollback do agente, log, clipboard).
 >
-> - **Se você tem CLI de gerenciador de segredos** (Bitwarden `bw`, 1Password `op`, HashiCorp Vault): gere a senha com `bw generate -ulns --length 32`, crie o item `talkingpres/coolify-admin` com `bw create item ...`, e só então use a senha no registro.
+> - **Se você tem CLI de gerenciador de segredos** (Bitwarden `bw`, 1Password `op`, HashiCorp Vault): gere a senha com `bw generate -ulns --length 32`, crie o item `panini-vps/coolify-admin` com `bw create item ...`, e só então use a senha no registro.
 > - **Se você não tem CLI configurada**: pare aqui. Peça ao humano para gerar e armazenar a credencial, ou configure a CLI antes de prosseguir. Não gere senha em buffer próprio — sidequest com credencial em local errado é dívida operacional escondida e potencial vazamento.
 
 Em seguida, no Coolify, configure **Settings -> General -> Instance domain** como:
@@ -124,13 +129,26 @@ Acesse primeiro por HTTP para permitir que o Traefik responda ao challenge e emi
 curl -I http://<SUBDOMINIO_COOLIFY>
 ```
 
-Aguarde alguns minutos e valide HTTPS:
+Aguarde alguns minutos e valide HTTPS — use `openssl s_client` (mais confiável que `curl -vI | grep`):
 
 ```bash
-curl -vI https://<SUBDOMINIO_COOLIFY> 2>&1 | grep -Ei 'ssl|tls|http/'
+echo | openssl s_client -connect <SEU_IP_VPS>:443 -servername <SUBDOMINIO_COOLIFY> 2>/dev/null \
+  | openssl x509 -noout -issuer -subject -dates
 ```
 
-Com o certificado de origem válido, vá em Cloudflare -> zona -> **SSL/TLS -> Overview** e selecione **Full (strict)**. Em **Edge Certificates**, habilite:
+Esperado: `issuer=... Let's Encrypt ...`, `subject=CN = <SUBDOMINIO_COOLIFY>`, `notAfter` ~90 dias no futuro.
+
+**Só agora**, com o cert válido confirmado, mude o record para **Proxied (laranja)** na Cloudflare.
+
+Valide que o IP da origem não aparece mais no DNS público:
+
+```bash
+dig +short <SUBDOMINIO_COOLIFY>
+```
+
+Resultado esperado: IPs Cloudflare, não `<SEU_IP_VPS>`.
+
+Com o record já **Proxied (laranja)** e o certificado de origem válido, vá em Cloudflare -> zona -> **SSL/TLS -> Overview** e selecione **Full (strict)**. Em **Edge Certificates**, habilite:
 
 - **Always Use HTTPS:** On
 - **Minimum TLS Version:** TLS 1.2
@@ -275,7 +293,7 @@ Escolha uma das opções (em ordem de preferência):
 
 No Cloudflare Dashboard, abra **R2 object storage** e habilite R2 se a conta ainda não tiver feito isso. Em seguida, crie o bucket:
 
-- **Bucket name:** `<R2_BUCKET_BACKUPS>`, por exemplo `talkingpres-backups`
+- **Bucket name:** `<R2_BUCKET_BACKUPS>`, por exemplo `panini-vps-backups`
 - **Location/jurisdiction:** default/automatic, salvo requisito explícito de jurisdição
 - **Public access:** off
 
@@ -328,8 +346,8 @@ Para clientes com suporte a remote MCP e OAuth, prefira a configuração sem tok
 
 O fluxo OAuth abre a Cloudflare no browser e permite conceder permissões interativamente. Para automações que exigem token manual, crie tokens curtos e separados por finalidade:
 
-- `talkingpres-mcp-dns-setup`: `Zone Read`, `DNS Read/Edit`, `Zone Settings Read/Edit` e `SSL and Certificates Read/Edit`, escopado apenas a `<SEU_DOMINIO>`, TTL curto.
-- `talkingpres-mcp-r2-provisioning`: `Workers R2 Storage Write` no account, TTL curto, apenas se o agente realmente for criar/listar buckets.
+- `panini-vps-mcp-dns-setup`: `Zone Read`, `DNS Read/Edit`, `Zone Settings Read/Edit` e `SSL and Certificates Read/Edit`, escopado apenas a `<SEU_DOMINIO>`, TTL curto.
+- `panini-vps-mcp-r2-provisioning`: `Workers R2 Storage Write` no account, TTL curto, apenas se o agente realmente for criar/listar buckets.
 
 Não habilite **Client IP Address Filtering** nesses tokens; o servidor MCP oficial informa que tokens com IP filtering não são suportados. Revogue tokens de setup depois de concluir a operação.
 
@@ -418,7 +436,7 @@ Considere este guide concluído apenas se todos os checks passarem:
 - Registros críticos de email/verificação foram preservados ou conscientemente descartados.
 - `dig +short <SUBDOMINIO_COOLIFY>` retorna IPs Cloudflare, não `<SEU_IP_VPS>`.
 - `https://<SUBDOMINIO_COOLIFY>` responde com TLS válido e Cloudflare em `Full (strict)`.
-- Admin Coolify criado, senha salva em `talkingpres/coolify-admin` no gerenciador de segredos (sem escala em buffer transitório).
+- Admin Coolify criado, senha salva em `panini-vps/coolify-admin` no gerenciador de segredos (sem escala em buffer transitório).
 - **Origem fechada provada por validação externa tripla:**
   - Validação A: `curl -I --max-time 5 http://<SEU_IP_VPS>` expira ou falha.
   - Validação B: `curl --resolve <SUBDOMINIO_COOLIFY>:443:<SEU_IP_VPS> ...` falha; `curl` sem `--resolve` passa.

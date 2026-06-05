@@ -4,7 +4,7 @@ titulo: Operação básica da VPS
 tipo: runbook
 data: 2026-05-25
 tags: [vps, ssh, ufw, fail2ban, coolify, ops]
-tldr: Comandos de referência para operar a VPS do talkingpres depois do hardening base. Runbook permanente, consultável, não progressivo.
+tldr: Comandos de referência para operar a VPS `panini-vps` (infra agnóstica multi-projeto) depois do hardening base. Runbook permanente, consultável, não progressivo.
 ---
 
 # Runbook 0001 — Operação básica da VPS
@@ -13,7 +13,7 @@ tldr: Comandos de referência para operar a VPS do talkingpres depois do hardeni
 
 ## Estado esperado
 
-- Hostname: `<NOME_VPS>`; na execução atual, `talkingpres-prod`.
+- Hostname: `<NOME_VPS>`; na execução atual, `panini-vps`.
 - Timezone: `UTC`.
 - Login SSH cotidiano: `<USUARIO_DEPLOY>@<SEU_IP_VPS>`.
 - Login SSH como `root`: desabilitado.
@@ -24,20 +24,20 @@ tldr: Comandos de referência para operar a VPS do talkingpres depois do hardeni
 - Fail2ban: jail `sshd` ativa com backend `systemd`.
 - Atualizações automáticas: security-only, reboot automático às `04:00 UTC`.
 
-Os valores reais dos placeholders vivem fora do repo em:
+Os valores reais dos placeholders vivem no caderno de bootstrap, **gitignored** (regra `.local/`, nunca versionado — o repo é público):
 
 ```bash
-~/secrets/talkingpres-bootstrap.md
+.local/panini-vps-bootstrap.md
 ```
 
-Segredos de verdade vivem no Bitwarden com prefixo `talkingpres/`.
+Segredos de verdade vivem no Bitwarden com prefixo `panini-vps/`.
 
 ## Login SSH
 
 Use sempre a chave dedicada:
 
 ```bash
-ssh -i ~/.ssh/talkingpres_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS>
+ssh -i ~/.ssh/panini_vps_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS>
 ```
 
 Depois de entrar, valide identidade e sudo:
@@ -59,17 +59,17 @@ root
 Atalho opcional em `~/.ssh/config`:
 
 ```sshconfig
-Host talkingpres-prod
+Host panini-vps
   HostName <SEU_IP_VPS>
   User <USUARIO_DEPLOY>
-  IdentityFile ~/.ssh/talkingpres_ed25519
+  IdentityFile ~/.ssh/panini_vps_ed25519
   IdentitiesOnly yes
 ```
 
 Com o atalho:
 
 ```bash
-ssh talkingpres-prod
+ssh panini-vps
 ```
 
 ## Autenticação
@@ -77,20 +77,20 @@ ssh talkingpres-prod
 Para carregar a chave no agent:
 
 ```bash
-ssh-add ~/.ssh/talkingpres_ed25519
+ssh-add ~/.ssh/panini_vps_ed25519
 ssh-add -l
 ```
 
 Para testar sem depender do agent:
 
 ```bash
-ssh -o BatchMode=yes -i ~/.ssh/talkingpres_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS> hostname
+ssh -o BatchMode=yes -i ~/.ssh/panini_vps_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS> hostname
 ```
 
 Testes esperados depois do hardening:
 
 ```bash
-ssh -i ~/.ssh/talkingpres_ed25519 root@<SEU_IP_VPS>
+ssh -i ~/.ssh/panini_vps_ed25519 root@<SEU_IP_VPS>
 ```
 
 Deve falhar com:
@@ -114,7 +114,7 @@ Validações mínimas:
 
 ```bash
 sudo sshd -t
-ssh -i ~/.ssh/talkingpres_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS> hostname
+ssh -i ~/.ssh/panini_vps_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS> hostname
 sudo ufw status verbose
 ```
 
@@ -162,7 +162,7 @@ test -f /var/run/reboot-required && cat /var/run/reboot-required || true
 Do terminal local:
 
 ```bash
-ssh -vvv -i ~/.ssh/talkingpres_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS>
+ssh -vvv -i ~/.ssh/panini_vps_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS>
 ```
 
 Na VPS:
@@ -382,8 +382,8 @@ sudo reboot
 Depois:
 
 ```bash
-ssh -i ~/.ssh/talkingpres_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS> uptime
-ssh -i ~/.ssh/talkingpres_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS> 'sudo docker ps --filter "name=coolify"'
+ssh -i ~/.ssh/panini_vps_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS> uptime
+ssh -i ~/.ssh/panini_vps_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS> 'sudo docker ps --filter "name=coolify"'
 ```
 
 ## Backups e snapshots
@@ -409,7 +409,7 @@ Antes de mudanças de risco:
 Checklist rápido:
 
 ```bash
-ssh -i ~/.ssh/talkingpres_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS> hostname
+ssh -i ~/.ssh/panini_vps_ed25519 <USUARIO_DEPLOY>@<SEU_IP_VPS> hostname
 sudo ufw status verbose
 sudo fail2ban-client status sshd
 sudo systemctl status ssh --no-pager

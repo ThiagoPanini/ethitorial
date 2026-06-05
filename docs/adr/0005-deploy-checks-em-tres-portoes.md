@@ -53,14 +53,15 @@ pr-checks.yml
 ├── security-scan (gitleaks + bandit + npm audit)
 ├── coverage-check (mínimo configurável, e.g., 80%)
 └── preview-deploy → Coolify cria ambiente efêmero
-    └── comenta no PR: https://pr-<n>.preview.talkingpres.com
+    └── comenta no PR: https://pr-<n>.preview.epistemix.dev
 ```
 
 **Branch protection na `main`:**
 - PR obrigatório
-- Code owner review obrigatória
+- Aprovações requeridas = **0** — a revisão humana é o próprio ato de mergear (ver [emenda 2026-06-04](#emenda-2026-06-04--review-na-realidade-solo))
 - Todos os checks acima verdes
 - Branch atualizada com `main` (rebase ou squash-merge)
+- História linear (squash-merge)
 - Sem `force push`
 
 ### Portão 3 — On merge to main (deploy)
@@ -134,3 +135,11 @@ Obrigatório no commit-msg hook (Lefthook + `commitlint`). PRs com squash-merge 
 - **Trunk-based sem PR:** velocidade máxima, perde revisão e CI gate; ruim para projeto open source.
 - **`pre-commit` em vez de Lefthook:** funcional mas mais lento e Python-centric; perde versatilidade do monorepo.
 - **Deploy manual via SSH:** elimina automação que justifica Coolify; força ritual sujeito a erro.
+
+## Emendas
+
+### Emenda 2026-06-04 — "review" na realidade solo
+
+A decisão original listava **"code owner review obrigatória"** na branch protection da `main`. Para um repositório de **dev solo**, isso é auto-bloqueante: o GitHub não permite que o autor aprove o próprio PR, então uma gate de aprovação requerida (`required approvals ≥ 1`) impede qualquer merge sem uma segunda identidade ou bypass de admin a cada merge.
+
+**Reconciliação:** a branch protection passa a exigir `required approvals = 0`. A revisão humana **não é eliminada** — ela é o próprio ato de o operador ler o PR (verde, preparado pelo loop AFK) e clicar merge, exatamente o portão "Revisar e mergear — sempre humano" do [ADR-0017](0017-desenvolvimento-autonomo-afk.md). Uma gate de aprovação separada seria redundante e impossível no fluxo solo. As demais proteções (PR obrigatório, checks verdes, sem force-push, história linear via squash) permanecem como a defesa real. Quando o projeto ganhar uma segunda pessoa revisando, reavaliar para `required approvals ≥ 1` + CODEOWNERS.

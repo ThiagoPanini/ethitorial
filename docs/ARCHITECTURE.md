@@ -1,4 +1,4 @@
-# Arquitetura — talkingpres
+# Arquitetura — epistemix
 
 Documento vivo. Reflete a arquitetura **atual e pretendida**. Mudanças significativas devem vir acompanhadas de ADR.
 
@@ -59,12 +59,12 @@ Documento vivo. Reflete a arquitetura **atual e pretendida**. Mudanças signific
 - Estrutura interna em boundaries de domínio:
 
 ```
-apps/api/src/talkingpres/
-├── catalog/         # Presentation, Slide, Tag (referencia User por UserId — ADR-0007)
+apps/api/src/epistemix/
+├── catalog/         # Section, Source, Artifact (Post, Presentation, Slide), Tag
 ├── identity/        # User, Session, Auth
-├── engagement/      # View, Vote, Comment
-├── narration/       # [V2] voice, RAG, Q&A
-├── shared/          # value objects, erros base
+├── engagement/      # View, Vote, Comment (apontam para Artifact)
+├── narration/       # [V2] voice, RAG, Q&A (restrito a Presentation)
+├── shared/          # value objects, erros base (Slug, UserId, ArtifactId)
 ├── platform/        # db, storage, observability adapters
 └── main.py          # composition root: registra adapters via Depends
 ```
@@ -98,7 +98,7 @@ Injeção de dependência: **FastAPI `Depends` puro** na composition root. Migra
 ### Assets de usuário
 
 - **Cloudflare R2** (S3-compatible, zero egress)
-- Estrutura: `r2://talkingpres-assets/{presentation_slug}/{slide_id}/{asset}`
+- Estrutura: `r2://epistemix-assets/{artifact_slug}/{slide_id}/{asset}`
 - Upload assinado direto do cliente (presigned URL emitido pela API)
 
 ### Observabilidade
@@ -129,7 +129,7 @@ PORTÃO 2 — On PR (minutos) ← GATE REAL
     ├── security-scan (gitleaks + bandit + npm audit)
     ├── coverage-check
     └── preview-deploy → Coolify
-        └── comenta no PR: pr-<n>.preview.talkingpres.com
+        └── comenta no PR: pr-<n>.preview.epistemix.dev
 
 PORTÃO 3 — On merge to main (deploy)
 └── GitHub Actions: deploy.yml
@@ -141,7 +141,7 @@ PORTÃO 3 — On merge to main (deploy)
     └── notify-sentry (release marker)
 ```
 
-**Branch protection na `main`:** PR obrigatório, review obrigatória, todos os checks verdes, branch atualizada com `main`, sem `force push`.
+**Branch protection na `main`:** PR obrigatório, `required approvals = 0` (dev solo — a revisão humana é o ato de mergear; ver [emenda do ADR-0005](adr/0005-deploy-checks-em-tres-portoes.md#emenda-2026-06-04--review-na-realidade-solo)), todos os checks verdes, branch atualizada com `main`, história linear, sem `force push`.
 
 **Convenção de branches:** regex `^(feat|fix|chore|docs|refactor|test)/.+$` enforced via GitHub Ruleset. Scope (`catalog`, `identity`, etc.) recomendado mas não obrigatório no regex inicial. Detalhe completo no ADR-0005.
 

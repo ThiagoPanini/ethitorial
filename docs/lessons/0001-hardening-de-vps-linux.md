@@ -360,6 +360,47 @@ AllowUsers <USUARIO_OPERACIONAL>
 
 **Feature disable.** `X11Forwarding no` desliga um vetor que servidores headless tipicamente não precisam: encaminhar X11 por SSH é uma classe de superfície que só interessa em workstations.
 
+### Exceção estrutural: orquestradores containerizados (Coolify, Portainer, similares)
+
+`PermitRootLogin no` + `AllowUsers <USUARIO_OPERACIONAL>` são as diretivas certas para o acesso externo. Mas orquestradores auto-hospedados como Coolify e Portainer se conectam ao host via SSH como `root` para executar comandos Docker — é a mecânica interna deles, não uma opção configurável.
+
+Sem exceção explícita, o hardening bloqueia o próprio orquestrador que você acabou de instalar. E o sintoma não é óbvio: o fail2ban bane o IP do container após as primeiras falhas, fazendo o erro parecer "connection refused" (ban de rede) em vez de "permission denied" (restrição de usuário) — mascarando a causa real.
+
+A solução correta é usar o bloco `Match Address` do OpenSSH para sobreescrever `PermitRootLogin` **apenas** para a rede Docker interna, mantendo a política restritiva para todo tráfego externo:
+
+```sshconfig
+# Em /etc/ssh/sshd_config.d/00-hardening.conf
+
+# Políticas globais (aplicam ao mundo externo)
+PermitRootLogin no
+AllowUsers deploy
+
+# Exceção para orquestradores containerizados (Coolify, Portainer, etc.)
+# Match Address sobrescreve PermitRootLogin apenas para a rede Docker interna
+Match Address 172.16.0.0/12
+    PermitRootLogin prohibit-password
+```
+
+`172.16.0.0/12` cobre o range inteiro que o Docker usa para suas redes bridge (tipicamente `172.16.x.x` a `172.31.x.x`). `prohibit-password` permite root com chave, mas rejeita senha — preservando o vetor de autenticação forte.
+
+Para que o orquestrador consiga autenticar, sua chave pública precisa estar em `/root/.ssh/authorized_keys` no host:
+
+```bash
+# Verificar chave pública da instância Coolify (exemplo)
+sudo docker exec coolify cat /var/www/html/storage/app/ssh/keys/id.root@host.docker.internal.pub
+
+# Adicionar ao authorized_keys do root
+sudo tee -a /root/.ssh/authorized_keys <<< "<CHAVE_PUBLICA_DO_ORQUESTRADOR>"
+sudo chmod 600 /root/.ssh/authorized_keys
+sudo chown root:root /root/.ssh/authorized_keys
+```
+
+**Momento certo para fazer isso:** ainda durante o hardening, **antes** da primeira tentativa de validação no UI do orquestrador. Cada tentativa falhada conta como falha de autenticação para o fail2ban (ver seção a seguir).
+
+> ⚠️ **AllowUsers não aceita sintaxe `user@CIDR` para ranges — somente IPs exatos**
+>
+> A diretiva `AllowUsers` aceita `root@172.16.1.5` (IP exato) mas **não** `root@172.16.0.0/12` (CIDR). Para liberar root de um range, use `Match Address` com `PermitRootLogin`, não `AllowUsers`. O bloco `Match` sobrescreve as diretivas globais para os endereços que batem com o range especificado.
+
 ### Validar antes de aplicar
 
 Antes de reiniciar o `sshd`, `sudo sshd -t` testa a sintaxe do config — o equivalente do `visudo -c` para SSH. Só então `sudo systemctl restart ssh`. E, do outro terminal (aquela linha de vida que nunca se fechou), tentar login como `root` e ver `Permission denied (publickey)` retornar. A porta dos fundos foi pregada.
@@ -464,6 +505,23 @@ port    = 22
 ```
 
 A janela é razoável: cinco falhas em dez minutos viram um ban de uma hora. Apertar mais que isso começa a banir operadores legítimos que erram passphrase algumas vezes.
+
+> ⚠️ **Armadilha: containers que fazem SSH para o host são banidos antes de revelar a causa real**
+>
+> Se você roda um orquestrador containerizado (Coolify, Portainer, n8n com execuções SSH), o container vai tentar SSH para o host. Enquanto a configuração não estiver correta (chave não autorizada, `PermitRootLogin no` bloqueando, etc.), cada tentativa conta como falha de autenticação. Depois de `maxretry` falhas, o fail2ban bane o IP do container — e o erro passa a parecer "connection refused" em vez de "permission denied", mascarando a causa real.
+>
+> **A solução é adicionar a subnet Docker ao `ignoreip` no momento do hardening**, antes de qualquer tentativa de conexão do orquestrador:
+>
+> ```ini
+> [DEFAULT]
+> ignoreip = 127.0.0.1/8 ::1 172.16.0.0/12
+> bantime  = 1h
+> findtime = 10m
+> maxretry = 5
+> backend  = systemd
+> ```
+>
+> `172.16.0.0/12` cobre todo o range de redes bridge do Docker. IPs nesse range nunca serão banidos pelo fail2ban, independente de quantas falhas de autenticação ocorram. O fail2ban ainda monitora e loga as tentativas — apenas não bane.
 
 > ⚠️ **Armadilha de Ubuntu 24.04: backend de arquivo gera jail vazio silenciosamente**
 >

@@ -1,9 +1,9 @@
 # ADR 0003 — Infra: VPS Hostinger + Coolify + Cloudflare
 
-- **Status:** Accepted
+- **Status:** Accepted — complementado por [ADR-0016](0016-vps-agnostica-multi-projeto.md) (2026-05-31: VPS deixa de ser de um único projeto e vira infra agnóstica multi-projeto; nomenclatura `talkingpres-*` → `panini-vps`)
 - **Data:** 2026-05-23
 - **Decisores:** Thiago Panini (solo)
-- **Relacionado:** [ADR-0002](0002-stack-fastapi-nextjs-postgres.md)
+- **Relacionado:** [ADR-0002](0002-stack-fastapi-nextjs-postgres.md), [ADR-0006](0006-cloudflare-na-frente-da-vps.md), [ADR-0016](0016-vps-agnostica-multi-projeto.md)
 
 ## Contexto
 
@@ -71,6 +71,7 @@ Precisamos decidir onde e como hospedar `apps/web`, `apps/api`, banco e assets. 
 - Coolify é responsabilidade adicional: precisa atualizar, ocasionalmente debugar
 - Backup precisa de teste de restore periódico (regra: backup não testado não é backup)
 - Sem escalabilidade horizontal automática; gargalo de CPU/RAM exige scale-up manual
+- **Coolify usa SSH como `root` para se conectar ao host e executar comandos Docker.** Isso cria um conflito direto com o hardening base (`PermitRootLogin no`, `AllowUsers <user>`): o próprio orquestrador será bloqueado pelo sshd e, em seguida, banido pelo fail2ban. A resolução exige (a) bloco `Match Address 172.16.0.0/12` com `PermitRootLogin prohibit-password` no sshd_config, (b) chave pública do Coolify em `/root/.ssh/authorized_keys`, e (c) `ignoreip = 172.16.0.0/12` no fail2ban. Esses três itens devem ser feitos **durante o hardening**, antes da primeira validação no UI do Coolify — ver [lição 0001 §"Exceção estrutural: orquestradores containerizados"](../lessons/0001-hardening-de-vps-linux.md).
 
 ## Operação
 

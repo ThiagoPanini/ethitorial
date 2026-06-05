@@ -29,7 +29,7 @@ Não escrever ai-ops para conversas exploratórias, refatorações triviais ou t
 ---
 data: 2026-05-24
 operacao: hardening da VPS de produção
-maquina: talkingpres-prod (203.0.113.42)
+maquina: panini-vps (203.0.113.42)
 operador: Thiago Panini
 agente: Claude Code
 resultado: parcial
@@ -59,3 +59,6 @@ Tom narrativo, primeira pessoa do plural ("criamos", "encontramos", "decidimos")
 
 - [2026-05-24 — Setup inicial da VPS talkingpres-prod com template Coolify](0001-setup-inicial-talkingpres-prod.md)
 - [2026-05-24 — Hardening base da VPS talkingpres-prod](0002-hardening-talkingpres-prod.md)
+- [2026-05-31 — Generalização da VPS: de talkingpres-prod para panini-vps](0003-generalizar-vps-panini.md)
+
+> Nota: `talkingpres-prod` é o nome histórico da máquina nas sessões de 2026-05-24. A partir de [0003](0003-generalizar-vps-panini.md) a VPS é agnóstica e se chama `panini-vps` (ver [ADR-0016](../adr/0016-vps-agnostica-multi-projeto.md)). Registros datados preservam o nome que a máquina tinha na data.

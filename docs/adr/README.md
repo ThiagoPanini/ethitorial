@@ -39,3 +39,7 @@ Não edite o ADR original. Crie um novo ADR de revisão que referencia o anterio
 - [0011 — URL pública do publicador é `/authors/<username>`](0011-url-publica-do-publicador.md)
 - [0012 — slide-kit: catálogo base + extensões locais + animação como primitiva](0012-slide-kit-base-plus-extensoes-locais.md)
 - [0013 — Substrato de planejamento operado por agentes (GitHub Projects)](0013-substrato-de-planejamento-operado-por-agentes.md)
+- [0014 — Substrato de planejamento via ROADMAP.md como single source, operado pela skill `solo-dev-assistant`](0014-roadmap-como-source-skill-solo-dev-assistant.md)
+- [0015 — Modelo de domínio epistemix: Section, Source, Artifact](0015-epistemix-domain-model.md)
+- [0016 — VPS agnóstica: infra desacoplada de um único projeto](0016-vps-agnostica-multi-projeto.md)
+- [0017 — Desenvolvimento autônomo (AFK): HITL nas bordas, AFK no meio](0017-desenvolvimento-autonomo-afk.md)

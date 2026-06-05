@@ -11,6 +11,7 @@ dividas:
   - portas 8000/6001/6002 ainda abertas no UFW (provisórias até DNS/TLS)
   - UFW ainda permite 80/443 do mundo (restringir para ranges Cloudflare)
   - backup Postgres ainda não configurado
+  - "⚠️ CONFLITO COM PASSO SEGUINTE: o hardening aplicado aqui (PermitRootLogin no + AllowUsers deploy) bloqueia a conectividade SSH que o Coolify precisa para funcionar. Ao configurar o servidor no Coolify (guide 0003, Passo 3), é necessário: (a) adicionar bloco Match Address 172.16.0.0/12 com PermitRootLogin prohibit-password no sshd_config, (b) chave pública do Coolify em /root/.ssh/authorized_keys, (c) ignoreip = 172.16.0.0/12 no fail2ban/jail.local. Ver lição 0001 §Exceção estrutural: orquestradores containerizados."
 referencias:
   lesson: ../lessons/0001-hardening-de-vps-linux.md
   guide_proximo: ../guides/0002-configurar-cloudflare-r2-mcp.md
@@ -19,6 +20,8 @@ referencias:
 ---
 
 # 20260524 — Hardening base da VPS talkingpres-prod
+
+> 📌 **Registro histórico.** Nesta data a máquina se chamava `talkingpres-prod`. Em 2026-05-31 virou infra agnóstica `panini-vps` (ver [ai-ops 0003](0003-generalizar-vps-panini.md) e [ADR-0016](../adr/0016-vps-agnostica-multi-projeto.md)). O hardening descrito permanece válido; só o nome da máquina e o do arquivo `52talkingpres-unattended-upgrades` (→ `52panini-vps-unattended-upgrades`) mudaram depois. Este registro não é reescrito.
 
 Registro narrativo da sessão em que a VPS de produção do talkingpres foi endurecida da configuração de template Hostinger até superfície estreita. Conceitos gerais sobre cada técnica e por que ela existe vivem na [lição 0001 — Hardening de VPS Linux](../lessons/0001-hardening-de-vps-linux.md). Este documento registra **o que efetivamente fizemos nesta máquina específica nesta data específica**, em continuação à sessão anterior de [setup inicial](0001-setup-inicial-talkingpres-prod.md).
 
