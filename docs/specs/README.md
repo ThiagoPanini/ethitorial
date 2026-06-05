@@ -64,4 +64,4 @@ boundary: catalog    # catalog | identity | engagement | narration | shared | pl
 
 ## Lista
 
-_(nenhum spec ainda — o primeiro nasce com a primeira feature da Fase 1)_
+- [0001 — Cadeia `with_sources` ponta-a-ponta (Courses → aihero.dev → Post)](0001-cadeia-with-sources-aihero.md) — primeira fatia da Fase 1; catálogo MDX-native ([ADR-0018](../adr/0018-catalogo-mdx-native-na-fase-1.md))
