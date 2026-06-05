@@ -141,7 +141,7 @@ PORTÃO 3 — On merge to main (deploy)
     └── notify-sentry (release marker)
 ```
 
-**Branch protection na `main`:** PR obrigatório, review obrigatória, todos os checks verdes, branch atualizada com `main`, sem `force push`.
+**Branch protection na `main`:** PR obrigatório, `required approvals = 0` (dev solo — a revisão humana é o ato de mergear; ver [emenda do ADR-0005](adr/0005-deploy-checks-em-tres-portoes.md#emenda-2026-06-04--review-na-realidade-solo)), todos os checks verdes, branch atualizada com `main`, história linear, sem `force push`.
 
 **Convenção de branches:** regex `^(feat|fix|chore|docs|refactor|test)/.+$` enforced via GitHub Ruleset. Scope (`catalog`, `identity`, etc.) recomendado mas não obrigatório no regex inicial. Detalhe completo no ADR-0005.
 
