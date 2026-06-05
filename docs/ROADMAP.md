@@ -80,6 +80,7 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
 
 ## Fase 3 — Conteúdo dinâmico
 
+- [ ] Catálogo migra de MDX-native para Postgres (troca do adapter de leitura — ver [ADR-0018](adr/0018-catalogo-mdx-native-na-fase-1.md)) + endpoints REST de catálogo (`apps/api` assume Section/Source/Artifact)
 - [ ] CMS leve: upload de apresentação via UI admin
 - [ ] Persistência das apresentações no Postgres + assets no R2/B2
 - [ ] Geração assistida por AI: rascunho de apresentação a partir de prompt (Claude API)
