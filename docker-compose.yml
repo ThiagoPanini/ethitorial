@@ -1,7 +1,9 @@
 services:
   web:
     build:
-      context: ./apps/web
+      # Contexto na raiz do monorepo para o build enxergar content/ (ADR-0018).
+      context: .
+      dockerfile: apps/web/Dockerfile
     ports:
       - "3000:3000"
     environment:

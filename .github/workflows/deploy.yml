@@ -46,7 +46,11 @@ jobs:
             type=sha,format=short
       - uses: docker/build-push-action@v7
         with:
-          context: apps/${{ matrix.app }}
+          # web precisa do contexto na raiz para enxergar content/ (catálogo
+          # MDX-native lido em build-time, ADR-0018); api segue com contexto
+          # próprio. file é relativo ao workspace nos dois casos.
+          context: ${{ matrix.app == 'web' && '.' || format('apps/{0}', matrix.app) }}
+          file: apps/${{ matrix.app }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

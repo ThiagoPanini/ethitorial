@@ -1,0 +1,14 @@
+# Contexto de build do web é a raiz do monorepo (ver apps/web/Dockerfile).
+# Mantemos fora tudo que infla o contexto ou conflita com o build do Next.
+**/node_modules
+**/.next
+.git
+**/Dockerfile
+**/.dockerignore
+**/*.md
+apps/api
+docs
+.agents
+.claude
+.vscode
+.codex

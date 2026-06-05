@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const API_URL = process.env.EPISTEMIX_API_URL ?? "http://localhost:8000";
 
 type Health = { status: string };
@@ -30,6 +32,12 @@ export default async function Home() {
       <p className="max-w-md text-center text-neutral-400">
         Hub pessoal de aprendizado. Fase 0 — esqueleto no ar.
       </p>
+      <Link
+        href="/courses"
+        className="rounded-full border border-neutral-800 bg-neutral-900/60 px-4 py-2 text-sm text-neutral-300 transition-colors hover:border-neutral-700 hover:text-white"
+      >
+        Ver Courses →
+      </Link>
       <div className="flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900/60 px-4 py-2 text-sm">
         <span
           className={`inline-block h-2 w-2 rounded-full ${ok ? "bg-emerald-400" : "bg-red-400"}`}
