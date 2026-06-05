@@ -10,7 +10,7 @@ Para a visão de longo prazo, ver [VISION.md](VISION.md). Para decisões registr
 
 Sem código de produto. Objetivo: base sólida de documentação, infra, automação e setup AI-first.
 
-> **Progresso (atualizado 2026-06-01):** infra base da VPS, fundação documental e **borda Cloudflare concluídas** — `epistemix.dev` no ar com hello-world (TLS Full strict) e origem fechada ([ai-ops 0004](ai-ops/0004-publicar-epistemix-dev.md)); esqueleto de aplicação Next.js pendente. Trilha auditável em [docs/ai-ops/](ai-ops/), receitas reproduzíveis em [docs/guides/](guides/).
+> **Progresso (atualizado 2026-06-05):** infra base da VPS, fundação documental, **borda Cloudflare** e **esqueleto de aplicação no ar concluídos** — `epistemix.dev` serve o `apps/web` real (landing Fase 0, card "API: online") consumindo `apps/api` via `api.epistemix.dev` atrás do Cloudflare; CI (3 portões), Lefthook e branch protection ativos. Cutover do placeholder + fiação web↔api em [ai-ops 0005](ai-ops/0005-deploy-cutover-coolify-e-api-publica.md). Restam só itens deferidos (backup Postgres → Fase 1; CONTRIBUTING/etc). Trilha auditável em [docs/ai-ops/](ai-ops/), receitas reproduzíveis em [docs/guides/](guides/).
 > **Estado de execução:** rastreado neste próprio ROADMAP como single source (markers `🚧`/`[x]`, sufixo `` `@human` ``/`` `@agent` `` na fase ativa) — board GitHub Projects deferido, ver [ADR-0014](adr/0014-roadmap-como-source-skill-solo-dev-assistant.md).
 
 ### Infra e borda
@@ -27,12 +27,15 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
 - [ ] Backup do Postgres em R2 (bucket criado no [guide 0002](guides/0002-configurar-cloudflare-r2-mcp.md); credencial S3 + schedule no Coolify em guide futuro)
 - [ ] Runbook de restore mensal do Postgres (backup não testado não é backup)
 - [x] Deploy "hello world" em produção respondendo em `epistemix.dev` — `nginxdemos/hello`, TLS Full (strict) — ver [ai-ops 0004](ai-ops/0004-publicar-epistemix-dev.md) e [guide 0003](guides/0003-publicar-epistemix-dev-em-producao.md)
+- [x] Cutover para os apps reais: `epistemix.dev` → `apps/web`, `apps/api` em `api.epistemix.dev` (Cloudflare), card "API: online" — ver [ai-ops 0005](ai-ops/0005-deploy-cutover-coolify-e-api-publica.md) e [runbook 0003](runbooks/0003-deploy-cutover-coolify.md)
 
 ### CI/CD e qualidade
 
 - [x] CI: GitHub Actions com lint + typecheck + testes em PR (`pr-checks.yml`, jobs web/api/security)
 - [x] Branch protection na `main`: PR obrigatório, checks verdes, sem force-push, história linear, approvals=0 (ruleset; emenda solo no ADR-0005)
 - [x] Secret scanning (`gitleaks`): pre-commit (Lefthook) + job `security` do `pr-checks.yml`
+- [x] Portão 1 (Lefthook): pre-commit (gitleaks), commit-msg (commitlint), pre-push (ruff/pyright/biome/tsc/pytest)
+- [x] Portão 3 (`deploy.yml`): build+push das imagens para GHCR no merge + redeploy no Coolify (guardado por `COOLIFY_TOKEN`) — ver [runbook 0003](runbooks/0003-deploy-cutover-coolify.md)
 
 ### Código e ambiente local
 
