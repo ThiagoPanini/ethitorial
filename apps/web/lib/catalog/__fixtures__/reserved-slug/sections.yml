@@ -1,0 +1,5 @@
+- slug: about
+  title: About
+  kind: direct
+  order: 1
+  description: "Colide com uma palavra reservada de rota."

@@ -1,0 +1,6 @@
+# Conjunto curado fechado de Tags (ADR-0008 / invariante 9).
+# Tag em frontmatter fora desta lista quebra a build.
+- slug: ai
+  label: "AI"
+- slug: typescript
+  label: "TypeScript"

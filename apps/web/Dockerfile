@@ -1,4 +1,10 @@
 # syntax=docker/dockerfile:1
+#
+# Contexto de build = RAIZ do monorepo (não apps/web), porque o catálogo é
+# MDX-native e lê `content/` (na raiz) em build-time/SSG — ADR-0018. O layout
+# do container segue plano (app em /app) para o standalone do Next ficar plano
+# e o estágio runner permanecer idêntico ao da Fase 0. Ver docker-compose.yml
+# (context: . / dockerfile: apps/web/Dockerfile).
 
 FROM node:24-alpine AS base
 RUN npm install -g pnpm@11.1.0
@@ -9,13 +15,16 @@ FROM base AS deps
 # um no-op. O pnpm 11 (strict-dep-builds) transforma "build ignorado" em erro
 # fatal — desligamos para o no-op benigno não derrubar a imagem.
 ENV PNPM_CONFIG_STRICT_DEP_BUILDS=false
-COPY package.json ./
+COPY apps/web/package.json ./
 RUN pnpm install --no-frozen-lockfile
 
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY apps/web ./
+# content/ vem da raiz do contexto; só é necessário em build-time (SSG).
+COPY content ./content
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV EPISTEMIX_CONTENT_DIR=/app/content
 RUN pnpm build
 
 FROM node:24-alpine AS runner
