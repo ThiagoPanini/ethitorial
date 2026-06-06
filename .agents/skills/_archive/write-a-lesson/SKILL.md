@@ -1,13 +1,12 @@
 ---
 name: write-a-lesson
-description: |
-  Cria documentos de lessons (aulas conceituais evergreen, em pt-BR) seguindo o padrão de docs/lessons/0001-hardening-de-vps-linux.md do talkingpres. Lessons explicam princípios e raciocínio sobre um tema, sem se prender a nomes específicos do projeto, datas concretas ou decisões de runtime.
-
-  **Auto-activation:** quando o usuário pede para escrever, criar ou rascunhar uma lição, aula, material didático conceitual, ou documentação evergreen sobre um tema técnico. Também ao converter conteúdo narrativo/situado (ai-ops, ADRs, transcrições) em aula reutilizável.
-
-  **Input sources:** conteúdo bruto de ai-ops existentes, ADRs, conversas técnicas de grilling, documentação de fornecedor, ou tópicos solicitados diretamente pelo usuário.
-
-  **Output type:** arquivo markdown em docs/lessons/NNNN-titulo.md com frontmatter rico, objetivos de aprendizagem, pré-requisitos, índice navegável, 6-12 seções de conteúdo com diagramas/tabelas/callouts/checkpoints, limites de escopo explícitos, leitura adicional categorizada, glossário e apêndice opcional de aplicações documentadas.
+description: >-
+  Cria lessons conceituais evergreen em pt-BR em docs/lessons/NNNN-titulo.md.
+  Use quando o usuário pedir para escrever, criar ou rascunhar uma lição, aula,
+  material didático conceitual ou documentação evergreen sobre tema técnico, ou
+  para converter ai-ops, ADRs, transcrições e conversas técnicas em aula
+  reutilizável com objetivos, pré-requisitos, índice, seções didáticas, leitura
+  adicional, glossário e apêndice opcional.
 agent: Plan
 context: fork
 metadata:

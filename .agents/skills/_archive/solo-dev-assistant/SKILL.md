@@ -1,6 +1,12 @@
 ---
 name: solo-dev-assistant
-description: Use this skill whenever the user invokes `/solo-dev-assistant ...`, wants to bootstrap a solo project, asks for a work-session briefing, wants to know what to do next, or needs a lightweight AI-assisted solo development process. This skill is a global, portable wrapper for solo work: it creates seed docs, reads roadmap/git state, and recommends the next process step across Start, Grill, Research, Prototype, PRD, Issues, Implement, and Review.
+description: >-
+  Use this skill whenever the user invokes `/solo-dev-assistant ...`, wants to
+  bootstrap a solo project, asks for a work-session briefing, wants to know what
+  to do next, or needs a lightweight AI-assisted solo development process. This
+  skill is a global, portable wrapper for solo work: it creates seed docs, reads
+  roadmap/git state, and recommends the next process step across Start, Grill,
+  Research, Prototype, PRD, Issues, Implement, and Review.
 ---
 
 # Solo Dev Assistant

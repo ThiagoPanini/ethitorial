@@ -4,9 +4,13 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import { getCatalog } from "@/lib/catalog";
 import { formatDate } from "@/lib/format";
 import { mdxComponents } from "@/lib/mdx-components";
+import { getReadTime, getSiteModel } from "@/lib/site/model";
+import { slugify } from "@/lib/slug";
+import { AppShell } from "../../../_components/app-shell";
+import { PostToc, type TocHeading } from "../../../_components/post-toc";
+import { Avatar, hueFromText, Icon } from "../../../_components/primitives";
+import { Engagement } from "../../../_components/surfaces";
 
-// Ver app/[section]/page.tsx: draft (fora do generateStaticParams) vira 404,
-// sem render on-demand — o que também evita depender de content/ em runtime.
 export const dynamicParams = false;
 
 export function generateStaticParams() {
@@ -25,49 +29,111 @@ export function generateStaticParams() {
 export default async function PostPage({
   params,
 }: {
-  params: Promise<{ section: string; source: string; post: string }>;
+  params: Promise<{ post: string; section: string; source: string }>;
 }) {
   const { section: sectionSlug, source: sourceSlug, post: postSlug } = await params;
   const catalog = getCatalog();
-
-  // getPost só retorna posts `published` → draft cai aqui em 404 (invariante 6).
-  const post = catalog.getPost(sectionSlug, sourceSlug, postSlug);
-  if (!post) notFound();
-
+  const model = getSiteModel();
+  const section = model.sections.find((candidate) => candidate.slug === sectionSlug);
   const source = catalog.getSource(sectionSlug, sourceSlug);
-  const tagLabels = new Map(catalog.getTags().map((t) => [t.slug, t.label]));
+  const post = catalog.getPost(sectionSlug, sourceSlug, postSlug);
+  if (!section || !source || !post) notFound();
+
+  const posts = catalog.getPosts(sectionSlug, sourceSlug);
+  const index = posts.findIndex((candidate) => candidate.slug === post.slug);
+  const previous = index > 0 ? posts[index - 1] : null;
+  const next = index >= 0 && index < posts.length - 1 ? posts[index + 1] : null;
+  const tagLabels = new Map(model.tags.map((tag) => [tag.slug, tag.label]));
+  const headings = extractHeadings(post.body);
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <Link
-        href={`/${sectionSlug}/${sourceSlug}`}
-        className="text-sm text-neutral-500 transition-colors hover:text-neutral-300"
-      >
-        ← {source?.name}
-      </Link>
+    <AppShell
+      activeSection={section.slug}
+      crumbs={[
+        { href: "/", label: "epistemix" },
+        { href: `/${section.slug}`, label: section.title },
+        { href: `/${section.slug}/${source.slug}`, label: source.name },
+        { label: post.title },
+      ]}
+      model={model}
+      showFooter={false}
+    >
+      <div className="read-wrap">
+        <article className="read-col">
+          <Link className="read-back" href={`/${sectionSlug}/${sourceSlug}`}>
+            <Icon name="chevronLeft" size={14} /> {source.name}
+          </Link>
 
-      <header className="mt-6 mb-10">
-        <time className="text-sm text-neutral-500">{formatDate(post.date)}</time>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-neutral-100">
-          {post.title}
-        </h1>
-        {post.tags.length > 0 && (
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {post.tags.map((tag) => (
-              <li
-                key={tag}
-                className="rounded-full border border-neutral-800 bg-neutral-900/60 px-3 py-1 text-xs text-neutral-400"
+          <header className="read-head">
+            <div className="meta-top">
+              <Icon name="clock" size={14} />
+              <span>{formatDate(post.date)}</span>
+              <span className="meta-sep">·</span>
+              <span>{getReadTime(post.body)} de leitura</span>
+            </div>
+            <h1>{post.title}</h1>
+            <div className="chip-row read-tags">
+              {post.tags.map((tag) => (
+                <span className="chip" key={tag}>
+                  {tagLabels.get(tag) ?? tag}
+                </span>
+              ))}
+            </div>
+            <div className="byline">
+              <Avatar hue={hueFromText(source.author)} name={source.author} size={26} />
+              <div>
+                <div className="nm">{source.author}</div>
+                <div className="rt">via {source.name}</div>
+              </div>
+            </div>
+          </header>
+
+          <div className="prose">
+            <MDXRemote source={post.body} components={mdxComponents} />
+          </div>
+
+          <Engagement />
+
+          <div className="post-nav">
+            {previous ? (
+              <Link
+                className="post-nav-card"
+                href={`/${sectionSlug}/${sourceSlug}/${previous.slug}`}
               >
-                {tagLabels.get(tag) ?? tag}
-              </li>
-            ))}
-          </ul>
-        )}
-      </header>
+                <div className="pn-dir">← Anterior</div>
+                <div className="pn-title">{previous.title}</div>
+              </Link>
+            ) : (
+              <span />
+            )}
+            {next ? (
+              <Link
+                className="post-nav-card next"
+                href={`/${sectionSlug}/${sourceSlug}/${next.slug}`}
+              >
+                <div className="pn-dir">Próximo →</div>
+                <div className="pn-title">{next.title}</div>
+              </Link>
+            ) : (
+              <span />
+            )}
+          </div>
+        </article>
 
-      <article className="flex flex-col gap-5 leading-relaxed text-neutral-300">
-        <MDXRemote source={post.body} components={mdxComponents} />
-      </article>
-    </main>
+        <PostToc headings={headings} />
+      </div>
+    </AppShell>
   );
+}
+
+function extractHeadings(body: string): TocHeading[] {
+  const withoutCode = body.replace(/```[\s\S]*?```/g, "");
+  return [...withoutCode.matchAll(/^(#{2,3})\s+(.+)$/gm)].map((match) => {
+    const text = match[2].trim();
+    return {
+      id: slugify(text),
+      level: match[1].length as 2 | 3,
+      text,
+    };
+  });
 }
