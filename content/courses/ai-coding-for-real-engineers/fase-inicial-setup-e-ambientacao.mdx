@@ -1,0 +1,403 @@
+---
+title: "Fase Inicial, Setup e Ambientação"
+date: 2026-06-07
+status: published
+tags: [ai, agents, sdd]
+summary: "Do primeiro contato com o Playground ao uso consciente do Claude Code: a base operacional que sustenta o restante do curso."
+---
+
+No Post anterior, eu coloquei a motivação na mesa: comecei o **AI Coding for Real
+Engineers** porque quero sair do improviso com agentes e transformar esse modo de
+trabalho numa disciplina de engenharia. A primeira camada do curso confirma essa
+direção, mas faz isso por um caminho menos glamouroso do que PRDs, agentes AFK
+ou paralelização.
+
+Antes de qualquer coisa sofisticada, existe a base fundamentada.
+
+Essa base tem três partes: saber onde pedir ajuda, conseguir rodar o Playground
+localmente e entender o mínimo necessário do Claude Code para não tratar o agente
+como uma caixa-preta dentro do terminal. Parece preparação burocrática, mas não é.
+O curso está desenhado para exercícios interativos em uma base realista. Se o
+ambiente local, o banco, o histórico do repositório e o *coding harness* ainda
+parecem mágicos, o restante do processo fica frágil.
+
+## O que esta fase inicial resolve
+
+Não encarei as duas primeiras aulas como uma lista de instalação. O valor delas
+está em reduzir o custo de errar antes que o curso comece a exigir decisões mais
+caras.
+
+| Camada | O que ela resolve | Por que importa depois |
+| --- | --- | --- |
+| Comunidade | Discord, perguntas, *office hours* e suporte assíncrono | Quando o ambiente falha, existe um caminho claro para destravar |
+| Playground | Repo, Node, `pnpm`, SQLite, seed, migrations e checkpoints | Os exercícios rodam em estados conhecidos da história do projeto |
+| Harness | Claude Code, sessão, prompts, IDE, bash e permissões | O agente vira parte do fluxo de feedback, não só um chat com acesso a arquivos |
+
+Essa tríade prepara o que vem a seguir. Quando o curso entrar em não determinismo,
+*handoffs*, *steering*, PRDs, issues, *feedback loops* e agentes AFK, a base
+operacional já precisa estar resolvida. Caso contrário, qualquer problema vira uma
+pergunta ruim: "o agente falhou?", "o ambiente está quebrado?", "o banco está fora
+de sincronia?", "eu estou no commit certo?".
+
+Responder essas perguntas cedo é uma forma de engenharia.
+
+## O Playground como primeira decisão de escopo
+
+O Matt apresenta o curso como um conjunto de exercícios interativos, não como uma
+sequência de palestras. Para isso, existe um Playground com uma aplicação de
+aproximadamente 20 mil linhas, escrita em TypeScript, Node e React. A aplicação é
+uma plataforma de cursos, com usuários, cursos, categorias, quizzes, matrículas,
+progresso de aulas, tentativas de quiz, eventos de vídeo e outros elementos que
+dão textura suficiente para parecer uma base real.
+
+Esse detalhe muda o peso do setup. Não estamos instalando um projeto de exemplo
+apenas para "ver se sobe". Estamos criando um laboratório onde o agente vai
+pesquisar, alterar código, rodar comandos, quebrar coisas e corrigir rota.
+
+O caminho base é direto:
+
+```bash
+# Clona o Playground oficial do cohort
+git clone https://github.com/ai-hero-dev/cohort-004-project.git
+cd cohort-004-project
+
+# Confere o runtime local
+node -v
+
+# Habilita o gerenciador usado pelo projeto
+corepack enable
+pnpm -v
+
+# Instala dependências, cria dados locais e sobe o app
+pnpm install
+pnpm db:seed
+pnpm dev
+```
+
+Na gravação, o app sobe em uma porta local do Vite, algo como `localhost:5175`,
+com uma interface de desenvolvimento que permite alternar usuários. O ponto
+pedagógico não é decorar a porta. É perceber que o curso parte de uma aplicação
+grande o bastante para expor os detalhes que aparecem quando um agente precisa
+trabalhar em software com estado, rotas, banco e UI.
+
+Também existe uma bifurcação importante: usar o repo do cohort ou aplicar os
+exercícios no próprio projeto. O repo oficial dá suporte melhor e permite seguir
+os checkpoints exatamente. O próprio repo dá relevância imediata, mas reduz a
+capacidade do instrutor de ajudar. Para quem está começando, o Playground é a
+opção mais segura. Para quem já tem um fluxo maduro, usar o próprio projeto pode
+ser tentador, mas adiciona variáveis logo no começo.
+
+No meu caso, a tentação óbvia seria usar o epistemix (este projeto) como laboratório. Mas há
+valor em começar pelo Playground: ele separa o aprendizado do curso das escolhas
+locais que eu já carreguei para este repositório.
+
+## O banco precisa deixar de ser uma sombra
+
+Uma das melhores decisões dessa fase inicial é parar para explicar migrations.
+Pode parecer lateral, mas é exatamente o tipo de assunto que derruba um fluxo com
+agente. Se o modelo altera o schema, gera uma migration, mas não aplica a mudança,
+o erro aparece depois, no runtime, com cara de problema misterioso.
+
+O Playground usa SQLite. Diferente de um Postgres remoto ou rodando em container,
+o banco local aparece como arquivos no próprio projeto, como `data.db`. Isso torna
+o ambiente menos abstrato: apagar o arquivo e rodar `pnpm db:seed` recria o banco
+com dados fictícios.
+
+O ciclo de mudança fica assim:
+
+| Passo | Comando ou arquivo | Papel |
+| --- | --- | --- |
+| Definir a estrutura | `schema.ts` | Fonte de verdade do schema no código |
+| Gerar migrations | `pnpm db:generate` | Cria os arquivos que descrevem a mudança |
+| Aplicar no banco | `pnpm db:migrate` | Sincroniza o SQLite local com as migrations |
+| Recomeçar do zero | `pnpm db:seed` | Recria o banco de exemplo quando o estado local atrapalha |
+
+O detalhe mais útil é este: o agente provavelmente consegue descobrir que precisa
+gerar migration, mas pode não saber que precisa aplicar migration. Essa distinção
+parece pequena até o primeiro erro de "tabela não existe" no browser.
+
+Para mim, esse trecho conversa diretamente com a promessa do curso. Agentes
+funcionam melhor em ambientes onde o feedback é explícito. Um banco local
+apagável, scripts claros e um processo de migration visível transformam uma
+classe inteira de problemas em algo que pode ser reproduzido e corrigido.
+
+## Aprender a navegar pelo histórico antes de criar trabalho novo
+
+O curso não espera que todo mundo acompanhe o repo em linha reta. Cada exercício
+foi gravado em um estado específico do Playground, e o material oferece comandos
+para levar o repositório até aquele ponto da história.
+
+Aqui aparecem três comandos que são mais importantes do que parecem:
+
+| Comando | Quando usar | Cuidado principal |
+| --- | --- | --- |
+| `pnpm reset` | Quando quero ficar exatamente no estado gravado para uma aula | É destrutivo: remove trabalho que não pertence ao checkpoint |
+| `pnpm cherry-pick` | Quando quero trazer um commit do curso preservando trabalho local | Pode gerar conflito se eu mudei a mesma região |
+| `pnpm pull` | Quando quero puxar atualizações do repo-base do curso para minha branch | Preserva a branch, mas ainda pode exigir resolução de conflitos |
+
+O `pnpm reset` é a opção de menor ambiguidade: ele coloca o repo no estado da
+aula. Justamente por isso, é perigoso para trabalho local que você queira manter.
+O `pnpm cherry-pick` entra quando existe algo seu para preservar. Se houver
+conflito, o próprio curso sugere usar o agente para ajudar a resolver, ou abortar
+com:
+
+```bash
+# Sai de um cherry-pick conflituoso mantendo o trabalho anterior
+git cherry-pick --abort
+```
+
+O `pnpm pull`, por sua vez, reconhece que o curso é vivo. O instrutor pode corrigir
+material, ajustar pacotes ou empurrar atualizações enquanto o cohort acontece. O
+comando busca essas mudanças e tenta integrá-las à branch de trabalho.
+
+Essa parte me interessa porque ela transforma a história do Git em ferramenta
+didática. O repo deixa de ser apenas um diretório com arquivos e passa a ser um
+mapa de estados. Para um curso sobre agentes, isso é especialmente importante:
+quanto mais preciso for o estado inicial, menos o agente precisa adivinhar.
+
+## Comunidade como parte do feedback loop
+
+O Discord aparece cedo no material, e não como adereço social. Existem canais
+gerais da comunidade, canais do cohort, um espaço específico para perguntas do
+curso e outro para perguntas de *office hours*. A recomendação prática é abrir
+threads no canal de perguntas quando houver problema de setup, dúvida sobre uma
+aula ou algo que precise de contexto.
+
+Também existe um desenho leve de participação: pessoas que ajudam, respondem e
+compartilham dicas podem ser reconhecidas como *heroes*. Esse detalhe não é
+central tecnicamente, mas sinaliza uma coisa saudável: o curso não trata o aluno
+como alguém isolado diante de uma ferramenta poderosa. Existe uma comunidade
+assíncrona onde dúvidas concretas podem virar aprendizado coletivo.
+
+As *office hours* seguem o mesmo espírito. Elas acontecem ao vivo durante o curso,
+ficam gravadas e não são obrigatórias. O material deixa claro que elas servem
+para perguntas, discussões mais profundas e tópicos que surgem durante a jornada.
+Quando algo interessante aparece, pode virar um explainer separado no curso.
+
+Isso conversa com o restante da ementa. Um bom processo com agente não depende
+apenas de prompt melhor. Ele depende de loops de feedback: teste, log, revisão,
+comunidade, documentação, pergunta bem feita e intervenção humana no momento
+certo.
+
+## Claude Code entra como harness, não como centro do curso
+
+A segunda aula começa com uma ressalva importante: o curso é agnóstico de
+*harness*, desde que o agente rode em CLI. O Matt usa Claude Code porque é popular,
+porque ele próprio usa bastante e porque permite demonstrar os conceitos com uma
+ferramenta concreta.
+
+Isso muda o enquadramento. Claude Code não é o assunto final. Ele é o instrumento
+usado para aprender como agentes funcionam dentro de um fluxo de engenharia.
+
+Mesmo assim, a preparação do Claude Code importa. O material recomenda usar o
+modelo padrão adequado ao seu plano, evitar a camada barata demais para tarefas
+mais complexas e manter o esforço no padrão sugerido pelo harness, geralmente
+algo como *medium effort*. No exemplo do curso, isso aparece como a escolha entre
+um modelo de topo e um modelo intermediário, dependendo da assinatura. A tese por
+trás da recomendação é mais estável que o nome do modelo: não economize capacidade
+justo no ambiente onde você quer aprender fluxos longos, contextuais e com várias
+etapas.
+
+O primeiro teste é quase banal: abrir o agente, escrever `hello` e confirmar que
+ele responde. Mas esse "banal" é a fronteira entre ferramenta instalada e
+ferramenta operacional.
+
+## A mecânica da sessão é pequena, mas não é opcional
+
+Antes de falar de estratégia, o primer passa pela mecânica da sessão. Isso inclui
+prompt, atalhos, contexto, interrupção e limpeza.
+
+| Recurso | Como aparece no Claude Code | Por que importa |
+| --- | --- | --- |
+| Prompt multi-linha | `/terminal-setup` e `Shift+Enter` | Permite instruções mais estruturadas sem enviar antes da hora |
+| Uso da conta | `/usage` | Mostra consumo e limites disponíveis |
+| Contexto da sessão | `/context` | Expõe quanto da janela de contexto está ocupada |
+| Interrupção | `Escape` | Para uma resposta longa ou uma tarefa que saiu do trilho |
+| Limpeza | `/clear` | Zera a conversa atual e reduz contexto acumulado |
+
+O comando `/context` é especialmente importante para o restante do curso. O
+primeiro Post já indicava que gestão de *context window* é um dos pontos que eu
+quero melhorar. Aqui aparece o primeiro degrau: antes de gerenciar bem, é preciso
+enxergar o que está sendo usado.
+
+O `/clear` também aponta para o futuro. Mais adiante, o curso troca a ideia de um
+loop genérico de planejar e executar por algo mais próximo de *grill / execute /
+clear*. Limpar contexto não é apagar história por descuido. É reconhecer quando o
+agente precisa de uma nova moldura para a próxima tarefa.
+
+## Prompt bom começa com contexto explícito
+
+Uma das práticas mais simples do Claude Code é referenciar arquivos diretamente
+com `@`. Em vez de pedir "olhe as rotas" e esperar que o agente encontre o arquivo
+certo, você pode trazer o arquivo para o prompt:
+
+```txt
+Explique como @routes.ts e @schema.ts se conectam neste projeto.
+```
+
+O autocomplete com `Tab` reduz fricção e permite citar vários arquivos no mesmo
+prompt. O custo é gastar alguns segundos escolhendo melhor o contexto. O benefício
+é tirar do agente uma adivinhação que o humano consegue resolver com mais
+precisão.
+
+O primer também mostra dois recursos ergonômicos que parecem pequenos, mas mudam
+o ritmo da conversa:
+
+| Recurso | Atalho | Uso |
+| --- | --- | --- |
+| Stash de prompt | `Ctrl+S` | Guarda uma instrução longa para fazer uma pergunta intermediária |
+| Limpar stash | `Ctrl+C` | Descarta uma instrução guardada que perdeu sentido |
+| Imagem no prompt | Colar imagem no input | Dá contexto visual ao agente, com ressalvas em WSL |
+
+Esse tipo de detalhe é onde a ferramenta deixa de ser só "um chat" e começa a se
+parecer com um ambiente de trabalho. O prompt deixa de ser uma frase solta e vira
+um pacote de contexto.
+
+## O IDE é onde o gosto humano continua entrando
+
+O comando `/ide` conecta o Claude Code ao editor. No curso, o exemplo é VS Code,
+mas a ideia vale para outros ambientes suportados. A integração mais importante
+não é charmosa: é o gerenciamento de diff.
+
+Sem IDE, uma alteração aparece no terminal como um diff mais difícil de revisar.
+Com IDE, a mudança aparece no editor, com contexto de arquivo, realce, rolagem e
+possibilidade de ajuste manual antes de aceitar.
+
+Isso parece só ergonomia, mas tem uma implicação maior. O humano continua
+impondo gosto e julgamento no ponto certo: olhando a mudança concreta. Se a saída
+do agente está quase boa, posso ajustar o arquivo e salvar. Se não está, rejeito
+ou peço outra abordagem.
+
+No fluxo que quero construir para o epistemix, esse ponto é central. Delegar para
+o agente não significa abdicar da revisão. Significa deslocar minha atenção para
+os lugares onde ela vale mais: intenção, critério de aceite, arquitetura, diff e
+risco.
+
+## Ir e voltar no tempo diminui o medo de experimentar
+
+Claude Code também oferece um modelo interessante de navegação temporal. No nível
+simples, posso pedir para ele reverter a última mudança. No nível mais completo,
+posso apertar `Escape` duas vezes e entrar em *rewind mode*, escolhendo um ponto
+anterior da conversa.
+
+Ao voltar no tempo, existem três opções conceituais:
+
+| Opção | Efeito |
+| --- | --- |
+| Restaurar código e conversa | Volta tudo para aquele ponto |
+| Restaurar só a conversa | Mantém o código, mas altera a memória da sessão |
+| Restaurar só o código | Mantém a conversa, mas desfaz o estado dos arquivos |
+
+Na prática, a opção mais comum é restaurar código e conversa. Mas a existência
+das três alternativas é valiosa porque separa duas coisas que muitas vezes
+tratamos como uma só: o estado do repositório e o estado mental da conversa.
+
+As sessões também são persistidas localmente. Ao sair com `Ctrl+C` duas vezes, o
+Claude Code informa um comando de retomada:
+
+```txt
+claude resume <uuid>
+```
+
+Também dá para usar `/resume` para navegar entre sessões anteriores, ou
+`claude --continue` para voltar à última. Para um fluxo longo, isso reduz bastante
+o medo de perder contexto por interrupção do terminal, queda de sessão ou pausa
+humana.
+
+## Bash transforma o agente em participante do feedback
+
+Uma virada importante acontece quando o agente passa a rodar comandos. Escrever
+código sem feedback é uma conversa incompleta. Rodar teste, typecheck, servidor
+local e inspeção de arquivos fecha o loop.
+
+O primer apresenta três formas de lidar com bash:
+
+| Situação | Forma de executar | O que o agente vê |
+| --- | --- | --- |
+| Comando rápido | `! npm run typecheck` | Saída entra no contexto do Claude |
+| Processo longo | `npm run dev` e depois `Ctrl+B` | O processo fica em background e logs podem ser consultados |
+| Comando privado | `Ctrl+Z`, comandos no terminal, depois `fg` | Claude fica suspenso e não vê o que foi executado |
+
+Esse desenho é simples, mas poderoso. Se quero que o agente corrija um erro de
+typecheck, faz sentido colocar a saída no contexto. Se quero manter um dev server
+rodando enquanto o agente investiga uma tela, faz sentido backgroundar o processo.
+Se quero usar o terminal sem envolver o agente, suspendo a sessão e volto depois.
+
+O ponto não é decorar atalhos. É escolher conscientemente o que vira contexto do
+agente e o que fica fora.
+
+## Permissões são a fronteira entre autonomia e imprudência
+
+A última parte do primer que mais me chamou atenção foi permissões. O curso trata
+isso como uma questão de risco e recompensa: quanto poder faz sentido dar ao
+agente para esta tarefa, neste repositório, neste momento?
+
+O Claude Code pede aprovação para comandos que considera sensíveis. A tela mostra
+o comando exato, a justificativa e opções como aprovar uma vez, aprovar comandos
+parecidos ou negar. Essas decisões podem ser registradas em
+`.claude/settings.local.json`, usando listas de `allow` e `deny`.
+
+Um exemplo típico é permitir uma família de comandos do projeto:
+
+```json
+{
+  "permissions": {
+    "allow": ["bash pnpm *"],
+    "deny": ["bash git push *"]
+  }
+}
+```
+
+Esse exemplo é propositalmente pequeno. A ideia não é liberar tudo. É criar uma
+fronteira que acelera o trabalho comum e bloqueia ações que não devem acontecer
+sem decisão humana. Se a configuração precisa ser compartilhada com o time, o
+arquivo local pode virar `.claude/settings.json` e ser versionado.
+
+Também existem permissões para web search e fetch. Isso importa porque nem todo
+problema está resolvido no repo local, mas toda consulta externa deveria ser uma
+decisão consciente, especialmente quando o agente vai apoiar uma conclusão técnica
+em documentação atual.
+
+Aqui o curso encosta diretamente no que já tenho tentado registrar no epistemix:
+autonomia no meio, humano nas bordas. O agente pode rodar testes, ler arquivos,
+fazer alterações e consultar logs. Mas operações destrutivas, publicação,
+segredos, produção e mudanças irreversíveis continuam exigindo uma fronteira
+explícita.
+
+## O que fica pronto para a próxima fase
+
+Depois dessas duas aulas, ainda não chegamos ao núcleo mais ambicioso do curso.
+Não falamos a fundo de PRD, *tracer bullets*, *feedback loops*, skills de
+*steering* ou agentes AFK. Mas já existe uma base concreta:
+
+- O Playground roda localmente e tem estado de banco compreensível.
+- O histórico do curso pode ser navegado por `pnpm reset`, `pnpm cherry-pick` e
+  `pnpm pull`.
+- O Discord e as *office hours* funcionam como apoio e feedback humano.
+- O Claude Code está instalado, conectado ao IDE e minimamente dominado.
+- A sessão pode ser medida, limpa, interrompida, retomada e rebobinada.
+- Bash e permissões deixam claro o que o agente pode executar e o que precisa de
+  freio.
+
+O apêndice do material também mostra que o Cohort 004 refinou bastante a linguagem
+do curso. Entraram tópicos como database migrations e intro de Claude Code; o
+antigo "Plan / Execute / Clear" aparece agora como *Grill / Execute / Clear*; a
+seção antes chamada Ralph vira agentes AFK; e o final passa a falar de padrões
+*human-in-the-loop*, prototype skill e workflow final.
+
+Essa mudança de vocabulário é pequena só por fora. Ela mostra uma direção: sair
+de uma ferramenta ou personagem específico e caminhar para um processo transferível.
+É exatamente o ponto que me interessa.
+
+O próximo degrau deve entrar nos fundamentos: por que agentes são não
+determinísticos, como fazer *handoffs* melhores e como estruturar o primeiro loop
+real de trabalho. A preparação acaba aqui, mas não como etapa menor. Ela acaba
+como todo bom setup deveria acabar: com menos mistério, menos risco escondido e
+mais espaço para pensar no problema de verdade.
+
+## Referências
+
+- [AI Coding for Real Engineers, página do cohort](https://www.aihero.dev/cohorts/ai-coding-for-real-engineers-m0k0w)
+- Aula `01-before-we-start`, material bruto extraído do cohort
+- Aula `02-getting-to-know-claude-code`, material bruto extraído do cohort
+- Post anterior: `Motivações e Objetivos`, neste mesmo Source

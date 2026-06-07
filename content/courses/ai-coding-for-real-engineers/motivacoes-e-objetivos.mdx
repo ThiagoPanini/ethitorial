@@ -1,0 +1,174 @@
+---
+title: "Motivações e Objetivos"
+date: 2026-06-07
+status: published
+tags: [ai, agents, sdd]
+summary: "Por que comecei o AI Hero, qual processo o curso promete ensinar e o que espero tirar dele."
+---
+
+Já faz um tempo que escrevo software com um agente do lado. No epistemix (este projeto),
+por exemplo, boa parte do que entra no repositório passa por Claude Code, Codex ou Copilot
+antes de virar commit. Funciona. Mas, sendo honesto, muito disso ainda é improviso: eu
+peço, o agente responde, eu corrijo, e tudo vai acontecendo. É produtivo e, ao
+mesmo tempo, artesanal demais para algo que já virou o centro do meu fluxo de
+trabalho.
+
+Foi por aí que cheguei no **AI Coding for Real Engineers**, do Matt Pocock. A
+proposta é trocar o improviso por método: parar de *vibe coding* e tratar o
+trabalho com agentes como uma disciplina de engenharia, com as competências de
+sempre, só que recolocadas num fluxo assistido por IA.
+
+O ponto que mais me chamou atenção na abertura do curso foi a recusa de entregar
+mais um *framework* fechado para "codar com IA". A tese é outra: o desenvolvedor
+precisa ser dono do próprio processo. O curso oferece uma forma inicial de
+trabalhar, mas ela aparece como algo para ser entendido, tensionado e adaptado,
+não como receita para ser obedecida.
+
+## Por que esse curso
+
+O que me convenceu não foi a promessa de acelerar meu trabalho com AI da noite para o dia.
+Foi o ângulo. Em vez de vender truques de *prompt*, o curso parte de fundamentos de
+engenharia que não envelhecem e mostra como dobrá-los para o trabalho com
+agentes. O Matt resume isso em sete verbos, e foram eles que me ganharam:
+
+| Verbo | O que significa |
+| --- | --- |
+| *Communicating* | Compartilhar com clareza intenção, contexto e requisitos |
+| *Anticipating* | Enxergar o problema antes de ele acontecer |
+| *Planning* | Transformar trabalho grande em PRDs bem formatados |
+| *Decomposing* | Quebrar o plano em tarefas pequenas e iterativas |
+| *Delegating* | Escolher o que entregar ao agente e o que segurar |
+| *Systematizing* | Transformar o que deu certo em padrão repetível |
+| *Parallelizing* | Colocar mais de um agente trabalhando em paralelo |
+
+Repare que nenhum desses verbos é sobre IA. São sobre engenharia. A IA entra
+como o novo executor de um ofício que já existia, e é essa inversão que me
+interessa.
+
+## A promessa operacional do curso
+
+A ementa fica mais interessante quando olhada pelo processo que ela quer formar.
+Na aula `01.01-where-were-going`, o Matt descreve uma sequência de sete fases que
+leva uma ideia ainda nebulosa até um trabalho revisado:
+
+| Fase | Papel no processo |
+| --- | --- |
+| *Grilling / interviewing* | Entender a intenção antes de sair implementando |
+| *Research* | Levantar contexto, alternativas e riscos do problema |
+| *Prototyping* | Testar o formato da solução antes de comprometer o sistema |
+| *Creating documents* | Transformar o aprendizado em documentos que guiam a execução |
+| *Turning documents into issues* | Quebrar o plano em trabalho pequeno, delegável e rastreável |
+| *Implementing issues* | Deixar o agente executar a parte certa com autonomia |
+| *Reviewing* | Validar o resultado, corrigir rota e realimentar o processo |
+
+Isso muda bastante a leitura da ementa. O curso não parece estar perguntando
+"como escrever o melhor *prompt*?", mas "como desenhar um sistema de trabalho em
+que um agente consiga produzir código útil sem que eu precise vigiar cada
+linha?". A resposta passa por documentos, issues, critérios de revisão,
+*feedback loops* e uma fronteira clara entre o que roda AFK e o que continua
+dependendo de intervenção humana.
+
+Também gosto do fato de o curso não tratar AFK como mágica. A promessa não é
+sumir enquanto o agente resolve qualquer coisa. É preparar o terreno para que a
+implementação possa rodar longe do teclado porque o problema já foi entrevistado,
+pesquisado, prototipado, documentado e quebrado em fatias pequenas o bastante.
+Esse detalhe é importante: autonomia vem depois de engenharia, não antes.
+
+## O que eu não espero, e o que espero
+
+Não espero sair do curso com uma fórmula mágica, e também não é um curso sobre
+construir aplicações de IA: o foco é o contrário, usar IA para construir
+software de verdade. O que espero é mais concreto: ganhar autonomia e segurança
+para delegar a parte certa do trabalho a um agente sem perder o controle do
+código nem a compreensão do que ele faz.
+
+## A ementa, em camadas
+
+É um *cohort* assíncrono de duas semanas, apoiado por Discord e *office hours*
+ao vivo, gravadas e com transcrição. Antes das aulas principais há um bloco de
+preparação com três objetivos bem práticos: colocar o Playground para rodar,
+entender como os exercícios se movem por pontos específicos da história do
+repositório e configurar um agente CLI para acompanhar o curso.
+
+O Playground também é parte da proposta, não só um repositório auxiliar. É uma
+aplicação realista, em TypeScript, Node e React, com banco SQLite, *seed*,
+migrations e estados gravados para cada exercício. O curso oferece comandos
+como `pnpm reset`, `pnpm cherry-pick` e `pnpm pull` para alternar entre pontos da
+jornada, preservar trabalho quando fizer sentido e receber atualizações do
+material. Quem preferir pode aplicar os exercícios no próprio repositório, com a
+troca esperada: mais relevância direta, menos suporte específico.
+
+O mapa que aparece no material bruto se organiza mais ou menos assim:
+
+| Camada | Foco | O que ela prepara |
+| --- | --- | --- |
+| Preparação | Setup, Discord, *office hours* e dinâmica do Playground | Ambiente local funcionando, banco compreendido, comandos de reset/preservação de trabalho e canais de suporte |
+| Primer de agente | *Getting to Know Claude Code* | Base para quem nunca usou um *coding harness* CLI e dicas avançadas para quem já usa |
+| Fundamentos | Não determinismo, *handoffs* e o loop *grill / execute / clear* | Entender por que agentes precisam de contexto bem passado, checkpoints e limpeza deliberada |
+| *Steering* | `AGENTS.md`, *skills*, *progressive disclosure* e gestão de contexto | Criar trilhos para o agente agir dentro das convenções do projeto |
+| Planejamento | Perguntas ao usuário, PRDs, issues e *tracer bullets* | Sair de intenção vaga para trabalho pequeno, vertical e verificável |
+| *Feedback loops* | Testes, CI, qualidade e sinais automáticos | Fazer o agente descobrir problemas cedo e corrigir antes que o humano vire fiscal de detalhe |
+| Agentes AFK | Execução autônoma, backlogs e filas de trabalho | Rodar implementação sem supervisão constante, mantendo escopo e rastreabilidade |
+| Padrões *human-in-the-loop* | Prototipação, intervenção humana e fluxo final | Saber quando o humano entra para impor gosto, pesquisar, revisar e mudar a direção |
+
+Essa camada de ementa explica melhor por que o curso se chama "for real
+engineers". O assunto não é só conversar melhor com um modelo. É preparar um
+ambiente em que contexto, documentação, testes, issues e revisão formam um
+sistema de produção. O agente vira parte desse sistema, mas não substitui o
+sistema.
+
+O destino prometido, pelo menos a partir da abertura, é bem concreto: conseguir
+envolver qualquer agente CLI num processo próprio para entregar código em uma
+base real. Em vez de ficar olhando o agente trabalhar, a ideia é chegar num
+estado em que eu possa planejar enquanto ele implementa, intervir nos momentos
+certos e manter a saúde do código porque o processo favorece bases legíveis,
+testáveis e bem divididas.
+
+## O que espero aprender
+
+Boa parte dessa ementa eu já pratico por instinto em alguns dos meus projetos.
+Costumo colocar um modelo de autonomia AFK com *human-in-the-loop* nas bordas (registrado em
+ADRs), specs no estilo PRD-lite antes de implementar, *vertical slices* que
+funcionam como *tracer bullets*, um `AGENTS.md` como fonte única de instrução e
+*skills* customizadas, incluindo a que escreveu este post.
+
+O problema é que construí quase tudo isso no tato. Quero submeter essas escolhas
+a apuração de quem já sistematizou o assunto e descobrir onde estou fazendo
+gambiarra. Há pontos que sei que faço mal: gerencio a *context window* na base da
+intuição, paralelizo agentes de forma desajeitada e nunca estruturei direito um
+*feedback loop* autônomo em que eu confie de olhos fechados. É exatamente onde a
+segunda metade do curso mira.
+
+Também quero comparar o meu fluxo atual com as sete fases propostas. Hoje eu já
+tenho algo parecido com *grilling*, specs, issues e revisão, mas ainda sinto que
+algumas passagens são implícitas demais. Pesquisa vira conversa solta. Protótipo
+vira implementação antes da hora. Issue às vezes nasce grande demais. Revisão,
+quando estou com pressa, corrige o resultado sem melhorar o sistema que gerou o
+resultado. Se o curso me ajudar a tornar essas transições mais explícitas, já
+terá valido.
+
+## Como vou registrar aqui
+
+O plano é simples: cada aula que render aprendizado relevante vira um Post neste
+*Source*. Não é resumo de aula, é o que sobra depois de passar pelo meu contexto,
+o que confirmou ou derrubou alguma prática que eu já usava no epistemix.
+
+Sobre frequência, sou honesto: isto é um projeto solo, tocado no tempo livre.
+Pode haver semanas de vários posts e pode haver silêncio. O compromisso é com a
+qualidade da nota, não com o calendário.
+
+Minha expectativa mais prática é usar o curso como laboratório para o próprio
+epistemix. Conforme as aulas avançarem, quero converter os aprendizados em
+mudanças concretas no repositório: instruções melhores para agentes, specs menos
+ambíguas, *feedback loops* que falhem cedo, critérios mais claros para delegar e
+uma forma mais disciplinada de paralelizar Claude Code, Codex e Copilot. No
+limite, a graça é esta: estudar um curso sobre engenharia com agentes enquanto o
+hub onde registro esse estudo fica mais preparado para ser desenvolvido com
+agentes.
+
+## Referências
+
+- [AI Coding for Real Engineers, página do cohort](https://www.aihero.dev/cohorts/ai-coding-for-real-engineers-m0k0w)
+- [AI Hero, de Matt Pocock](https://www.aihero.dev/)
+- [Matt Pocock anunciando a versão 2 do curso](https://x.com/mattpocockuk/status/2056447804537741327)
+- Aula `01.01-where-were-going`, do material bruto extraído do cohort
