@@ -3,7 +3,7 @@ title: "Motivações e Objetivos"
 date: 2026-06-07
 status: published
 tags: [ai, agents, sdd]
-summary: "Por que comecei o AI Hero e o que espero tirar dele."
+summary: "Por que comecei o AI Hero, qual processo o curso promete ensinar e o que espero tirar dele."
 ---
 
 Já faz um tempo que escrevo software com um agente do lado. No epistemix (este projeto),
@@ -17,6 +17,12 @@ Foi por aí que cheguei no **AI Coding for Real Engineers**, do Matt Pocock. A
 proposta é trocar o improviso por método: parar de *vibe coding* e tratar o
 trabalho com agentes como uma disciplina de engenharia, com as competências de
 sempre, só que recolocadas num fluxo assistido por IA.
+
+O ponto que mais me chamou atenção na abertura do curso foi a recusa de entregar
+mais um *framework* fechado para "codar com IA". A tese é outra: o desenvolvedor
+precisa ser dono do próprio processo. O curso oferece uma forma inicial de
+trabalhar, mas ela aparece como algo para ser entendido, tensionado e adaptado,
+não como receita para ser obedecida.
 
 ## Por que esse curso
 
@@ -39,6 +45,35 @@ Repare que nenhum desses verbos é sobre IA. São sobre engenharia. A IA entra
 como o novo executor de um ofício que já existia, e é essa inversão que me
 interessa.
 
+## A promessa operacional do curso
+
+A ementa fica mais interessante quando olhada pelo processo que ela quer formar.
+Na aula `01.01-where-were-going`, o Matt descreve uma sequência de sete fases que
+leva uma ideia ainda nebulosa até um trabalho revisado:
+
+| Fase | Papel no processo |
+| --- | --- |
+| *Grilling / interviewing* | Entender a intenção antes de sair implementando |
+| *Research* | Levantar contexto, alternativas e riscos do problema |
+| *Prototyping* | Testar o formato da solução antes de comprometer o sistema |
+| *Creating documents* | Transformar o aprendizado em documentos que guiam a execução |
+| *Turning documents into issues* | Quebrar o plano em trabalho pequeno, delegável e rastreável |
+| *Implementing issues* | Deixar o agente executar a parte certa com autonomia |
+| *Reviewing* | Validar o resultado, corrigir rota e realimentar o processo |
+
+Isso muda bastante a leitura da ementa. O curso não parece estar perguntando
+"como escrever o melhor *prompt*?", mas "como desenhar um sistema de trabalho em
+que um agente consiga produzir código útil sem que eu precise vigiar cada
+linha?". A resposta passa por documentos, issues, critérios de revisão,
+*feedback loops* e uma fronteira clara entre o que roda AFK e o que continua
+dependendo de intervenção humana.
+
+Também gosto do fato de o curso não tratar AFK como mágica. A promessa não é
+sumir enquanto o agente resolve qualquer coisa. É preparar o terreno para que a
+implementação possa rodar longe do teclado porque o problema já foi entrevistado,
+pesquisado, prototipado, documentado e quebrado em fatias pequenas o bastante.
+Esse detalhe é importante: autonomia vem depois de engenharia, não antes.
+
 ## O que eu não espero, e o que espero
 
 Não espero sair do curso com uma fórmula mágica, e também não é um curso sobre
@@ -47,18 +82,47 @@ software de verdade. O que espero é mais concreto: ganhar autonomia e seguranç
 para delegar a parte certa do trabalho a um agente sem perder o controle do
 código nem a compreensão do que ele faz.
 
-## A ementa, em duas semanas
+## A ementa, em camadas
 
-É um *cohort* assíncrono de duas semanas, com aulas liberadas toda segunda e
-*office hours* ao vivo (gravadas e com transcrição). Antes de começar há um
-módulo de aquecimento, *Getting to Know Claude Code*, e a versão atual do curso é
-agnóstica de agente: vale o *coding agent* que você preferir. As duas semanas se
-dividem assim:
+É um *cohort* assíncrono de duas semanas, apoiado por Discord e *office hours*
+ao vivo, gravadas e com transcrição. Antes das aulas principais há um bloco de
+preparação com três objetivos bem práticos: colocar o Playground para rodar,
+entender como os exercícios se movem por pontos específicos da história do
+repositório e configurar um agente CLI para acompanhar o curso.
 
-| Semana | Foco | Alguns tópicos |
+O Playground também é parte da proposta, não só um repositório auxiliar. É uma
+aplicação realista, em TypeScript, Node e React, com banco SQLite, *seed*,
+migrations e estados gravados para cada exercício. O curso oferece comandos
+como `pnpm reset`, `pnpm cherry-pick` e `pnpm pull` para alternar entre pontos da
+jornada, preservar trabalho quando fizer sentido e receber atualizações do
+material. Quem preferir pode aplicar os exercícios no próprio repositório, com a
+troca esperada: mais relevância direta, menos suporte específico.
+
+O mapa que aparece no material bruto se organiza mais ou menos assim:
+
+| Camada | Foco | O que ela prepara |
 | --- | --- | --- |
-| 1 | Fundamentos, *steering* e planejamento | Gestão da *context window*, o loop *Plan / Execute / Clear*, `AGENTS.md` e *skills* customizadas, *progressive disclosure*, decomposição de features, escrita de PRD, *tracer bullets* e validação de arquitetura, planejamento multi-fase |
-| 2 | *Feedback loops*, agentes AFK e *human-in-the-loop* | Integração com CI e estratégias de teste, *skills* para padrões de qualidade, *pre-commit hooks*, o padrão *Ralph Wiggum loop*, modo *human-in-the-loop*, execução autônoma (AFK), fases de pesquisa, *kanban* e preparação do *codebase* para agentes |
+| Preparação | Setup, Discord, *office hours* e dinâmica do Playground | Ambiente local funcionando, banco compreendido, comandos de reset/preservação de trabalho e canais de suporte |
+| Primer de agente | *Getting to Know Claude Code* | Base para quem nunca usou um *coding harness* CLI e dicas avançadas para quem já usa |
+| Fundamentos | Não determinismo, *handoffs* e o loop *grill / execute / clear* | Entender por que agentes precisam de contexto bem passado, checkpoints e limpeza deliberada |
+| *Steering* | `AGENTS.md`, *skills*, *progressive disclosure* e gestão de contexto | Criar trilhos para o agente agir dentro das convenções do projeto |
+| Planejamento | Perguntas ao usuário, PRDs, issues e *tracer bullets* | Sair de intenção vaga para trabalho pequeno, vertical e verificável |
+| *Feedback loops* | Testes, CI, qualidade e sinais automáticos | Fazer o agente descobrir problemas cedo e corrigir antes que o humano vire fiscal de detalhe |
+| Agentes AFK | Execução autônoma, backlogs e filas de trabalho | Rodar implementação sem supervisão constante, mantendo escopo e rastreabilidade |
+| Padrões *human-in-the-loop* | Prototipação, intervenção humana e fluxo final | Saber quando o humano entra para impor gosto, pesquisar, revisar e mudar a direção |
+
+Essa camada de ementa explica melhor por que o curso se chama "for real
+engineers". O assunto não é só conversar melhor com um modelo. É preparar um
+ambiente em que contexto, documentação, testes, issues e revisão formam um
+sistema de produção. O agente vira parte desse sistema, mas não substitui o
+sistema.
+
+O destino prometido, pelo menos a partir da abertura, é bem concreto: conseguir
+envolver qualquer agente CLI num processo próprio para entregar código em uma
+base real. Em vez de ficar olhando o agente trabalhar, a ideia é chegar num
+estado em que eu possa planejar enquanto ele implementa, intervir nos momentos
+certos e manter a saúde do código porque o processo favorece bases legíveis,
+testáveis e bem divididas.
 
 ## O que espero aprender
 
@@ -73,7 +137,15 @@ a apuração de quem já sistematizou o assunto e descobrir onde estou fazendo
 gambiarra. Há pontos que sei que faço mal: gerencio a *context window* na base da
 intuição, paralelizo agentes de forma desajeitada e nunca estruturei direito um
 *feedback loop* autônomo em que eu confie de olhos fechados. É exatamente onde a
-Semana 2 mira.
+segunda metade do curso mira.
+
+Também quero comparar o meu fluxo atual com as sete fases propostas. Hoje eu já
+tenho algo parecido com *grilling*, specs, issues e revisão, mas ainda sinto que
+algumas passagens são implícitas demais. Pesquisa vira conversa solta. Protótipo
+vira implementação antes da hora. Issue às vezes nasce grande demais. Revisão,
+quando estou com pressa, corrige o resultado sem melhorar o sistema que gerou o
+resultado. Se o curso me ajudar a tornar essas transições mais explícitas, já
+terá valido.
 
 ## Como vou registrar aqui
 
@@ -99,3 +171,4 @@ agentes.
 - [AI Coding for Real Engineers, página do cohort](https://www.aihero.dev/cohorts/ai-coding-for-real-engineers-m0k0w)
 - [AI Hero, de Matt Pocock](https://www.aihero.dev/)
 - [Matt Pocock anunciando a versão 2 do curso](https://x.com/mattpocockuk/status/2056447804537741327)
+- Aula `01.01-where-were-going`, do material bruto extraído do cohort
