@@ -4,3 +4,11 @@
   label: "AI"
 - slug: typescript
   label: "TypeScript"
+- slug: vps
+  label: "VPS"
+- slug: security
+  label: "Security"
+- slug: linux
+  label: "Linux"
+- slug: devops
+  label: "DevOps"

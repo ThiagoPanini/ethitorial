@@ -1,0 +1,357 @@
+---
+title: "Preparando uma VPS Linux para produção: do provisionamento ao hardening"
+date: 2026-06-06
+status: draft
+tags: [vps, security, linux, devops]
+summary: "A história de transformar uma VPS recém-provisionada numa máquina estreita e operável, do clique em 'Create VPS' ao servidor pronto para hospedar uma aplicação: snapshot, usuário operacional, SSH endurecido, firewall, fail2ban e patches automáticos."
+---
+
+Existe um instante curto, entre o clique em "Create VPS" no painel do provedor e o primeiro `ssh root@<IP>`, em que a máquina já existe, já está roteada na internet pública, já escuta na porta 22 aceitando login por senha, e ninguém ainda decidiu quem ela é. Nesse momento ela não é minha. Ela é de qualquer *scanner* que estiver passando pelo bloco de IPs do provedor naquele segundo. E, considerando o volume de tráfego de reconhecimento que rola na internet o tempo todo, esse "qualquer scanner" não é hipótese: é certeza estatística.
+
+Esse é o ponto de partida, e ele é desconfortável de propósito. Não existe um momento mágico em que a VPS nasce "segura por padrão". Existe um intervalo em que ela está exposta com *defaults* amistosos, e existe o que a gente faz dentro desse intervalo.
+
+Eu precisava de um lugar para hospedar o **epistemix**, este hub de aprendizado. A decisão de infraestrutura já estava registrada: uma VPS na Hostinger, com Coolify orquestrando os containers e a Cloudflare na frente. Mas antes de qualquer `docker compose up`, antes de apontar DNS, antes de criar o primeiro admin de painel, havia um trabalho mais básico e mais importante: transformar uma máquina genérica numa máquina opinada. Com identidade, com lista nominal de quem entra, com portas justificadas uma a uma, e com uma rotina silenciosa aplicando patches enquanto eu durmo.
+
+Este post conta essa história inteira. É a jornada de uma VPS qualquer saindo do estado "existe e está exposta" para o estado "estreita e operável", organizada em torno de três coisas que eu queria garantir: **segurança** (a superfície de ataque mais fina possível), **eficiência** (não desperdiçar trabalho nem reinventar o que o provedor já entrega) e **operabilidade** (uma máquina que eu consiga entender e operar daqui a seis meses, às três da manhã, no meio de um incidente).
+
+## O modelo de ameaça é mundano, e isso é libertador
+
+Antes de listar comandos, vale calibrar contra o quê a gente está defendendo. Eu não estou protegendo a VPS do epistemix de um adversário estatal. Estou defendendo contra *scanners* automatizados, *brute force* de SSH e exploração oportunista de pacotes desatualizados. Essa é a base estatística de qualquer servidor exposto, e é mundana.
+
+Saber disso é libertador porque dimensiona o esforço. Não preciso de um SIEM, de auditoria de *syscalls* nem de criptografia de disco na primeira sessão. Preciso de algumas camadas finas, cada uma fechando um vetor diferente, compostas na ordem certa. É a aritmética da **defesa em profundidade**: várias barreiras modestas somam mais do que uma barreira única "boa".
+
+O desenho mental que eu carrego durante todo o processo é este:
+
+```text
+                  Internet pública
+                         │
+                         ▼
+              ┌──────────────────────┐
+              │  Cloudflare na frente│  ← absorve DDoS, termina TLS
+              └──────────┬───────────┘
+                         │
+                         ▼
+              ┌──────────────────────┐
+              │   Firewall (UFW)     │  ← última camada, não primeira
+              └──────────┬───────────┘
+                         │ só 22/80/443
+                         ▼
+              ┌──────────────────────┐
+              │  sshd endurecido     │  ← AllowUsers nominal
+              └──────────┬───────────┘
+                         │ só usuário operacional
+                         ▼
+              ┌──────────────────────┐
+              │  Chave Ed25519       │  ← passphrase no operador
+              └──────────┬───────────┘
+                         │ chave + passphrase
+                         ▼
+              ┌──────────────────────┐
+              │  sudo (NOPASSWD)     │  ← elevação consciente
+              └──────────┬───────────┘
+                         ▼
+                    root efetivo
+
+       Em paralelo, em segundo plano:
+        • fail2ban observa logs e bane IPs reincidentes
+        • unattended-upgrades aplica patches de segurança
+        • snapshot do provedor = botão de undo
+```
+
+Para um atacante chegar à última camada, ele precisaria ter acesso à rede onde a VPS é roteada, furar o firewall, casar com a `AllowUsers`, possuir a chave Ed25519 e conhecer a *passphrase*. Cada camada reduz o universo de candidatos em ordens de magnitude. É isso que a gente constrói, de baixo para cima, nas próximas seções.
+
+Vale o aviso que orienta tudo o que vem a seguir: as duas etapas mais perigosas, SSH e firewall, são justamente aquelas em que, se eu errar, perco o acesso pelo qual estou editando. Toda mudança nelas eu faço com uma **segunda sessão SSH aberta** em outro terminal, servindo de linha de vida enquanto a primeira testa a porta nova. Nunca se serra o galho onde a gente está sentado.
+
+## Antes do primeiro comando: três decisões
+
+Três decisões aparecem antes mesmo do `apt update`, e cada uma molda o que vem depois.
+
+### O snapshot é o meu botão de undo
+
+A primeira coisa que faço, ainda no painel do provedor, é tirar um *snapshot*. Snapshot é uma imagem do disco inteiro num ponto no tempo, restaurável em um clique. Nos planos KVM costuma vir um slot manual gratuito, e é o único botão de *undo* confiável quando estou prestes a tocar em `sshd`, `ufw` ou `sudoers`.
+
+Confundir snapshot com *backup* é comum, e a distinção importa:
+
+| | Snapshot | Backup |
+|---|---|---|
+| O que copia | Disco inteiro da VPS num ponto no tempo | Dados específicos (banco, uploads) |
+| Onde mora | Storage do mesmo provedor, mesma conta | Provedor diferente, idealmente outra região |
+| Granularidade | Tudo ou nada | Por dataset, por dia ou hora |
+| Para que serve | Reverter mudança de estado de sistema | Recuperar dados em evolução |
+
+Para hardening, snapshot manual basta: ele me protege do cenário "quebrei o sshd e perdi o acesso". Os dados da aplicação são outra camada (dump diário para storage externo à máquina), e essa eu monto depois. A VPS inteira não é o ativo crítico, ela é reproduzível. Os dados é que não são.
+
+A heurística que eu sigo: snapshot antes de tocar em qualquer coisa que possa me trancar do lado de fora (sshd, ufw, sudoers) ou apagar volume (Docker, banco). Snapshot é barato. Recuperar de "perdi acesso e não tenho rollback" é caro.
+
+### O template do provedor é input, não output
+
+Muitos provedores oferecem *templates* que entregam a VPS com um stack já rodando. No caso do epistemix, faz sentido o template do Coolify: ele já sobe o orquestrador e poupa uma classe inteira de erros de instalação. Mas template pede uma postura específica: tratar a entrega como **input para auditoria**, não como trabalho pronto.
+
+Quando eu herdo containers rodando, banco interno com schema próprio e diretórios de dados pré-criados, minha primeira ação não é "começar a usar". É perguntar:
+
+- Quais containers estão rodando? Quais imagens, quais versões?
+- Que usuário (UID) cada um usa?
+- Quais portas foram publicadas no host?
+- Onde estão os diretórios de dados, e quem é o dono deles?
+- E principalmente: o que **não** está lá? Admin pré-criado? Proxy em execução? Validações pendentes?
+
+Template economiza tempo e é eficiência legítima. O que ele não faz é hardening, e não substitui ler com olho crítico o que está rodando como `root` numa máquina nova exposta à internet.
+
+### A ordem das operações não é gosto, é dependência
+
+A sequência de hardening não foi escolhida por estética. Cada etapa fecha uma porta que a anterior deixou aberta:
+
+1. **Atualizar o sistema**, para fechar vulnerabilidades já conhecidas antes de construir em cima.
+2. **Hostname e timezone**, para dar identidade observável à máquina antes que ela apareça em logs.
+3. **Criar usuário operacional e validar o sudo**, para habilitar operação não-root antes de demolir o caminho do root.
+4. **Replicar a chave SSH** para esse usuário, garantindo o caminho novo antes de fechar o antigo.
+5. **Endurecer o SSH**, fechando root e senha só depois que o caminho novo está provado.
+6. **Ativar o firewall**, fechando portas inesperadas com o SSH já liberado e endurecido.
+7. **Ativar o fail2ban**, somando resposta automática aos ataques que ainda assim chegarem.
+8. **Configurar patches automáticos**, automatizando a manutenção da base.
+9. **Só então** abrir painéis administrativos e expor serviços.
+
+Inverter qualquer uma é colocar o pé na frente da bala. Inverta os passos 4 e 5, por exemplo, e você desabilita o `root` via SSH antes de ter provado que o usuário novo consegue entrar: o resultado é nenhum caminho de entrada e uma viagem ao console web do provedor para se recuperar.
+
+## Atualizar a base antes de qualquer cadeado
+
+Imagens de sistema dos provedores costumam ter dias, às vezes semanas, entre o build e o momento em que a gente liga a VPS. Esse intervalo é exatamente o tempo em que vulnerabilidades já publicadas ainda não chegaram à imagem. Atualizar antes de configurar o resto é construir sobre uma base coerente, não sobre uma fotografia antiga.
+
+```bash
+apt update          # mexe só no catálogo, não instala nada
+apt -y full-upgrade # instala e aceita ajustes mais agressivos de dependência
+apt -y autoremove   # limpa pacotes órfãos que ninguém mais usa
+```
+
+A diferença entre `full-upgrade` e o `upgrade` simples importa: o `upgrade` recua diante de qualquer conflito de dependência, enquanto o `full-upgrade` resolve. Numa base atrasada, é o `full-upgrade` que efetivamente fecha o atraso.
+
+Uma surpresa comum em VPS de template: alguns pacotes vêm marcados como `hold`, estado em que o `apt` se recusa a atualizá-los porque o provedor congelou uma versão específica. O `cloud-init` (o agente que aplica o provisionamento inicial: hostname, chaves SSH, dados do template) é o caso clássico. Atualizar sem cuidado pode sobrescrever `/etc/cloud/cloud.cfg` com a versão genérica do pacote e apagar customizações do template. A saída segura é atualizar preservando o arquivo de configuração local:
+
+```bash
+apt-mark unhold cloud-init
+apt install -y -o Dpkg::Options::="--force-confold" cloud-init
+apt-mark hold cloud-init
+```
+
+Quando o terminal cospe `0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.`, a base está limpa e dá para seguir.
+
+## Nomear a máquina é trabalho de observabilidade
+
+```bash
+hostnamectl set-hostname epistemix-prod
+timedatectl set-timezone UTC
+```
+
+Hostname não é cosmético. Ele aparece no prompt, nos logs do `journald`, nos cabeçalhos dos e-mails de relatório do `unattended-upgrades` e em qualquer dashboard que venha a agregar essa máquina. O nome de fábrica, algo como `srv1700377`, comunica nada. `epistemix-prod` comunica função e ambiente, que é exatamente o que eu quero ler num alerta às três da manhã. Isso é a perna de **operabilidade** começando cedo.
+
+UTC é a decisão chata e correta. No momento em que existir mais de uma máquina, ou uma integração cruzando regiões, ou um *cron* rodando "às quatro da manhã", a única forma de correlacionar eventos sem perder tempo é todo mundo falar a mesma língua temporal. Horário de verão deslocando logs em uma hora é o tipo de armadilha que custa caro num incidente. UTC é o esperanto da operação.
+
+## Deixar de ser `root` antes que `root` me deixe
+
+`root` não tem freio. É o usuário onde qualquer *typo* num `rm -rf` apaga o sistema. E, mais relevante para o modelo de ameaça, é o usuário cujo nome todo *scanner* já conhece. Quando o login por SSH é como `root`, o atacante já tem metade da credencial: resta adivinhar a senha. Quando o login é como `deploy` (ou qualquer outro nome que eu escolha), ele precisa primeiro descobrir que existe um usuário com esse nome.
+
+A receita é criar o usuário, colocá-lo no grupo `sudo` e conceder o sudo via arquivo dedicado em `/etc/sudoers.d/`:
+
+```bash
+adduser deploy
+usermod -aG sudo deploy
+echo "deploy ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-deploy
+chmod 0440 /etc/sudoers.d/90-deploy
+visudo -c   # valida a sintaxe do sudoers SEM aplicar
+```
+
+O `visudo -c` é o cinto antes da curva. Um erro de sintaxe no sudoers quebra o `sudo` inteiro, e numa máquina onde daqui a poucos minutos o `root` via SSH deixará de existir, quebrar o `sudo` é o equivalente operacional a trancar a chave do carro dentro do carro. Eu valido antes de confiar.
+
+Resta justificar o `NOPASSWD`, porque a posição ingênua ("sudo deve sempre pedir senha") tem mérito real. O argumento a favor depende de duas premissas. **Primeira:** o fator de autenticação que importa nesta máquina é a chave Ed25519 protegida por passphrase, do lado do operador. **Segunda:** a senha local do usuário está bloqueada.
+
+Sob essas premissas, pedir uma senha local para o `sudo` adiciona atrito sem adicionar fator de autenticação. Quem entrou já provou que tem a chave privada e a passphrase, evidência mais forte do que qualquer senha local seria. É um trade-off consciente, e ele só se sustenta enquanto as duas premissas valerem: se o SSH por senha voltar, ou se a chave perder a passphrase, o `NOPASSWD` cai junto.
+
+## A chave que se ganha, e por que o SSH é caprichoso
+
+A escolha padrão hoje é Ed25519: curva elíptica moderna, chaves curtas, assinaturas rápidas, sem os *caveats* de geração ruim que historicamente atormentaram o RSA. A chave pública vai para `/home/deploy/.ssh/authorized_keys`. A privada nunca sai da máquina do operador e fica protegida por passphrase.
+
+O SSH é deliberadamente paranoico com as permissões dos arquivos de chave:
+
+```text
+700  /home/deploy/.ssh
+600  /home/deploy/.ssh/authorized_keys
+```
+
+Se a pasta `.ssh` estiver legível por grupo ou por outros, ou se o `authorized_keys` tiver qualquer permissão além de `600`, o `sshd` ignora a chave em silêncio e o login falha. Esse comportamento existe porque, num sistema multiusuário, um `authorized_keys` mal protegido é uma porta dos fundos: qualquer usuário local que conseguisse escrever ali poderia adicionar a própria chave e virar o usuário `deploy` por SSH. O SSH prefere falhar a confiar em arquivos potencialmente comprometidos. É uma das raras vezes em que um daemon escolhe ser inconveniente em vez de permissivo, e a gente agradece.
+
+A validação é prosaica: conectar como o novo usuário, rodar `sudo whoami`, e ver o terminal responder `root`. Nesse instante, `root` direto por SSH ainda funciona. Ele é o próximo a cair.
+
+## Cada linha do `sshd_config` é uma decisão consciente
+
+Eu coloco o hardening do SSH em `/etc/ssh/sshd_config.d/00-hardening.conf`, não no arquivo principal. O Ubuntu honra os `.conf` desse diretório como *overrides*, e isolar minhas decisões num arquivo dedicado deixa óbvio o que veio do projeto e o que veio do pacote. Há um bônus de sobrevivência: um `apt upgrade` do `openssh-server` pode sobrescrever o `sshd_config` principal, mas os arquivos em `sshd_config.d/` ficam preservados. O prefixo `00-` garante que eles carregam antes de qualquer override posterior.
+
+```sshconfig
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+KbdInteractiveAuthentication no
+UsePAM yes
+X11Forwarding no
+MaxAuthTries 3
+LoginGraceTime 30s
+ClientAliveInterval 300
+ClientAliveCountMax 2
+AllowUsers deploy
+```
+
+Cada diretiva fecha uma coisa específica:
+
+| Diretiva | O que faz | Por que está aqui |
+|---|---|---|
+| `PermitRootLogin no` | Recusa SSH como `root` | Fecha o vetor mais batido: brute force contra um nome que todo scanner já tem |
+| `AllowUsers deploy` | Allowlist nominal de quem entra | Robusto mesmo se algum usuário inesperado for criado depois |
+| `PasswordAuthentication no` | Recusa senha como método | Corta uma classe inteira de ataques automatizados |
+| `PubkeyAuthentication yes` | Aceita chave pública | Redundante por default, mas explícito vale a clareza |
+| `KbdInteractiveAuthentication no` | Desliga o modo interativo | Impede o PAM de aceitar "senha" disfarçada de prompt |
+| `UsePAM yes` | Mantém a integração com PAM | PAM cuida de sessão, limites e logging, não só de senha |
+| `MaxAuthTries 3` | Limita tentativas por conexão | Reduz o custo de cada varredura |
+| `LoginGraceTime 30s` | Tempo máximo para autenticar | Conexões zumbi não esgotam slots |
+| `ClientAliveInterval 300` + `ClientAliveCountMax 2` | Derruba sessão sem resposta após ~10 min | Limpa sessões esquecidas em terminais abertos |
+| `X11Forwarding no` | Desliga forwarding gráfico | Servidor headless não precisa |
+
+Vale uma nota sobre `KbdInteractiveAuthentication`. Em versões antigas do OpenSSH (anteriores à 8.7) existia também a `ChallengeResponseAuthentication`, e desligar só uma podia deixar a outra aberta. A partir da 8.7 a `ChallengeResponseAuthentication` foi removida e só a `KbdInteractive` permanece válida. Se você lida com um parque de versões mistas, manter as duas linhas é cinto e suspensório que sobrevive a ambas: a versão nova ignora a removida, a antiga ignora a nova, e em qualquer caso o caminho interativo fica fechado. Confirme a sua com `ssh -V`.
+
+Há uma exceção que morde quem instala um orquestrador containerizado como o Coolify. Ele se conecta ao host via SSH como `root` para executar comandos Docker. Isso é a mecânica interna dele, não uma opção. Com `PermitRootLogin no`, o hardening bloqueia o próprio orquestrador que eu acabei de instalar, e o sintoma engana: o fail2ban bane o IP do container e o erro parece "connection refused" (ban de rede) em vez de "permission denied" (restrição de usuário). A solução correta é abrir a exceção só para a rede Docker interna, mantendo a política restritiva para o mundo externo:
+
+```sshconfig
+# Em /etc/ssh/sshd_config.d/00-hardening.conf
+
+# Políticas globais (aplicam ao mundo externo)
+PermitRootLogin no
+AllowUsers deploy
+
+# Exceção só para a rede Docker interna (Coolify, Portainer, etc.)
+Match Address 172.16.0.0/12
+    PermitRootLogin prohibit-password
+```
+
+O range `172.16.0.0/12` cobre as redes bridge que o Docker usa, e `prohibit-password` permite root com chave mas rejeita senha, preservando o vetor de autenticação forte. A chave pública do orquestrador precisa estar em `/root/.ssh/authorized_keys` no host, e isso vale fazer **ainda durante o hardening**, antes da primeira validação no painel, porque cada tentativa falha conta como falha de autenticação para o fail2ban.
+
+Antes de reiniciar o daemon, `sudo sshd -t` testa a sintaxe (o equivalente do `visudo -c` para o SSH). Só então `sudo systemctl restart ssh`. E, do outro terminal, aquela linha de vida que nunca se fechou, eu tento login como `root` e vejo `Permission denied (publickey)` voltar. A porta dos fundos foi pregada.
+
+## O firewall não é a primeira camada, é a última
+
+É tentador pensar no firewall como a barreira principal. Não é. As camadas que importam mais, autenticação por chave e lista nominal de usuários, já foram montadas. O firewall é a rede de segurança que pega o que escapou delas: o serviço que escutou em `0.0.0.0` por engano, o container que publicou uma porta sem querer, o daemon que veio por dependência transitiva e abriu um socket.
+
+A política base é a única que faz sentido para um servidor exposto:
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+```
+
+Negar tudo na entrada faz qualquer serviço novo nascer invisível até alguém liberar de propósito. Permitir tudo na saída é o ajuste pragmático: o servidor precisa baixar pacote, puxar imagem Docker, falar com APIs e resolver DNS. Restringir *egress* vale num modelo de ameaça mais alto ou com um proxy de saída controlando o que sai, e não é o caso típico de uma VPS de aplicação.
+
+As portas mínimas para servir HTTP:
+
+```bash
+sudo ufw allow 22/tcp   comment 'SSH'
+sudo ufw allow 80/tcp   comment 'HTTP'
+sudo ufw allow 443/tcp  comment 'HTTPS'
+```
+
+A ordem segura na hora de ligar o firewall é liberar o `22/tcp` **antes** do `ufw enable`. Ativar a política `deny incoming` com a porta SSH ainda fora da allowlist é o atalho mais rápido para perder o acesso à própria máquina. Depois do `enable`, eu testo um login novo em outro terminal mantendo o atual aberto.
+
+Há uma sutileza que engana quase todo mundo: **Docker e UFW não conversam direito.** O daemon do Docker injeta regras próprias na cadeia `DOCKER` do `iptables`, e elas correm antes das regras do UFW para o tráfego destinado a containers. Na prática, um `docker run -p 5432:5432 ...` pode deixar uma porta acessível de fora mesmo que o `ufw status` jure que não. A consequência operacional é direta: a saída do UFW não é a fonte da verdade quando Docker está presente. O conjunto mínimo de evidências para saber a realidade é:
+
+```bash
+sudo ss -tlnp           # quem está escutando em quê
+sudo docker ps          # o que cada container publicou
+sudo ufw status verbose # o que o UFW pensa que está aceitando
+```
+
+Se uma porta aparece no `ss -tlnp` ligada a um processo Docker, ela provavelmente está exposta, independentemente do que o UFW diga. É o tipo de detalhe que separa "achar que está fechado" de "estar fechado".
+
+## Vigilância que reage, não que previne
+
+O `fail2ban` não impede invasão, e não é essa a função. Ele lê os logs continuamente, identifica padrões de falha (tipicamente tentativas mal-sucedidas no `sshd`) e bane o IP atacante por um tempo via `iptables` quando um limiar é cruzado.
+
+Numa máquina onde o SSH só aceita chave e `PasswordAuthentication` está desligado, a chance de alguém entrar por brute force já é desprezível. Então por que rodar o fail2ban? Por duas razões. A primeira é reduzir ruído: sem ele, os scanners ficam pingando para sempre e poluem o `journalctl -u ssh` com tentativas que nunca vão dar certo, dificultando enxergar eventos legítimos. A segunda é conter erros futuros meus: se uma mudança involuntariamente reabrir autenticação por senha, o fail2ban segura a janela enquanto eu não percebo. É seguro contra meus próprios deslizes, não contra atacantes presentes.
+
+A configuração mínima vai em `/etc/fail2ban/jail.local`:
+
+```ini
+[DEFAULT]
+ignoreip = 127.0.0.1/8 ::1 172.16.0.0/12
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+backend  = systemd
+
+[sshd]
+enabled = true
+port    = 22
+```
+
+Cinco falhas em dez minutos viram uma hora de ban. Apertar mais que isso começa a banir o próprio operador que errou a passphrase algumas vezes.
+
+Duas linhas merecem atenção. O `ignoreip` inclui `172.16.0.0/12` pela mesma razão da exceção no SSH: o orquestrador containerizado vai fazer SSH para o host, e sem essa isenção o fail2ban baniria o IP do container nas primeiras tentativas, mascarando a causa real de qualquer problema de conexão. E o `backend = systemd` existe porque o Ubuntu moderno não popula mais `/var/log/auth.log` por padrão; os logs de autenticação vivem no `journald`. Configurar um backend de arquivo aqui leva a um jail silenciosamente vazio: o serviço roda, mas não vê nada, e fica a falsa sensação de cobertura. O teste que separa configuração real de configuração teórica é um só:
+
+```bash
+sudo fail2ban-client status sshd   # o jail está enxergando o sshd?
+```
+
+## Patches enquanto eu durmo
+
+Vulnerabilidades têm janela. Entre o dia em que um CVE é publicado e o dia em que um exploit público circula, o relógio anda. Servidor sem patch é servidor cujo dono está apostando que ninguém vai usar essa janela contra ele. A aposta às vezes ganha, mas a casa, com o tempo, sempre vence.
+
+Memória humana não escala para checar atualizações de segurança diariamente. Automação aqui é a única forma realista, e o `unattended-upgrades` faz isso sozinho. A configuração que eu uso é *security-only* com reboot automático em janela de baixo tráfego:
+
+```text
+Unattended-Upgrade::Allowed-Origins {
+    "${distro_id}:${distro_codename}-security";
+    "${distro_id}ESMApps:${distro_codename}-apps-security";
+    "${distro_id}ESM:${distro_codename}-infra-security";
+};
+
+Unattended-Upgrade::Mail "eu@exemplo.com";
+Unattended-Upgrade::MailReport "on-change";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "04:00";
+```
+
+A decisão central é o *security-only*. Em vez de puxar todos os updates do repositório, eu restrinjo ao canal `-security`. Atualizações comuns mudam comportamento de bibliotecas, o que é bom numa estação de trabalho e ruim num servidor de produção, onde uma mudança de comportamento numa madrugada qualquer pode quebrar o que estava funcionando. É a posição conservadora consciente: aceito a interrupção mínima dos patches críticos e rejeito o turbilhão de upgrades funcionais não pedidos.
+
+O `Automatic-Reboot` é a contrapartida honesta. Algumas atualizações, em particular as de kernel, glibc e openssl, só entram em vigor depois de reboot. Sem reboot, o pacote novo está no disco mas o código vulnerável continua mapeado em memória, e a sensação de "atualizado" é cosmética. Marcar uma janela previsível em UTC, às quatro da manhã, é trocar disponibilidade contínua por segurança real. Para um projeto ainda sem usuários em produção, é uma troca trivial; quando houver tráfego sensível a downtime, a janela merece revisão com health check pós-reboot.
+
+As linhas `ESM` só fazem efeito com Ubuntu Pro ativo (gratuito para até cinco máquinas de uso pessoal). Sem subscription, elas são ignoradas em silêncio e o `unattended-upgrades` aplica só o canal `-security` padrão. Deixo as linhas mesmo assim, porque não atrapalham e ativam sozinhas se eu anexar a máquina ao Ubuntu Pro depois.
+
+Antes de confiar, eu valido com um *dry-run*, confirmando que ele simula só pacotes `-security` e não meia distribuição:
+
+```bash
+sudo unattended-upgrade --dry-run --debug 2>&1 | tail -30
+```
+
+## Quando NÃO criar a credencial de admin
+
+Depois de tudo isso (sistema atualizado, identidade definida, `root` exilado do SSH, chave Ed25519 no portão, firewall negando por padrão, fail2ban observando, patches automatizados), ainda falta um ato com ordem específica: criar o admin do painel de orquestração. No caso do epistemix, o admin do Coolify.
+
+Um painel administrativo, uma vez com credencial, é poder concentrado. Ele orquestra deploys, conhece todos os containers, guarda as variáveis de ambiente sensíveis das aplicações e executa comandos com privilégio dentro da máquina. Criar esse admin antes de a base estar estreita é abrir uma superfície administrativa numa máquina ainda menos endurecida, exatamente o vetor que o resto do trabalho tentou fechar. A regra é simples: primeiro tornar a máquina estreita, depois introduzir o ponto de poder.
+
+E a credencial vai direto para o gerenciador de segredos (Bitwarden, 1Password, Vault), sem escala em buffer transitório. Clipboard, scrollback do terminal, anotação rápida: qualquer um desses é o local errado, e o hábito de "depois eu copio direito" é exatamente o jeito como segredos vazam. Se a CLI do gerenciador de segredos não estiver disponível na sessão, adiar a criação da credencial é a decisão correta, mesmo que pareça trabalho incompleto. Um item explicitamente pendente é dívida operacional visível, e visível é gerenciável.
+
+## O que fica para a próxima sessão
+
+O estado pós-hardening é honesto sobre o que é e o que não é. É uma máquina com acesso controlado, autenticação por chave forte, firewall ativo, vigilância automatizada, patches rotineiros e identidade clara. Não é, ainda, uma máquina pronta para receber usuários finais em produção. A diferença mora em três frentes que ficam para os próximos passos:
+
+- **Cloudflare na frente.** Quando o DNS apontar para o proxy e o tráfego entrar só pelos IPs dele, o firewall pode passar de "permite 80/443 de qualquer lugar" para "permite 80/443 só dos blocos da Cloudflare", eliminando num movimento o tráfego direto à origem. O proxy também absorve DDoS, termina TLS na borda e oferece cache. A VPS deixa de ser endpoint público e vira *back-of-house*.
+- **Fechar as portas temporárias** que ficaram abertas durante o bootstrap (painéis de admin, sockets de instalação, dashboards expostos em `:8000`). Um comentário `(temporario)` no UFW marca o que precisa fechar quando a alternativa segura estiver pronta.
+- **Stack de dados e backup.** Banco configurado e backups automatizados para storage externo à máquina, porque servidor sem backup é especulação, não operação. O backup mora em provedor diferente por uma razão simples: cópia no mesmo lugar do original é cópia, não backup.
+
+Há também a camada que eu deliberadamente deixei de fora desta primeira sessão e que só se justifica com um modelo de ameaça mais alto: AppArmor com profiles próprios, auditoria de syscalls com auditd, hardening de kernel via sysctl, ciphers e KEX do SSH afinados pelas [diretrizes da Mozilla](https://infosec.mozilla.org/guidelines/openssh). Para uma VPS de aplicação começando, o hardening base deste post é o piso, não o teto.
+
+O que fica desta primeira sessão não é o estado final da máquina. É o estado de partida confiável: uma VPS na qual dá para construir o resto sem ansiedade. E essa diferença, entre uma máquina que simplesmente existe e uma máquina sobre a qual se pode construir, é a única que valia a viagem.
+
+## Para aprofundar
+
+- [Mozilla OpenSSH Guidelines](https://infosec.mozilla.org/guidelines/openssh): referência canônica para ciphers, KEX, MACs e diretivas, indo além da camada de auth que este post cobriu.
+- [CIS Ubuntu Linux Benchmark](https://www.cisecurity.org/benchmark/ubuntu_linux): checklist exaustivo de hardening, centenas de itens. Use como complemento; muito vai além do "base".
+- [NIST SP 800-123 — Guide to General Server Security](https://csrc.nist.gov/publications/detail/sp/800-123/final): princípios gerais de segurança de servidor, agnósticos de sistema operacional.
+- `man sshd_config` na própria VPS: a fonte autoritativa para cada diretiva da sua versão exata do OpenSSH.

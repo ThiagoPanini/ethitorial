@@ -3,3 +3,8 @@
   kind: with_sources
   order: 1
   description: "Cursos que estou fazendo, com minhas notas e aprendizados."
+- slug: blog
+  title: Blog
+  kind: direct
+  order: 2
+  description: "Posts soltos sobre o que estou construindo e aprendendo na prática."
