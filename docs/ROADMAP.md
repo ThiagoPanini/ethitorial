@@ -31,7 +31,7 @@ Sem código de produto. Objetivo: base sólida de documentação, infra, automa�
 
 ### CI/CD e qualidade
 
-- [x] CI: GitHub Actions com lint + typecheck + testes em PR (`pr-checks.yml`, jobs web/api/security)
+- [x] CI: GitHub Actions com lint + typecheck + testes no push da branch (`pr-checks.yml`, jobs web/api/security); job `open-pr` abre PR para a main quando os checks ficam verdes (ADR-0005 emenda 2026-06-07)
 - [x] Branch protection na `main`: PR obrigatório, checks verdes, sem force-push, história linear, approvals=0 (ruleset; emenda solo no ADR-0005)
 - [x] Secret scanning (`gitleaks`): pre-commit (Lefthook) + job `security` do `pr-checks.yml`
 - [x] Portão 1 (Lefthook): pre-commit (gitleaks), commit-msg (commitlint), pre-push (ruff/pyright/biome/tsc/pytest)
