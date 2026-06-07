@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-06T12:00:00Z",
+  "title": "Design System: epistemix",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Aurora Violet",
+        "canonical": "oklch(0.62 0.21 256)",
+        "tonalRamp": [
+          "oklch(0.20 0.10 256)",
+          "oklch(0.30 0.15 256)",
+          "oklch(0.40 0.19 256)",
+          "oklch(0.50 0.21 256)",
+          "oklch(0.62 0.21 256)",
+          "oklch(0.72 0.17 256)",
+          "oklch(0.82 0.11 256)",
+          "oklch(0.92 0.05 256)"
+        ]
+      },
+      "accent-text": {
+        "role": "primary",
+        "displayName": "Aurora Violet Text",
+        "canonical": "oklch(0.78 0.13 256)"
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Bancada (near-black)",
+        "canonical": "#08090a",
+        "tonalRamp": [
+          "#08090a",
+          "#101113",
+          "#16181b",
+          "#1b1d21",
+          "#2d3035",
+          "#5b6069",
+          "#8a8f98",
+          "#edeef0"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Live Green",
+        "canonical": "#3fb68b"
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Alert Coral",
+        "canonical": "#f0616d"
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Apenas o hero da home." },
+      "headline": { "displayName": "Headline", "purpose": "h1 de leitura e títulos de Section/Source." },
+      "title": { "displayName": "Title", "purpose": "Headings da prosa (h2/h3) e cabeçalhos de lista." },
+      "body": { "displayName": "Body (UI)", "purpose": "Texto base da aplicação, descrições, nav." },
+      "prose": { "displayName": "Prose", "purpose": "Corpo dos artigos; coluna de ~700px." },
+      "label": { "displayName": "Label", "purpose": "Rótulos UPPERCASE de nav/TOC e badges." },
+      "mono": { "displayName": "Mono", "purpose": "Números, datas, código, atalhos, slugs." }
+    },
+    "shadows": [
+      { "name": "brand-glow", "value": "0 0 0 1px oklch(0.62 0.21 256 / 0.32), 0 4px 14px oklch(0.62 0.21 256 / 0.35)", "purpose": "Brand mark; única elevação que usa cor." },
+      { "name": "primary-glow", "value": "0 1px 0 oklch(0.72 0.16 256) inset, 0 4px 14px oklch(0.62 0.21 256 / 0.3)", "purpose": "Botão primário em repouso." },
+      { "name": "overlay", "value": "0 24px 70px rgba(0,0,0,0.6)", "purpose": "Modal da command palette." },
+      { "name": "floating", "value": "0 16px 40px rgba(0,0,0,0.5)", "purpose": "Toast; quadro de slide usa 0 30px 90px." }
+    ],
+    "motion": [
+      { "name": "ui-transition", "value": "140ms ease", "purpose": "Padrão para background/borda/cor em hover e estado." },
+      { "name": "press", "value": "90ms ease", "purpose": "Afundar do :active (translateY 0.5px)." },
+      { "name": "pop", "value": "160ms cubic-bezier(0.2, 0.7, 0.3, 1)", "purpose": "Entrada do modal da command palette." },
+      { "name": "rise", "value": "1.1s cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Entrada da figura/aurora do hero (ease-out-quint)." },
+      { "name": "aurora-drift", "value": "22s ease-in-out infinite", "purpose": "Deriva lenta dos blobs da aurora; desligada em prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "920px" },
+      { "name": "mobile", "value": "560px" }
+    ],
+    "zIndex": [
+      { "name": "aurora", "value": "0" },
+      { "name": "figure", "value": "1" },
+      { "name": "header", "value": "20" },
+      { "name": "scrim", "value": "25" },
+      { "name": "sidebar", "value": "30" },
+      { "name": "player", "value": "90" },
+      { "name": "overlay", "value": "100" },
+      { "name": "toast", "value": "200" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação primária; o único elemento que carrega Aurora Violet cheio, com glow.",
+      "html": "<button class=\"ds-btn-primary\">Explorar Conteúdos <svg class=\"ds-ic\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 8h9m-3.5-3.5L12.5 8 9 11.5\"/></svg></button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:34px;padding:0 14px;border:1px solid transparent;border-radius:8px;font:530 13px/1 Inter,system-ui,sans-serif;color:#fff;background:oklch(0.62 0.21 256);box-shadow:0 1px 0 oklch(0.72 0.16 256) inset,0 4px 14px oklch(0.62 0.21 256 / 0.3);cursor:pointer;transition:background 140ms ease,transform 90ms ease}.ds-btn-primary:hover{background:oklch(0.68 0.20 256)}.ds-btn-primary:active{transform:translateY(0.5px)}.ds-btn-primary:focus-visible{outline:2px solid oklch(0.62 0.21 256);outline-offset:2px}.ds-btn-primary .ds-ic{width:15px;height:15px}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ação secundária; contorno fino que ganha superfície no hover.",
+      "html": "<button class=\"ds-btn-ghost\">Voltar ao início</button>",
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border:1px solid #ffffff14;border-radius:8px;font:530 13px/1 Inter,system-ui,sans-serif;color:#8a8f98;background:transparent;cursor:pointer;transition:background 140ms ease,border-color 140ms ease,color 140ms ease}.ds-btn-ghost:hover{background:#101113;border-color:#ffffff24;color:#edeef0}.ds-btn-ghost:focus-visible{outline:2px solid oklch(0.62 0.21 256);outline-offset:2px}"
+    },
+    {
+      "name": "Source Card",
+      "kind": "card",
+      "refersTo": "card-source",
+      "description": "Card de Source com capa gerada por hash do slug; eleva por tom + borda no hover, sem sombra.",
+      "html": "<a class=\"ds-src-card\"><span class=\"ds-src-cover\"><span class=\"ds-src-grid\"></span><span class=\"ds-src-mono\">AH</span></span><span class=\"ds-src-body\"><span class=\"ds-src-name\">AI Hero</span><span class=\"ds-src-author\"><span class=\"ds-av\">TP</span>Thiago Panini</span><span class=\"ds-src-desc\">Notas e reflexões sobre o curso, post a post.</span><span class=\"ds-src-foot\"><span>3 posts</span><span class=\"ds-sdot\">·</span><span>0 views</span></span></span></a>",
+      "css": ".ds-src-card{display:flex;flex-direction:column;width:280px;overflow:hidden;text-decoration:none;background:#101113;border:1px solid #ffffff14;border-radius:12px;transition:background 160ms ease,border-color 160ms ease,transform 160ms ease}.ds-src-card:hover{background:#16181b;border-color:#ffffff24;transform:translateY(-2px)}.ds-src-cover{position:relative;display:grid;place-items:center;aspect-ratio:16/9;border-bottom:1px solid #ffffff14;background:radial-gradient(120% 130% at 18% 12%,oklch(0.55 0.20 262) 0%,oklch(0.42 0.17 286) 46%,oklch(0.20 0.08 286) 100%)}.ds-src-grid{position:absolute;inset:0;opacity:0.5;background-image:linear-gradient(rgba(255,255,255,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.05) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:radial-gradient(circle at 70% 20%,black,transparent 75%);mask-image:radial-gradient(circle at 70% 20%,black,transparent 75%)}.ds-src-mono{position:relative;z-index:2;font:600 34px/1 'JetBrains Mono',ui-monospace,monospace;color:rgba(255,255,255,0.92);text-shadow:0 2px 18px rgba(0,0,0,0.3)}.ds-src-body{display:flex;flex-direction:column;gap:5px;padding:20px;font-family:Inter,system-ui,sans-serif}.ds-src-name{font-size:15.5px;font-weight:580;color:#edeef0}.ds-src-author{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#8a8f98}.ds-av{display:grid;place-items:center;width:16px;height:16px;border-radius:50%;font-size:8px;font-weight:700;color:#fff;background:linear-gradient(150deg,oklch(0.6 0.16 256),oklch(0.45 0.14 286))}.ds-src-desc{margin-top:2px;font-size:13px;line-height:1.5;color:#8a8f98}.ds-src-foot{display:flex;gap:10px;margin-top:13px;padding-top:13px;font-size:11.5px;color:#5b6069;font-variant-numeric:tabular-nums}.ds-sdot{opacity:0.45}"
+    },
+    {
+      "name": "Tag Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Tag de Post (estática) e filtro selecionável (estado .on em Aurora Soft).",
+      "html": "<span class=\"ds-chip\">python</span><button class=\"ds-tag on\">fastapi</button><button class=\"ds-tag\">sre</button>",
+      "css": ".ds-chip{display:inline-block;padding:2px 9px;border:1px solid #ffffff14;border-radius:999px;font:400 11px/1.5 Inter,system-ui,sans-serif;color:#8a8f98;background:rgba(255,255,255,0.04)}.ds-tag{margin-left:6px;padding:3px 10px;border:1px solid #ffffff14;border-radius:999px;font:400 11.5px/1 Inter,system-ui,sans-serif;color:#8a8f98;background:rgba(255,255,255,0.03);cursor:pointer;transition:background 130ms ease,border-color 130ms ease,color 130ms ease}.ds-tag:hover{border-color:#ffffff24;color:#edeef0}.ds-tag.on{background:oklch(0.62 0.21 256 / 0.13);border-color:oklch(0.62 0.21 256 / 0.32);color:oklch(0.78 0.13 256)}.ds-tag:focus-visible{outline:2px solid oklch(0.62 0.21 256);outline-offset:2px}"
+    },
+    {
+      "name": "Search Trigger",
+      "kind": "input",
+      "refersTo": "search-trigger",
+      "description": "Disparador da command palette (⌘K); aparência de input, comportamento de botão.",
+      "html": "<button class=\"ds-search\"><svg class=\"ds-search-ic\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"7.2\" cy=\"7.2\" r=\"4.2\"/><path d=\"m10.6 10.6 2.4 2.4\"/></svg><span class=\"ds-search-label\">Buscar Sections, Sources, Posts…</span><span class=\"ds-kbd\">⌘K</span></button>",
+      "css": ".ds-search{display:flex;align-items:center;gap:9px;height:34px;min-width:210px;padding:0 10px 0 11px;border:1px solid #ffffff14;border-radius:8px;background:#101113;color:#5b6069;font:400 13px/1 Inter,system-ui,sans-serif;cursor:pointer;transition:background 140ms ease,border-color 140ms ease}.ds-search:hover{background:#16181b;border-color:#ffffff24}.ds-search-ic{width:16px;height:16px;flex-shrink:0}.ds-search-label{flex:1;text-align:left}.ds-kbd{padding:1px 5px;border:1px solid #ffffff14;border-radius:5px;font:11px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#8a8f98;background:rgba(255,255,255,0.05)}.ds-search:focus-visible{outline:2px solid oklch(0.62 0.21 256);outline-offset:2px}"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Item de navegação da sidebar; ativo em Aurora Soft com ícone Aurora Text.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item active\"><span class=\"ds-nav-ic\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 5.5 8 3l5 2.5L8 8 3 5.5Z\"/><path d=\"M3 5.5v5L8 13l5-2.5v-5\"/></svg></span><span class=\"ds-nav-name\">Courses</span><span class=\"ds-nav-count\">3</span></a><a class=\"ds-nav-item\"><span class=\"ds-nav-ic\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 3.5h4A1.5 1.5 0 0 1 8.5 5v8A1.5 1.5 0 0 0 7 11.5H3v-8Z\"/><path d=\"M13 3.5H9A1.5 1.5 0 0 0 7.5 5v8A1.5 1.5 0 0 1 9 11.5h4v-8Z\"/></svg></span><span class=\"ds-nav-name\">Books</span></a></nav>",
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:2px;width:224px;padding:12px;background:#101113;border-radius:12px;font-family:Inter,system-ui,sans-serif}.ds-nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;font-size:13.5px;font-weight:480;color:#8a8f98;text-decoration:none;cursor:pointer;transition:background 140ms ease,color 140ms ease}.ds-nav-item:hover{background:#1b1d21;color:#edeef0}.ds-nav-item.active{background:oklch(0.62 0.21 256 / 0.13);color:#edeef0}.ds-nav-ic{display:grid;place-items:center;width:16px;height:16px;flex-shrink:0;color:#5b6069}.ds-nav-item:hover .ds-nav-ic{color:#8a8f98}.ds-nav-item.active .ds-nav-ic{color:oklch(0.78 0.13 256)}.ds-nav-name{flex:1}.ds-nav-count{font-size:11px;color:#5b6069;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Post Row",
+      "kind": "custom",
+      "refersTo": "post-list",
+      "description": "Linha da lista de Posts: índice em mono, título que vira Aurora Text no hover, divisores em vez de cards.",
+      "html": "<a class=\"ds-post-row\"><span class=\"ds-pr-idx\">01</span><span class=\"ds-pr-main\"><span class=\"ds-pr-title\">Setup inicial do ambiente <svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 8h9m-3.5-3.5L12.5 8 9 11.5\"/></svg></span><span class=\"ds-pr-sum\">Primeiros passos e decisões de tooling.</span></span><span class=\"ds-pr-date\">06 jun 2026</span></a>",
+      "css": ".ds-post-row{display:flex;align-items:baseline;gap:16px;padding:15px 8px;border-bottom:1px solid #ffffff14;text-decoration:none;transition:background 140ms ease}.ds-post-row:hover{background:#101113}.ds-pr-idx{flex-shrink:0;width:22px;font:12px/1 'JetBrains Mono',ui-monospace,monospace;color:#5b6069}.ds-pr-main{flex:1;min-width:0;font-family:Inter,system-ui,sans-serif}.ds-pr-title{display:flex;align-items:center;gap:9px;font-size:14.5px;font-weight:520;color:#edeef0;transition:color 140ms ease}.ds-pr-title svg{width:13px;height:13px}.ds-post-row:hover .ds-pr-title{color:oklch(0.78 0.13 256)}.ds-pr-sum{display:block;margin-top:3px;font-size:13px;line-height:1.5;color:#8a8f98}.ds-pr-date{flex-shrink:0;font-size:12px;color:#5b6069;font-variant-numeric:tabular-nums;white-space:nowrap}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Lab Notebook",
+    "overview": "O epistemix é o caderno de laboratório de um engenheiro, levado a público e mantido com rigor. A tela é quase-preta (#08090a), como uma bancada à noite; o conteúdo é o que importa e a interface é o instrumento que desaparece na tarefa. Cada Post é uma entrada datada; índices em mono, datas tabulares e capas com grid sutil dão ao hub a textura de um registro técnico, não a de uma vitrine de marketing. A profundidade vem de camadas tonais, não de sombras, e a única cor é o Aurora Violet (OKLCH hue 256), reservada para ação, seleção e estado em ≤10% de qualquer tela. A aurora de fundo é a assinatura da marca, calibrada para ser sentida, não notada. A inspiração de navegação é codewiki.google; familiaridade ganha vale mais que surpresa.",
+    "keyCharacteristics": [
+      "Dark-first sobre quase-preto; color-scheme: dark.",
+      "Uma só cor de marca (Aurora Violet), usada como sinal, nunca como decoração.",
+      "Profundidade por camadas tonais + bordas; sombras só para flutuantes.",
+      "Inter (UI + display) + JetBrains Mono (números, código, atalhos).",
+      "Densidade de produto: tabelas de posts, sidebar de navegação, palette de comandos.",
+      "Aurora como assinatura ambiente; motion curto e funcional."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Aurora Violet é a única cor saturada e aparece em ≤10% de qualquer tela: ação primária, seleção atual e indicadores de estado. Sua raridade é o ponto. Cinza não vira quase-acento; ou é neutro, ou é Aurora Violet.", "section": "colors" },
+      { "name": "The Aurora-Text Rule", "body": "Para texto e ícones, use sempre accent-text (oklch(0.78 0.13 256)), nunca o accent cheio. O accent cheio é para preenchimento (botão, bullet, blob), onde fica sobre escuro com texto branco por cima.", "section": "colors" },
+      { "name": "The One-Family Rule", "body": "Inter faz display, headline, title, body e label. Não introduza uma segunda sans nem uma serif para dar elegância. A riqueza vem do par Inter + JetBrains Mono e do contraste de peso.", "section": "typography" },
+      { "name": "The Machine-Mono Rule", "body": "Mono é só para conteúdo de máquina (números, datas, código, atalhos, slugs). Nunca use mono em texto de prosa ou em labels de UI comuns.", "section": "typography" },
+      { "name": "The Flat-At-Rest Rule", "body": "Superfícies são planas em repouso. Sombra só aparece em resposta a estado (hover, foco) ou quando o elemento literalmente flutua (modal, toast, slide). Card com drop shadow em repouso está errado: eleve por tom + borda.", "section": "elevation" },
+      { "name": "The Z-Scale Rule", "body": "Camadas seguem uma escala semântica fixa, nunca valores arbitrários: aurora 0, figura 1, header 20, scrim 25, sidebar 30, player 90, overlay/command palette 100, toast 200.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do manter o fundo quase-preto (#08090a) e construir profundidade por camadas tonais + bordas finas (branco 8%/14%), não por sombras.",
+      "Do usar Aurora Violet só como sinal (ação, seleção, estado) em ≤10% da tela; para texto/ícone use accent-text, para preenchimento use accent.",
+      "Do carregar toda a tipografia em Inter + JetBrains Mono, com hierarquia por escala e peso; mono só para números, datas, código, atalhos e slugs.",
+      "Do manter raios em 8px (botão) e 12px (card); pílula só para chips e tags.",
+      "Do reservar gradiente em texto exclusivamente para o wordmark e o .grad do hero; é assinatura de marca em pontos escolhidos.",
+      "Do dar a todo componente interativo os estados default/hover/focus-visible/active/disabled, com o outline de foco padrão (2px accent, offset 2px).",
+      "Do honrar prefers-reduced-motion: aurora e reveals já têm fallback; mantenha como invariante."
+    ],
+    "donts": [
+      "Don't parecer uma landing SaaS genérica: nada de fundo creme/areia, template hero-métrica ou grids de cards idênticos com ícone+título+texto.",
+      "Don't parecer uma plataforma de cursos / LMS: sem barras de progresso onipresentes, selos, gamificação ou densidade de dashboard.",
+      "Don't parecer um template de blog padrão (Medium/dev.to/Hashnode) nem um clone de Notion/wiki cinza-chapado sem identidade.",
+      "Don't usar border-left/border-right > 1px como faixa colorida em cards, itens de lista, callouts ou alertas (o 2px do blockquote é a única exceção).",
+      "Don't colar eyebrow UPPERCASE com tracking acima de toda seção, nem marcadores numéricos 01/02/03 como andaime; numeração só quando a ordem carrega informação.",
+      "Don't arredondar cards acima de 16px, nem parear borda 1px com drop shadow ≥16px no mesmo elemento.",
+      "Don't usar glassmorphism decorativo nem gradiente em texto fora do wordmark/hero.",
+      "Don't usar ink-faint (#5b6069) em texto de corpo: ele só passa AA como texto grande/decorativo.",
+      "Don't introduzir uma segunda família de fonte nem display fonts em labels, botões ou dados."
+    ]
+  }
+}
