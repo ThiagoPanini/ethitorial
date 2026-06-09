@@ -1,0 +1,266 @@
+---
+title: "A Janela de Contexto e a Fuga da Dumb Zone"
+date: 2026-06-09
+status: published
+tags: [ai, agents]
+summary: "A restrição que governa todo o trabalho com agentes: o que é a smart zone, por que a janela de 1M não a aumenta, e como subagents e o comando /context ajudam a não cair na dumb zone."
+---
+
+No Post anterior, fechei a fase de preparação apontando para os fundamentos: não
+determinismo, *handoffs* e o primeiro loop real de trabalho. O curso começa esses
+fundamentos por um lugar que, à primeira vista, parece teoria adiável: as
+restrições dos LLMs. É o oposto de adiável. É a base que decide se o resto vai
+funcionar.
+
+A tese das quatro primeiras aulas do dia 1 é direta: o recurso mais escasso de um
+agente não é inteligência, é espaço. A **janela de contexto** governa tudo o que
+vem depois, e quase toda técnica que o curso ensina mais tarde existe para
+proteger esse espaço. Decidi tratar essas aulas como um Post único porque elas
+contam uma história só — a janela de contexto e as estratégias para não estourá-la.
+
+## Por que começar pela restrição, e não pela técnica
+
+O Matt abre com uma provocação que vale repetir: um LLM não é um desenvolvedor
+júnior muito animado que trabalha 24 horas por dia. É algo mais estranho e mais
+limitado que isso. E o aviso que acompanha a provocação é o que me fez levar a
+aula a sério: se você não entende as restrições, vai culpar o modelo, o provedor
+ou o Claude Code quando algo der errado — quando, na verdade, você está
+trabalhando *contra* a natureza do modelo em vez de *com* ela.
+
+Este Post não é sobre truques de *prompt*. É sobre entender por que o agente fica
+mais burro conforme a conversa cresce, e o que o *harness* faz para adiar esse
+momento. Quem internaliza isso para de brigar com a ferramenta e começa a desenhar
+o trabalho em torno do limite real dela.
+
+## Smart zone e dumb zone: por que adicionar um token custa caro
+
+A primeira restrição é a mais importante, e é a que volta o curso inteiro. Um LLM
+recebe texto, quebra em pedaços e transforma cada pedaço num número — um *token*.
+Tudo o que o modelo enxerga de uma vez são os tokens dentro da janela de contexto,
+que costumava terminar por volta de 200 mil tokens.
+
+A intuição enganosa é achar que adicionar um token custa "mais um número na
+memória". Não é isso. O modelo não guarda só o token; guarda **a relação dele com
+todos os outros tokens**. E aí a conta explode:
+
+| Tokens na janela | Relações a rastrear |
+| --- | --- |
+| 4 | 6 |
+| 8 | 28 |
+| 100 | ~5.000 |
+
+A escala é quadrática, não linear. O Matt usa uma analogia que gruda: não é como
+acrescentar uma letra a um documento, é como adicionar um time a um campeonato de
+pontos corridos — cada time novo joga contra todos os outros, e o número de jogos
+dispara. Cada token novo é um time novo nessa liga.
+
+Na prática, isso cria duas regiões dentro da mesma janela. Cedo, com a janela
+ainda vazia, o modelo está na **smart zone**: tem folga de atenção, as relações
+não estão tensionadas, e ele raciocina com nitidez sobre tudo o que está no
+contexto. Conforme a janela enche, ele sobe para a **dumb zone**: alucinações
+começam a aparecer, o raciocínio piora, e às vezes ele não consegue nem recuperar
+uma informação que está ali, parada, na própria janela.
+
+Onde a dumb zone começa é tema de alguma controvérsia, mas o Matt fica paranoico
+por volta dos 40%. Numa janela de 200 mil tokens, isso são os 80 mil. Alguns
+diriam que é agressivo demais, que talvez 60% ou 70%, mas todo mundo concorda que
+a dumb zone existe e que ela precisa estar no seu radar sempre que você usa um
+LLM.
+
+Sei que esse trecho é o mais denso do Post. Ele é também o mais importante: se só
+uma ideia daqui sobreviver, que seja esta — a janela de contexto tem um teto
+prático bem antes do teto técnico, e o seu trabalho é não cruzá-lo.
+
+## A janela de 1 milhão não aumenta a smart zone
+
+Aqui entra a atualização que mais me chamou atenção, porque é fácil entendê-la ao
+contrário. Desde que o curso foi gravado, a janela de contexto dominante saltou de
+200 mil para um milhão de tokens — o Claude [liberou janelas de 1M](https://claude.com/blog/1m-context-ga)
+para Opus 4.6 e Sonnet 4.6, e hoje esse já é o padrão de muita gente no Claude Code.
+
+A pergunta óbvia é: isso aposenta a conta de smart zone e dumb zone? Os 40% ainda
+valem? A resposta do Matt é seca e contraintuitiva: a janela de 1M **não move a
+smart zone**. Ela continua sendo algo entre 80 mil e 100 mil tokens. O que a janela
+maior fez foi entregar muito mais dumb zone. Você pode trabalhar mais tempo na
+região ruim agora, se quiser, mas a região boa praticamente não cresceu.
+
+A consequência operacional é a parte que anotei para mim e que vale mais que o
+número: **pare de pensar em porcentagem e passe a pensar em tokens absolutos**. Os
+40% eram uma régua para a janela de 200 mil. Numa janela de 1M, 40% são 400 mil
+tokens — muito além da smart zone. O limite real está na contagem de tokens, não
+na barra de progresso. É um detalhe que muda a forma de monitorar o agente, e vou
+voltar nele quando falar do comando `/context`.
+
+## As outras restrições puxam tudo para o mesmo lugar
+
+A smart zone é a restrição central, mas o curso lista mais três, e o ponto bonito é
+que todas convergem para a mesma conclusão. Resumi assim:
+
+| Restrição | O que é | O que ela te obriga a fazer |
+| --- | --- | --- |
+| Smart zone / dumb zone | A atenção escala quadraticamente; cedo o modelo raciocina nítido, tarde ele degrada | Manter o trabalho nos primeiros ~80–100 mil tokens |
+| LLM não é banco de dados | O conhecimento de treino é um *JPEG borrado*, comprimido até quase sumir | Trazer doc e código no contexto, não confiar na memória do modelo |
+| *Knowledge cutoff* | Treinado até uma data; nada posterior entrou na memória paramétrica | Fornecer versões novas de libs no contexto, não esperar que ele saiba |
+| *Statelessness* | Cada conversa nova começa do zero, sem memória da anterior | Investir em organização do repo e em doc, porque a exploração se repete sempre |
+
+A metáfora do *JPEG borrado* é a que melhor desarma o erro mais comum: tratar o LLM
+como um banco de dados que recupera fatos do treino com precisão. Ele viu
+praticamente todo o conhecimento público da internet, mas comprimiu isso num
+conjunto de parâmetros pequeno o suficiente para caber numa GPU. Quando você
+pergunta algo, ele não consulta o dado original — consulta essa lembrança
+embaçada. Por isso a resposta é, *por design*, não confiável.
+
+O que muda tudo é a última frase dessa aula: a única coisa que o modelo enxerga com
+nitidez total, em dados crus, é o que está na janela de contexto *agora*. É por isso
+que as quatro restrições apontam para o mesmo lugar. Conhecimento de treino é
+borrado; só o contexto é nítido; mas o contexto é finito e degrada quando enche.
+A janela de contexto não é só um limite — é a única memória boa que o modelo tem.
+
+## Statelessness transforma exploração em custo fixo
+
+Das quatro restrições, a mais estranha e a que você sente primeiro é a
+*statelessness*. O Matt compara o modelo ao personagem de *Memento*, que acorda
+todo dia sem lembrança da véspera. Na prática, é como contratar um desenvolvedor
+novo a cada conversa: alguém que nunca viu o seu código, não conhece os padrões e
+não faz ideia de como o projeto está organizado.
+
+Isso tem uma consequência que muda como penso em exploração. Ela não é uma tarefa
+de setup que você faz uma vez. É o piso de toda interação com o agente. Antes de
+escrever qualquer linha, o modelo precisa se situar: descobrir a stack, entender o
+propósito do repositório, achar onde mora a autenticação, qual modo do React Router
+o app usa, que papéis de usuário existem. E cada nova sessão paga esse custo de
+novo, do zero.
+
+No exercício, isso vira uma habilidade concreta: usar o próprio agente para
+explorar o repositório mais rápido do que você faria à mão. Um *prompt* inicial
+simples — "me diga qual é a stack deste repo e qual o propósito dele" — e depois
+perguntas de aprofundamento, observando como ele cava: lê arquivos, roda comandos,
+checa estrutura. O detalhe que importa para este Post é o custo escondido:
+**exploração consome smart zone**. Cada arquivo lido, cada comando rodado, ocupa
+tokens da mesma região boa que você precisa preservar para a implementação. Quanto
+mais o agente explora, melhor ele entende o repo — e menos espaço sobra para
+construir. Esse é o dilema que a próxima estratégia resolve.
+
+## Subagents: como o harness devolve espaço ao orquestrador
+
+Imagine a janela de contexto dividida em blocos. Um pedaço fixo é sempre do
+*system prompt* e das ferramentas — o que o Claude Code precisa carregar para se
+comportar como agente. Depois vem a exploração. Depois a implementação. E o que
+sobra é espaço vazio, que pode ou não estar dentro da smart zone, dependendo de
+quanto os outros blocos ocuparam. O sonho de qualquer *harness* é encolher esses
+blocos, porque cada token poupado na exploração é um token a mais disponível na
+smart zone para a implementação.
+
+Mas explorar menos significa entender pior o repo, o que significa implementar
+pior. Parece um beco sem saída. A solução que o Claude Code adota é elegante: o
+agente com quem você conversa — o **agente orquestrador** — não faz a exploração
+dentro da própria janela. Ele gera um **subagent**, que é uma janela de contexto
+nova e separada, e delega a tarefa.
+
+O subagent gasta os *próprios* tokens explorando, tudo dentro da smart zone dele, e
+devolve ao orquestrador apenas um resumo do que achou — não cada chamada de
+ferramenta, não cada arquivo lido. É uma mecânica de delegação: o orquestrador é o
+dev sênior, o subagent é o ajudante que recebe uma tarefa focada e volta com o
+relatório. O orquestrador ganha o contexto útil sem carregar todo o detalhe
+intermediário.
+
+Dá para ir além. O orquestrador pode disparar vários subagents em paralelo, cada um
+numa fatia da tarefa, e cada um reportando de volta. E os subagents podem usar
+modelos diferentes — para algo simples como exploração, é comum o Claude Code
+subir um Haiku, que é rápido e entrega bom resultado. No fim, o subagent é um
+mecanismo de economia de contexto, e o Claude Code usa isso de forma agressiva: você
+vai vê-lo por toda parte.
+
+Aqui entra uma leitura pessoal, porque o curso trata subagents como algo que você
+configura e orquestra, e a minha experiência tem ido para outro lado. Houve um
+momento em que subagent foi *o* assunto da comunidade, justamente por causa dessa
+característica de proteger a janela de contexto. Mas vejo cada vez mais o
+*harness* — o Claude Code, no caso — gerenciando isso por conta própria, gerando
+subagents de exploração nativamente, sem eu precisar desenhar nada. Subagents
+customizados ainda ganham seu lugar quando a tarefa é específica e repetível e você
+quer isolar o contexto dela de propósito. Mas, para o caso básico, é bem provável
+que a ferramenta já resolva quase tudo sozinha. Vale entender o conceito menos para
+configurá-lo à mão e mais para *reconhecer* o que o agente está fazendo quando você
+o vê delegar.
+
+## Construir uma feature com paranoia de contexto
+
+A quarta aula junta tudo num exercício prático: construir a primeira feature com o
+Claude Code. O alvo é um sistema de avaliação de cursos — alunos deixam uma nota de
+1 a 5 estrelas, sem review escrita, e a média aparece na página de listagem e na
+página do curso. O Matt escolheu essa feature de propósito: ela é "carnuda" o
+bastante para tocar todas as camadas do código (schema, serviço, rotas, UI), mas
+não tão pesada de interface a ponto de virar um projeto à parte.
+
+O *prompt* inicial é deliberadamente leve, uma ou duas frases descrevendo o que se
+quer, sem especificação detalhada — só o suficiente para apontar a direção. E o
+objetivo do aluno não é acertar a feature perfeita de primeira. É entrar em modo de
+observação: ver se o Claude dispara um subagent de exploração, quais arquivos ele lê
+primeiro, que perguntas ele faz, qual plano ele propõe. Dar um pouco de *steering*
+quando algo destoa da intenção, mas, sobretudo, observar o comportamento padrão da
+ferramenta.
+
+E é aqui que mora o item que mais anotei das quatro aulas: o comando `/context`.
+
+```txt
+/context
+```
+
+Ele abre um gráfico de barras mostrando quanto da janela cada coisa está ocupando —
+*system prompt*, ferramentas, mensagens, e o uso do orquestrador principal. É o
+instrumento que torna a smart zone visível em vez de adivinhada. O Post anterior já
+tinha apontado o `/context` como o primeiro degrau de gestão de contexto; aqui ele
+ganha um uso disciplinado. A régua do Matt é checar o consumo conforme o agente
+trabalha e ficar nervoso por volta dos 40% do orquestrador — lembrando do ajuste da
+janela de 1M, **medindo por tokens, não por porcentagem**. Se você se aproxima da
+beira da smart zone, é hora de pedir um resumo do que falta, encerrar a fase atual,
+ou começar uma sessão limpa com `/clear` para o próximo bloco de trabalho.
+
+Vale registrar dois detalhes ergonômicos do exercício. Depois de revisar o plano,
+dá para alternar para o modo *accept all edits* (o `Shift+Tab` cicla entre os modos
+de submissão), deixando o Claude implementar sem pedir permissão a cada arquivo. E,
+quando algo quebra, a recomendação é não sair consertando à mão: descreva para o
+agente, em linguagem natural, o que você esperava e o que aconteceu. Depurar em
+conversa faz parte do ciclo de construção — e cada nova rodada, claro, também
+consome contexto, o que fecha o círculo de volta no `/context`.
+
+## O que isso muda no meu fluxo
+
+Saí dessas quatro aulas com uma régua mais nítida do que tinha antes. No epistemix,
+eu já gerenciava janela de contexto no olhômetro — sentia quando o agente começava
+a "viajar" e limpava a sessão por instinto. O curso me deu o vocabulário e o
+instrumento: existe uma smart zone finita, ela não cresce com a janela de 1M, e o
+`/context` mostra em tokens quão perto da borda eu estou. Trocar intuição por
+medição é exatamente o tipo de coisa que me trouxe para este curso.
+
+A consequência mais concreta é parar de raciocinar em porcentagem. A barra
+confortável de uma janela de 1M esconde que a região boa acabou há muito tokens
+atrás. Pensar em tokens absolutos, encerrar fases antes de degradar e usar `/clear`
+de propósito — não por descuido — é o começo do loop que o curso vai chamar mais
+adiante de *grill / execute / clear*. Limpar contexto deixa de ser perda e vira uma
+escolha de engenharia: dar ao agente uma moldura nova, dentro da smart zone, para a
+próxima tarefa.
+
+## Onde isso me leva
+
+A janela de contexto é a restrição que governa o resto do dia 1. As próximas aulas
+da seção entram em não determinismo, em mostrar o contexto na *status line*, em por
+que o *plan mode* decepciona e, enfim, no loop *grill / execute / clear* que
+amarra tudo. Nenhuma dessas técnicas faz sentido sem o que está aqui: elas são,
+todas, formas de manter o agente na smart zone pelo maior tempo possível.
+
+Para mim, o ganho desta etapa é ter trocado uma sensação por um modelo mental
+operável. Não é mais "o agente ficou ruim do nada". É "a janela passou da smart
+zone, e eu tenho como ver e corrigir isso". Esse é o tipo de fundamento que não
+envelhece com a próxima versão do modelo — a janela cresce, mas a disciplina de
+proteger a região boa continua sendo o trabalho.
+
+## Referências
+
+- [AI Coding for Real Engineers, página do cohort](https://www.aihero.dev/cohorts/ai-coding-for-real-engineers-m0k0w)
+- [Claude — janelas de contexto de 1 milhão de tokens](https://claude.com/blog/1m-context-ga)
+- Aula `03.01-the-constraints-of-llms`, material bruto extraído do cohort
+- Aula `03.02-what-are-subagents`, material bruto extraído do cohort
+- Aula `03.03-codebase-exploration`, material bruto extraído do cohort
+- Aula `03.04-build-a-feature`, material bruto extraído do cohort
+- Post anterior: `Fase Inicial, Setup e Ambientação`, neste mesmo Source
