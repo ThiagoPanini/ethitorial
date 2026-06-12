@@ -2,9 +2,10 @@
 
 from typing import Annotated
 
-from fastapi import Cookie, Depends, FastAPI, Request
+from fastapi import Cookie, Depends, FastAPI, HTTPException, Request, status
+from sqlalchemy import select
 
-from epistemix.db import ping_db
+from epistemix.db import SessionLocal, ping_db
 from epistemix.engagement import views as views_module
 from epistemix.engagement import votes as votes_module
 from epistemix.identity.dependencies import get_current_user, require_auth
@@ -45,6 +46,23 @@ async def me_authenticated(
 ) -> dict[str, str]:
     """Returns minimal user info; 401 if unauthenticated. Useful for auth checks."""
     return {"username": user.username, "role": user.role}
+
+
+@app.get("/api/authors/{username}")
+async def get_author(username: str) -> dict:
+    """Returns public profile of a user by username. 404 if not found."""
+    if SessionLocal is None:
+        raise HTTPException(status_code=503, detail="Database not configured")
+    async with SessionLocal() as db:
+        result = await db.execute(select(AuthUser).where(AuthUser.username == username))
+        user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
+    return {
+        "name": user.name,
+        "username": user.username,
+        "image": user.image,
+    }
 
 
 @app.post("/api/views/{artifact_id:path}", status_code=204)
