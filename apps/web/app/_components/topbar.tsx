@@ -1,5 +1,7 @@
 "use client";
 
+import { AccountNav } from "./account-nav";
+
 const GITHUB_URL = "https://github.com/ThiagoPanini/epistemix";
 
 function LiveDot() {
@@ -41,6 +43,7 @@ export function Topbar({ onPaletteOpen }: TopbarProps) {
         <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="kbtn" aria-label="GitHub">
           GITHUB
         </a>
+        <AccountNav />
       </div>
     </header>
   );

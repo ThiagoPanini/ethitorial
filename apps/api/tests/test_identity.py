@@ -198,6 +198,57 @@ def test_identity_migration_upgrade_creates_tables(tmp_path):
     assert "auth_verification" in tables
 
 
+# ---------------------------------------------------------------------------
+# /api/authors/{username} — public profile
+# ---------------------------------------------------------------------------
+
+
+def test_get_author_returns_profile_when_user_exists():
+    user = _make_user()
+
+    import epistemix.main as main_module
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = user
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=mock_result)
+
+    mock_session_maker = MagicMock()
+    mock_session_maker.return_value.__aenter__ = AsyncMock(return_value=mock_db)
+    mock_session_maker.return_value.__aexit__ = AsyncMock(return_value=None)
+
+    with patch.object(main_module, "SessionLocal", mock_session_maker):
+        client = TestClient(app)
+        response = client.get("/api/authors/testuser")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["username"] == "testuser"
+    assert data["name"] == "Test User"
+    assert "id" not in data  # id não é público
+
+
+def test_get_author_returns_404_when_user_not_found():
+    import epistemix.main as main_module
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=mock_result)
+
+    mock_session_maker = MagicMock()
+    mock_session_maker.return_value.__aenter__ = AsyncMock(return_value=mock_db)
+    mock_session_maker.return_value.__aexit__ = AsyncMock(return_value=None)
+
+    with patch.object(main_module, "SessionLocal", mock_session_maker):
+        client = TestClient(app)
+        response = client.get("/api/authors/nobody")
+
+    assert response.status_code == 404
+
+
 def test_identity_migration_downgrade_removes_tables(tmp_path):
     import sqlalchemy as sa
     from alembic.config import Config
