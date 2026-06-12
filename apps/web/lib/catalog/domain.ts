@@ -40,6 +40,19 @@ export interface NowLearningItem {
   progress?: number;
 }
 
+export type TimelineEventType = "publication" | "note" | "lecture" | "start" | "conquest";
+
+export interface TimelineEvent {
+  id: string;
+  type: TimelineEventType;
+  date: string;
+  year: string;
+  label: string;
+  detail: string;
+  href: string;
+  hot: boolean;
+}
+
 export interface Tag {
   slug: string;
   label: string;

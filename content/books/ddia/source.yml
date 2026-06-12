@@ -2,3 +2,6 @@ name: "Designing Data-Intensive Applications"
 external_url: "https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/"
 author: "Martin Kleppmann"
 description: "O livro definitivo sobre sistemas distribuídos e data engineering: replicação, particionamento, transações, consistência e muito mais."
+study_status: ongoing
+started_at: "2026-05-15"
+last_activity: "2026-06-06"
