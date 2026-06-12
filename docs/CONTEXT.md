@@ -2,7 +2,7 @@
 
 Este documento é o **glossário e conjunto de invariantes** que define a linguagem comum do projeto. É lido por humanos e por agentes de IA antes de qualquer trabalho substantivo. Mudanças aqui são mudanças no jeito de pensar o produto.
 
-> **Status:** atualizado após sessão `grill-with-docs` de pivô (2026-05-31): de hub de apresentações (`talkingpres`) para hub pessoal de aprendizado multi-formato (`epistemix`). Mudanças futuras passam por ADR + atualização inline.
+> **Status:** atualizado após sessão `grill-with-docs` de pivô (2026-05-31): de hub de apresentações (`talkingpres`) para hub pessoal de aprendizado multi-formato (`epistemix`). Atualizado novamente na sessão `grill-with-docs` de **redesenho completo (2026-06-12)**: o protótipo de alta fidelidade da Direção A ("Prensa") em `.claude/design/` passa a ser o alvo absoluto de produto; entram os conceitos derivados *Now Learning*, *Timeline* e *Knowledge Graph*, e o eixo de **status de estudo**. Mudanças futuras passam por ADR + atualização inline.
 
 ## Glossário
 
@@ -19,6 +19,10 @@ Este documento é o **glossário e conjunto de invariantes** que define a lingua
 | **View** | Registro persistido de visualização de um `Artifact`. Disparado no carregamento da página (POST client-side, com filtro server-side de bots/crawlers). Dedup por `(artifact_id, session_id, day_bucket_UTC)`. Carrega `user_id` opcional, `referrer_kind` e `country_code`. Usado como sinal público de popularidade e base analítica. Ver [ADR-0009](adr/0009-view-como-entidade-persistida.md) e [ADR-0015](adr/0015-epistemix-domain-model.md). |
 | **Vote** | Upvote de usuário autenticado em um `Artifact`. Toggle (votar / desfazer). Um voto por par `(User, Artifact)`. |
 | **Comment** | Texto curto de usuário autenticado em um `Artifact`. Sujeito a moderação. |
+| **Status de estudo** | Eixo de estado **ortogonal à visibilidade** (`draft`/`published`), aplicável a um `Source` e a `Artifact`s de natureza diário-de-estudo (ex.: livro em leitura, certificação em andamento). Valores: `ongoing` ("em estudo") e `concluded` ("concluído"). Um `Artifact` pode estar `published` e `ongoing` simultaneamente. Alimenta o *Now Learning* e o evento `conquista` da *Timeline*. |
+| **Now Learning** *(UI: "Agora estudando")* | **Projeção derivada** (read-model), não entidade persistida nem superfície de autoria. Conjunto de `Source`s e `Artifact`s `published` cujo status de estudo é `ongoing`, ordenado por atividade recente. Exibido na home. |
+| **Timeline** *(UI: "Cronologia")* | **Projeção derivada** (read-model) que funde eventos do catálogo numa linha do tempo: publicação de `Post`/`Presentation`, início de estudo (de um `Source` ou `Artifact`) e conquista (um `Source` de certificação que vira `concluded`). Cada evento ancora num `Artifact` ou `Source` real. Não é entidade persistida nem autorada à parte. |
+| **Knowledge Graph** *(UI: "Grafo")* | **Projeção derivada** (read-model) da relação `Tag`↔`Artifact`: nós são `Tag`s curadas e `Artifact`s, arestas são o pertencimento de tag. Layout (posições dos nós) calculado por algoritmo determinístico — não é autorado. Clique num `Artifact` navega para sua leitura. |
 | **Narration** *(V2)* | Sequência de áudios gerados por TTS, um por `Slide`, narrados com a voz clonada do autor. Restrito ao subtipo `Presentation`. |
 | **Knowledge Base** *(V2)* | Conjunto de embeddings derivados do conteúdo de um `Artifact`, usado para responder Q&A via RAG. |
 
@@ -32,16 +36,18 @@ Este documento é o **glossário e conjunto de invariantes** que define a lingua
 4. `Comment.user_id` deve referenciar um `User` ativo.
 5. O `slug` de um `Artifact` é único dentro do seu subtipo (`Post` e `Presentation` têm espaços de slug separados) e é imutável após publicação.
 6. `Artifact` em estado `draft` não aparece em listagens públicas, busca, sitemap ou feeds.
-7. `Artifact` publicado é mutável (conteúdo, metadata exceto `slug`). Sem entidade `Version` no domínio. Versionamento explícito deferido para a Fase 4.
+7. `Artifact` publicado é mutável (conteúdo, metadata exceto `slug`). Sem entidade `Version` no domínio. Versionamento explícito permanece deferido (sem prazo; reavaliar como V2).
 8. Toda mudança em `Artifact` publicado gera registro de auditoria (V2+).
 9. `Tag` pertence a um conjunto curado fechado definido em `content/tags.yml`. Tag fora desse conjunto referenciada em frontmatter MDX falha a build. Ver [ADR-0008](adr/0008-tags-curadas.md).
 10. `Comment` é flat (sem replies aninhadas). Menções `@usuario` resolvem referência humana; não há `parent_comment_id`. Decisão pode ser revisada quando volume real justificar threading.
 11. `Comment` não recebe reações na V1/V2. `Vote` é exclusivamente sobre `Artifact`. Emoji reactions ficam fora de escopo permanente para preservar o tom curado do hub.
-12. Moderação de `Comment` na Fase 2 é exclusivamente por `User` com `role = admin`. Autor de `Artifact` não tem poder especial de moderação local.
+12. Moderação de `Comment` é exclusivamente por `User` com `role = admin`. Autor de `Artifact` não tem poder especial de moderação local.
 13. `View` conta uma vez por `(artifact_id, session_id, day_bucket_UTC)`. Gatilho: carregamento da página do `Artifact`. Bots/crawlers identificados via User-Agent são descartados. `session_id` é cookie funcional anônimo.
 14. Um `Post` está vinculado a exatamente um `Source` (se a Section pai for `with_sources`) ou diretamente a uma Section `direct` — nunca a ambos simultaneamente.
 15. `Presentation` pertence exclusivamente a uma Section `direct`. Não pode ser aninhada sob um `Source`.
-16. `Source` pertence a exatamente uma `Section` com `kind = with_sources`.
+16. `Source` pertence a exatamente uma `Section` com `kind = with_sources`. As Sections `Courses`, `Books` e `Certifications` são `with_sources` (o curso/livro/certificação é o `Source`; resenhas e notas são `Post`s vinculados a ele). `Blog` e `Presentations` são `direct`.
+17. **Status de estudo é ortogonal à visibilidade.** `ongoing`/`concluded` não substituem nem se misturam com `draft`/`published`. Um `Artifact` `draft` permanece oculto (invariante 6) independentemente do status de estudo.
+18. **`Now Learning`, `Timeline` e `Knowledge Graph` são projeções derivadas do catálogo.** Não têm persistência, autoria, nem identidade próprias: todo item que aparece neles existe como `Artifact` ou `Source`. Mudar o catálogo é a única forma de mudá-los.
 
 ## Boundaries de domínio
 
@@ -69,7 +75,10 @@ Detalhamento arquitetural em [ARCHITECTURE.md](ARCHITECTURE.md).
 | "Category" | `Section` |
 | "Item" (referindo-se a Source) | `Source` |
 | "Content" (referindo-se a Artifact) | `Artifact`, `Post` ou `Presentation` |
+| "Cronologia" *(no domínio)* | `Timeline` (no domínio). "Cronologia" é rótulo de UI. |
+| "Grafo" *(no domínio)* | `Knowledge Graph` (no domínio). "Grafo" é rótulo de UI. |
+| "Agora estudando" *(no domínio)* | `Now Learning` (no domínio). "Agora estudando" é rótulo de UI. |
 
 ## Decisões abertas
 
-_(nenhuma no momento — sessão `grill-with-docs` de pivô (2026-05-31) resolveu o modelo de domínio epistemix)_
+Sessão de redesenho (2026-06-12) resolveu: Direção visual A ("Prensa") como alvo absoluto; *Now Learning*/*Timeline*/*Knowledge Graph* como projeções derivadas; eixo de status de estudo ortogonal; Books/Certs permanecem `with_sources`; **URLs EN aninhadas pela hierarquia** (`/courses/<source>/<slug>`, `/books/...`, `/certifications/...`, `/blog/<slug>`, `/talks/<slug>`, `/timeline`, `/graph`); painel de *Tweaks* do protótipo **descartado** (artefato de prototipação — fixa acento da Direção A + `prefers-reduced-motion`); **nav de conta completa** no header (avatar, menu, perfil `/authors/<username>`) — extensão deliberada, já que o header do protótipo A não previa login. Pendente: **provedor de auth** (engagement trazido para já — decidir Clerk vs. better-auth via ADR dedicado na implementação).

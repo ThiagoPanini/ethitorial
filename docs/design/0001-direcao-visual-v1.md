@@ -1,11 +1,20 @@
 ---
 numero: 0001
 titulo: Direção visual e UX da V1 — decisões para prototipação de alta fidelidade
-status: draft
+status: superseded
 data: 2026-06-05
+superseded_por: ../DESIGN.md
+superseded_em: 2026-06-12
 escopo: apps/web (Fase 1+)
 origem: sessão grill-with-docs de 2026-06-05
 ---
+
+> ⚠️ **SUPERSEDED por [../DESIGN.md](../DESIGN.md) (2026-06-12).** Esta direção
+> (violeta/aurora + Inter + sabor Linear) foi **rompida deliberadamente** pelo
+> protótipo de alta fidelidade que ela mesma ajudou a gerar. A direção vencedora é
+> a **"Prensa" (Direção A)**: editorial técnica, Archivo + Source Serif 4 + Spline
+> Sans Mono, acento laranja. Mantido como histórico do raciocínio que levou ao
+> protótipo.
 
 # Direção visual e UX — V1 (epistemix)
 

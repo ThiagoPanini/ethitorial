@@ -51,7 +51,7 @@ Documento vivo. Reflete a arquitetura **atual e pretendida**. Mudanças signific
 - UI de auth, perfil, votos, comentários
 - Server Actions exclusivas para concerns do Next (revalidar cache, cookies funcionais, redirects) — ver [ADR-0010](adr/0010-server-actions-apenas-para-concerns-do-next.md)
 - Consome `apps/api` via `fetch` para todas as operações **dinâmicas** de domínio (voto, comentário, perfil, upload). Cliente gerado a partir do OpenAPI.
-- **Exceção da Fase 1 (catálogo read-only) — ver [ADR-0018](adr/0018-catalogo-mdx-native-na-fase-1.md):** o catálogo (Section/Source/Artifact) é **MDX-native** — lido direto de `content/**/*.mdx` em RSC/build-time, sem passar pela API. O `catalog` boundary Python e os endpoints REST de catálogo entram na Fase 2/3, atrás do mesmo port (adapter MDX→Postgres). "Tudo via fetch da API" segue valendo para operações dinâmicas (engagement, auth, upload).
+- **Catálogo MDX-native — ver [ADR-0018](adr/0018-catalogo-mdx-native-na-fase-1.md):** o catálogo (Section/Source/Artifact) é **MDX-native** — lido direto de `content/**/*.mdx` em RSC/build-time, sem passar pela API. "Tudo via fetch da API" vale para as operações **dinâmicas** (engagement, auth, upload), que entram **agora** no push feature-completo ([ADR-0019](adr/0019-redesenho-prototipo-absoluto-push-feature-completo.md)). O `catalog` boundary Python + endpoints REST de catálogo ficam para a futura migração CMS (adapter MDX→Postgres atrás do mesmo port), sem amarração a número de fase.
 
 ### `apps/api` (FastAPI)
 

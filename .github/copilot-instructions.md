@@ -5,10 +5,10 @@ A fonte canônica de instruções operacionais deste repositório é [`AGENTS.md
 Documentação adicional obrigatória:
 
 - [`docs/VISION.md`](../docs/VISION.md) — por que o produto existe
+- **Alvo absoluto:** o protótipo da Direção A em `.claude/design/epistemix-redesenho-completo/` + [`docs/DESIGN.md`](../docs/DESIGN.md) (sistema visual) — ver [ADR-0019](../docs/adr/0019-redesenho-prototipo-absoluto-push-feature-completo.md)
 - [`docs/CONTEXT.md`](../docs/CONTEXT.md) — glossário e invariantes de domínio
 - [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — desenho de alto nível e boundaries
-- [`docs/ROADMAP.md`](../docs/ROADMAP.md) — fases e marcos
-- [`docs/adr/`](../docs/adr/) — decisões registradas
+- [`docs/adr/`](../docs/adr/) — decisões registradas. O [`docs/ROADMAP.md`](../docs/ROADMAP.md) faseado foi **aposentado** (ADR-0019); execução vive nas issues do GitHub.
 
 ## Resumo das regras
 
@@ -19,4 +19,4 @@ Documentação adicional obrigatória:
 - **Commits:** Conventional Commits. PRs pequenos (~300 LOC alvo).
 - **Decisão arquitetural nova:** propor ADR antes de implementar.
 - **Mudança em invariante de domínio:** atualizar `docs/CONTEXT.md` no mesmo PR.
-- **Não introduzir features de fases futuras** (ver ROADMAP). Não usar `--force` ou `--no-verify`. Não commitar segredos.
+- **Não introduzir features V2 de `narration`** (voz/RAG, marcadas *(V2)* no CONTEXT.md) sem ADR — foco é fechar o protótipo da Direção A. Não usar `--force` ou `--no-verify`. Não commitar segredos.
