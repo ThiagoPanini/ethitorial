@@ -12,6 +12,14 @@ export const sectionSchema = z.object({
 
 export const sectionsFileSchema = z.array(sectionSchema);
 
+// YAML sem aspas parseia `2026-06-05` como Date; aceitamos ambos e
+// normalizamos para a data ISO (YYYY-MM-DD).
+const isoDateSchema = z
+  .union([z.string(), z.date()])
+  .transform((value) => (value instanceof Date ? value.toISOString().slice(0, 10) : value));
+
+export const studyStatusSchema = z.enum(["ongoing", "concluded"]);
+
 // `source.yml` usa snake_case; mapeamos para o domínio em camelCase.
 export const sourceFileSchema = z.object({
   name: z.string(),
@@ -22,6 +30,11 @@ export const sourceFileSchema = z.object({
   // app/content-assets/[...segments]. Use caminhos relativos, como _assets/capa.webp.
   cover: z.string().optional(),
   author_avatar: z.string().optional(),
+  // Eixo de status de estudo (invariante 17 — ortogonal a draft/published).
+  study_status: studyStatusSchema.optional(),
+  started_at: isoDateSchema.optional(),
+  last_activity: isoDateSchema.optional(),
+  progress: z.number().min(0).max(100).optional(),
 });
 
 export const tagSchema = z.object({
@@ -32,12 +45,6 @@ export const tagSchema = z.object({
 export const tagsFileSchema = z.array(tagSchema);
 
 export const postStatusSchema = z.enum(["draft", "published"]);
-
-// YAML sem aspas parseia `2026-06-05` como Date; aceitamos ambos e
-// normalizamos para a data ISO (YYYY-MM-DD).
-const isoDateSchema = z
-  .union([z.string(), z.date()])
-  .transform((value) => (value instanceof Date ? value.toISOString().slice(0, 10) : value));
 
 export const postFrontmatterSchema = z.object({
   title: z.string(),

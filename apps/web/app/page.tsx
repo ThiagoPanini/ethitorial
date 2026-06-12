@@ -53,9 +53,11 @@ export default function Home() {
     return { slug: s.slug, title: s.title, description: s.description, count };
   });
 
+  const nowLearning = catalog.getNowLearning();
+
   return (
     <AppShell>
-      <HomeView featured={featured} latest={latest} sections={sections} />
+      <HomeView featured={featured} latest={latest} sections={sections} nowLearning={nowLearning} />
     </AppShell>
   );
 }

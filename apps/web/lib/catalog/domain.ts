@@ -12,6 +12,8 @@ export interface Section {
   description: string;
 }
 
+export type StudyStatus = "ongoing" | "concluded";
+
 export interface Source {
   slug: string;
   sectionSlug: string;
@@ -19,8 +21,23 @@ export interface Source {
   externalUrl: string;
   author: string;
   description: string;
-  cover?: string; // caminho relativo da capa em content/<section>/<source>/
-  authorAvatar?: string; // caminho relativo do avatar do autor, idem
+  cover?: string;
+  authorAvatar?: string;
+  studyStatus?: StudyStatus;
+  startedAt?: string;
+  lastActivity?: string;
+  progress?: number;
+}
+
+export interface NowLearningItem {
+  kind: "source";
+  sectionSlug: string;
+  sourceSlug: string;
+  href: string;
+  title: string;
+  detail: string;
+  lastActivity: string;
+  progress?: number;
 }
 
 export interface Tag {
