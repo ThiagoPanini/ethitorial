@@ -1,6 +1,15 @@
-import { getSiteModel } from "@/lib/site/model";
-import { HomeLanding } from "./_components/home-landing";
+import { AppShell } from "./_components/app-shell";
+import { WipPage } from "./_components/wip-page";
+
+export const metadata = { title: "epistemix" };
 
 export default function Home() {
-  return <HomeLanding model={getSiteModel()} />;
+  return (
+    <AppShell>
+      <WipPage
+        title="epistemix"
+        description="Hub pessoal de aprendizado — posts, cursos, livros, certificações e palestras."
+      />
+    </AppShell>
+  );
 }
