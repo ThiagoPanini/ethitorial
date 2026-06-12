@@ -32,9 +32,7 @@ class ArtifactView(Base):
 
 class ArtifactVote(Base):
     __tablename__ = "artifact_vote"
-    __table_args__ = (
-        UniqueConstraint("artifact_id", "user_id", name="uq_vote_per_user"),
-    )
+    __table_args__ = (UniqueConstraint("artifact_id", "user_id", name="uq_vote_per_user"),)
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     artifact_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
