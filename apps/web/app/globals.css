@@ -1033,6 +1033,173 @@ button {
   justify-self: start;
 }
 
+/* ---- Discussão (E4 comment section) ---- */
+.disc-head {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.disc-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fnt);
+  margin-left: 10px;
+}
+
+.cmt-list {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cmt-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--ln);
+}
+
+.cmt-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fnt);
+  flex-wrap: wrap;
+}
+
+.cmt-username {
+  font-weight: 500;
+  color: var(--mut);
+}
+
+.cmt-badge {
+  color: var(--ac-text);
+  border: 1px solid var(--ac-line);
+  padding: 0 5px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.cmt-date {
+  flex: 1;
+}
+
+.cmt-del {
+  font-size: 16px;
+  color: var(--fnt);
+  line-height: 1;
+  transition: color 120ms;
+}
+
+.cmt-del:hover {
+  color: oklch(0.7 0.2 25);
+}
+
+.cmt-body {
+  font-size: 14px;
+  color: var(--mut);
+  margin-top: 8px;
+  line-height: 1.6;
+  max-width: 620px;
+}
+
+.mention {
+  background: var(--ac-soft);
+  color: var(--ac-text);
+  padding: 0 3px;
+  border-radius: 2px;
+  font-style: normal;
+}
+
+.cmt-write {
+  margin-top: 20px;
+}
+
+.cmt-form {
+  display: grid;
+  gap: 8px;
+}
+
+.cmt-textarea {
+  background: var(--bg2);
+  border: 1px solid var(--ln);
+  color: var(--ink);
+  font: 400 14px / 1.5 var(--sans);
+  padding: 12px 14px;
+  min-height: 84px;
+  resize: vertical;
+  width: 100%;
+  transition: border-color 140ms;
+}
+
+.cmt-textarea:focus {
+  outline: none;
+  border-color: var(--ac-line);
+}
+
+.cmt-textarea:disabled {
+  opacity: 0.5;
+}
+
+.cmt-error {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: oklch(0.7 0.2 25);
+}
+
+.cmt-form-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cmt-chars {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--fnt);
+}
+
+.cmt-submit {
+  background: var(--ac);
+  color: #14100b;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  padding: 8px 14px;
+  transition: filter 140ms;
+}
+
+.cmt-submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.cmt-submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.cmt-cta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--fnt);
+  letter-spacing: 0.04em;
+}
+
+.cmt-cta a,
+.cmt-cta a:hover {
+  color: var(--ac-text);
+}
+
+.cmt-cta a:hover {
+  /* biome-ignore lint/style/noDescendingSpecificity: intentional cascade for hover state */
+  text-decoration: underline;
+}
+
 /* ============================================================
    CRONOLOGIA
    ============================================================ */
