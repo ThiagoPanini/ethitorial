@@ -11,6 +11,8 @@ export type {
   Source,
   StudyStatus,
   Tag,
+  TimelineEvent,
+  TimelineEventType,
 } from "./domain";
 
 // `content/` vive na raiz do monorepo. O Next roda (dev/build) com cwd em

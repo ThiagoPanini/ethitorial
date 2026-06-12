@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import matter from "gray-matter";
 import yaml from "js-yaml";
-import type { NowLearningItem, Post, Section, Source, Tag } from "./domain";
+import type { NowLearningItem, Post, Section, Source, Tag, TimelineEvent } from "./domain";
 import { isReservedSectionSlug } from "./reserved";
 import {
   postFrontmatterSchema,
@@ -22,6 +22,7 @@ export interface Catalog {
   getDirectPost(sectionSlug: string, postSlug: string): Post | undefined;
   getTags(): Tag[];
   getNowLearning(): NowLearningItem[];
+  getTimelineEvents(): TimelineEvent[];
 }
 
 function readYaml(path: string): unknown {
@@ -153,6 +154,78 @@ export function loadCatalog(rootDir: string): Catalog {
       .filter((p) => p.status === "published" && p.sectionSlug === sectionSlug)
       .sort((a, b) => b.date.localeCompare(a.date));
 
+  const sectionTitle = (slug: string) =>
+    sections.find((section) => section.slug === slug)?.title ?? slug;
+
+  const timelineEvents = (): TimelineEvent[] =>
+    [
+      ...posts
+        .filter((post) => post.status === "published")
+        .map((post) => {
+          const source = sources.find(
+            (candidate) =>
+              candidate.sectionSlug === post.sectionSlug && candidate.slug === post.sourceSlug,
+          );
+          return {
+            id: `note:${post.sectionSlug}/${post.sourceSlug}/${post.slug}`,
+            type: "note" as const,
+            date: post.date,
+            year: post.date.slice(0, 4),
+            label: post.title,
+            detail: source?.name ?? sectionTitle(post.sectionSlug),
+            href: `/${post.sectionSlug}/${post.sourceSlug}/${post.slug}`,
+            hot: false,
+          };
+        }),
+      ...directPosts
+        .filter((post) => post.status === "published")
+        .map((post) => {
+          const type: TimelineEvent["type"] =
+            post.sectionSlug === "presentations" ? "lecture" : "publication";
+          return {
+            id: `${type}:${post.sectionSlug}/${post.slug}`,
+            type,
+            date: post.date,
+            year: post.date.slice(0, 4),
+            label: post.title,
+            detail: sectionTitle(post.sectionSlug),
+            href: `/${post.sectionSlug}/${post.slug}`,
+            hot: true,
+          };
+        }),
+      ...sources.flatMap((source) => {
+        const events: TimelineEvent[] = [];
+        if (source.startedAt) {
+          events.push({
+            id: `start:${source.sectionSlug}/${source.slug}`,
+            type: "start",
+            date: source.startedAt,
+            year: source.startedAt.slice(0, 4),
+            label: source.name,
+            detail: sectionTitle(source.sectionSlug),
+            href: `/${source.sectionSlug}/${source.slug}`,
+            hot: false,
+          });
+        }
+        if (source.studyStatus === "concluded") {
+          const date = source.lastActivity ?? source.startedAt;
+          if (date) {
+            events.push({
+              id: `conquest:${source.sectionSlug}/${source.slug}`,
+              type: "conquest",
+              date,
+              year: date.slice(0, 4),
+              label: source.name,
+              detail: sectionTitle(source.sectionSlug),
+              href: `/${source.sectionSlug}/${source.slug}`,
+              hot: true,
+            });
+          }
+        }
+        return events;
+      }),
+    ].sort((a, b) => b.date.localeCompare(a.date));
+
   return {
     getSections: () => sections,
     getSection: (slug) => sections.find((s) => s.slug === slug),
@@ -182,5 +255,6 @@ export function loadCatalog(rootDir: string): Catalog {
           lastActivity: s.lastActivity ?? s.startedAt ?? "",
           progress: s.progress,
         })),
+    getTimelineEvents: timelineEvents,
   };
 }

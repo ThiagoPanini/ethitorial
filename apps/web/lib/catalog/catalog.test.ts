@@ -175,6 +175,22 @@ describe("loadCatalog — study_status / Now Learning (D1)", () => {
   });
 });
 
+describe("loadCatalog — Timeline (D2)", () => {
+  it("derives publication, note, start, and conquest events ordered newest first", () => {
+    const catalog = loadCatalog(fixture("valid"));
+
+    expect(catalog.getTimelineEvents().map((event) => `${event.type}:${event.label}`)).toEqual([
+      "publication:Primeiro Post do Blog",
+      "note:Primeiras impressões",
+      "publication:Segundo Post do Blog",
+      "note:Setup inicial",
+      "start:Designing Data-Intensive Applications",
+      "conquest:AWS Solutions Architect Associate (SAA-C03)",
+      "start:AI Hero",
+    ]);
+  });
+});
+
 describe("loadCatalog — build-time validation", () => {
   it("throws when a post uses a tag outside tags.yml (invariante 9)", () => {
     expect(() => loadCatalog(fixture("invalid-tag"))).toThrow(/naoexiste/);

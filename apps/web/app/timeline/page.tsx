@@ -1,15 +1,16 @@
 import { AppShell } from "@/app/_components/app-shell";
-import { WipPage } from "@/app/_components/wip-page";
+import { TimelineView } from "@/app/_components/timeline-view";
+import { getCatalog } from "@/lib/catalog";
 
 export const metadata = { title: "Cronologia · epistemix" };
 
 export default function TimelinePage() {
+  const catalog = getCatalog();
+  const events = catalog.getTimelineEvents();
+
   return (
     <AppShell>
-      <WipPage
-        title="Cronologia"
-        description="Feed cronológico de publicações, notas de estudo e conquistas."
-      />
+      <TimelineView events={events} />
     </AppShell>
   );
 }
