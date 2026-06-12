@@ -1,16 +1,19 @@
 import Link from "next/link";
-import type { Post, Source } from "@/lib/catalog";
+import type { Post, Source, Tag } from "@/lib/catalog";
 import { formatDate } from "@/lib/format";
 
 export function SourceView({
   source,
   posts,
   sectionSlug,
+  tags = [],
 }: {
   source: Source;
   posts: Post[];
   sectionSlug: string;
+  tags?: Tag[];
 }) {
+  const tagLabel = (slug: string) => tags.find((t) => t.slug === slug)?.label ?? slug;
   const hostname = (() => {
     try {
       return new URL(source.externalUrl).hostname.replace(/^www\./, "");
@@ -51,14 +54,29 @@ export function SourceView({
             <div>
               <div className="art-t">{post.title}</div>
               {post.summary && <div className="art-x">{post.summary}</div>}
+              {post.tags.length > 0 && (
+                <div className="tagrow" style={{ marginTop: "6px" }}>
+                  {post.tags.map((tag) => (
+                    <Link
+                      key={tag}
+                      href={`/tags/${tag}`}
+                      className="tag"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {tagLabel(tag)}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
             <span className="art-date">{formatDate(post.date)}</span>
           </Link>
         ))}
         {posts.length === 0 && (
-          <p className="mono" style={{ fontSize: "13px", color: "var(--fnt)", padding: "26px 0" }}>
-            Nenhuma nota publicada ainda.
-          </p>
+          <div className="empty-state">
+            <h2>Sem notas publicadas</h2>
+            <p>Este source ainda não tem notas publicadas. Em breve.</p>
+          </div>
         )}
       </div>
     </div>

@@ -1,8 +1,18 @@
 import Link from "next/link";
-import type { Post, Section } from "@/lib/catalog";
+import type { Post, Section, Tag } from "@/lib/catalog";
 import { formatDate } from "@/lib/format";
 
-export function SectionDirectView({ section, posts }: { section: Section; posts: Post[] }) {
+export function SectionDirectView({
+  section,
+  posts,
+  tags = [],
+}: {
+  section: Section;
+  posts: Post[];
+  tags?: Tag[];
+}) {
+  const tagLabel = (slug: string) => tags.find((t) => t.slug === slug)?.label ?? slug;
+
   return (
     <div className="page wrap">
       <div className="page-head">
@@ -26,9 +36,14 @@ export function SectionDirectView({ section, posts }: { section: Section; posts:
               {post.tags.length > 0 && (
                 <div className="tagrow" style={{ marginTop: "6px" }}>
                   {post.tags.map((tag) => (
-                    <span className="tag" key={tag}>
-                      {tag}
-                    </span>
+                    <Link
+                      key={tag}
+                      href={`/tags/${tag}`}
+                      className="tag"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {tagLabel(tag)}
+                    </Link>
                   ))}
                 </div>
               )}
@@ -36,9 +51,10 @@ export function SectionDirectView({ section, posts }: { section: Section; posts:
           </Link>
         ))}
         {posts.length === 0 && (
-          <p className="mono" style={{ fontSize: "13px", color: "var(--fnt)", padding: "26px 0" }}>
-            Nenhum post publicado ainda.
-          </p>
+          <div className="empty-state">
+            <h2>Sem posts publicados</h2>
+            <p>Esta seção ainda não tem conteúdo publicado. Volte em breve.</p>
+          </div>
         )}
       </div>
     </div>

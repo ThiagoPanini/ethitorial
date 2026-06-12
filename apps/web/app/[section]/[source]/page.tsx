@@ -87,9 +87,10 @@ export default async function SourceOrDirectPostPage({
     const source = catalog.getSource(sectionSlug, sourceSlug);
     if (!source) notFound();
     const posts = catalog.getPosts(sectionSlug, sourceSlug);
+    const tags = catalog.getTags();
     return (
       <AppShell>
-        <SourceView source={source} posts={posts} sectionSlug={sectionSlug} />
+        <SourceView source={source} posts={posts} sectionSlug={sectionSlug} tags={tags} />
       </AppShell>
     );
   }

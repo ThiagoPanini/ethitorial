@@ -29,7 +29,9 @@ export function Topbar({ onPaletteOpen }: TopbarProps) {
       <div className="topbar-in wrap">
         <span className="brand">epistemix</span>
         <LiveDot />
-        <FormattedDate />
+        <span className="date-hide">
+          <FormattedDate />
+        </span>
         <span className="spacer" aria-hidden="true" />
         <button
           type="button"
@@ -40,7 +42,13 @@ export function Topbar({ onPaletteOpen }: TopbarProps) {
           <span>Buscar</span>
           <kbd>⌘K</kbd>
         </button>
-        <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="kbtn" aria-label="GitHub">
+        <a
+          href={GITHUB_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="kbtn gh-hide"
+          aria-label="GitHub"
+        >
           GITHUB
         </a>
         <AccountNav />

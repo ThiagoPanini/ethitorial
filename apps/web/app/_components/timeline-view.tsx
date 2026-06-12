@@ -49,8 +49,8 @@ export function TimelineView({ events }: { events: TimelineEvent[] }) {
         </div>
       ) : (
         <div className="empty-state">
-          <h2>Nada na cronologia ainda</h2>
-          <p>Quando o catálogo tiver publicações ou estudos datados, eles aparecem aqui.</p>
+          <h2>Cronologia vazia</h2>
+          <p>Quando o catálogo tiver publicações ou estudos datados, os eventos aparecem aqui.</p>
         </div>
       )}
     </div>

@@ -52,9 +52,10 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
   // direct sections (blog, talks)
   if (section.kind === "direct") {
     const posts = catalog.getDirectPosts(sectionSlug);
+    const tags = catalog.getTags();
     return (
       <AppShell>
-        <SectionDirectView section={section} posts={posts} />
+        <SectionDirectView section={section} posts={posts} tags={tags} />
       </AppShell>
     );
   }
