@@ -1,16 +1,14 @@
-"""epistemix API — application entrypoint.
-
-Fase 0: skeleton com health check. Os boundaries de domínio (catalog,
-identity, engagement, ...) nascem na Fase 1, com granularidade proporcional
-à complexidade — ver docs/adr/0004-hexagonal-pragmatica.md.
-"""
+"""epistemix API — application entrypoint."""
 
 from fastapi import FastAPI
+
+from epistemix.db import ping_db
 
 app = FastAPI(title="epistemix API", version="0.0.0")
 
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    """Liveness probe consumida pelo apps/web e pelo health check de deploy."""
-    return {"status": "ok"}
+    """Liveness + readiness probe. Returns db status alongside service status."""
+    db_status = await ping_db()
+    return {"status": "ok", "db": db_status}
