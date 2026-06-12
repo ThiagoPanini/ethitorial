@@ -6,10 +6,11 @@ export interface PaletteItem {
   title: string;
   section: string;
   detail?: string;
-  kind: "nav" | "post";
+  kind: "nav" | "post" | "presentation";
 }
 
 const NAV_ITEMS: PaletteItem[] = [
+  { href: "/talks", title: "Palestras", section: "Navegação", kind: "nav" },
   { href: "/timeline", title: "Cronologia", section: "Navegação", kind: "nav" },
   { href: "/graph", title: "Grafo", section: "Navegação", kind: "nav" },
 ];
@@ -38,5 +39,13 @@ export function buildPaletteItems(model: SiteModel, catalog: Catalog): PaletteIt
       })),
     );
 
-  return [...NAV_ITEMS, ...withSourcesPosts, ...directPosts];
+  const presentations: PaletteItem[] = catalog.getPresentations().map((presentation) => ({
+    href: `/talks/${presentation.slug}`,
+    title: presentation.title,
+    section: "Palestras",
+    detail: `${presentation.slides.length} slides`,
+    kind: "presentation" as const,
+  }));
+
+  return [...NAV_ITEMS, ...presentations, ...withSourcesPosts, ...directPosts];
 }

@@ -109,3 +109,22 @@ export interface Post {
   summary: string;
   body: string; // prosa MDX crua, renderizada na rota
 }
+
+export interface PresentationSlide {
+  order: number;
+  eyebrow: string;
+  title: string;
+  body: string;
+  bullets: string[];
+}
+
+export interface Presentation {
+  slug: string;
+  sectionSlug: "presentations";
+  title: string;
+  date: string;
+  status: PostStatus;
+  tags: string[];
+  summary: string;
+  slides: PresentationSlide[];
+}

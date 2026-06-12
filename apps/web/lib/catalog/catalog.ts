@@ -7,6 +7,7 @@ import type {
   KnowledgeGraphArtifactNode,
   NowLearningItem,
   Post,
+  Presentation,
   Section,
   Source,
   Tag,
@@ -15,6 +16,7 @@ import type {
 import { isReservedSectionSlug } from "./reserved";
 import {
   postFrontmatterSchema,
+  presentationFileSchema,
   sectionsFileSchema,
   sourceFileSchema,
   tagsFileSchema,
@@ -29,6 +31,8 @@ export interface Catalog {
   getPost(sectionSlug: string, sourceSlug: string, postSlug: string): Post | undefined;
   getDirectPosts(sectionSlug: string): Post[];
   getDirectPost(sectionSlug: string, postSlug: string): Post | undefined;
+  getPresentations(): Presentation[];
+  getPresentation(slug: string): Presentation | undefined;
   getTags(): Tag[];
   getNowLearning(): NowLearningItem[];
   getTimelineEvents(): TimelineEvent[];
@@ -131,6 +135,38 @@ function loadPosts(rootDir: string, source: Source, knownTags: Set<string>): Pos
   });
 }
 
+function loadPresentations(rootDir: string, knownTags: Set<string>): Presentation[] {
+  const sectionSlug = "presentations";
+  const dir = join(rootDir, sectionSlug);
+  let slugs: string[];
+  try {
+    slugs = listDirs(dir);
+  } catch {
+    return [];
+  }
+
+  return slugs.map((slug) => {
+    const raw = presentationFileSchema.parse(readYaml(join(dir, slug, "presentation.yml")));
+    const unknown = raw.tags.filter((tag) => !knownTags.has(tag));
+    if (unknown.length > 0) {
+      throw new Error(
+        `Tag(s) fora de tags.yml em ${sectionSlug}/${slug}/presentation.yml: ${unknown.join(", ")}`,
+      );
+    }
+
+    return {
+      slug,
+      sectionSlug,
+      title: raw.title,
+      date: raw.date,
+      status: raw.status,
+      tags: raw.tags,
+      summary: raw.summary,
+      slides: [...raw.slides].sort((a, b) => a.order - b.order),
+    };
+  });
+}
+
 export function loadCatalog(rootDir: string): Catalog {
   const sections = sectionsFileSchema
     .parse(readYaml(join(rootDir, "sections.yml")))
@@ -150,6 +186,7 @@ export function loadCatalog(rootDir: string): Catalog {
   const sources = sections.flatMap((section) => loadSources(rootDir, section));
   const posts = sources.flatMap((source) => loadPosts(rootDir, source, knownTags));
   const directPosts = sections.flatMap((section) => loadDirectPosts(rootDir, section, knownTags));
+  const presentations = loadPresentations(rootDir, knownTags);
 
   const publishedIn = (sectionSlug: string, sourceSlug: string) =>
     posts
@@ -166,6 +203,11 @@ export function loadCatalog(rootDir: string): Catalog {
 
   const sectionTitle = (slug: string) =>
     sections.find((section) => section.slug === slug)?.title ?? slug;
+
+  const publishedPresentations = () =>
+    presentations
+      .filter((presentation) => presentation.status === "published")
+      .sort((a, b) => b.date.localeCompare(a.date));
 
   const timelineEvents = (): TimelineEvent[] =>
     [
@@ -296,6 +338,9 @@ export function loadCatalog(rootDir: string): Catalog {
     getDirectPosts: publishedDirect,
     getDirectPost: (sectionSlug, postSlug) =>
       publishedDirect(sectionSlug).find((p) => p.slug === postSlug),
+    getPresentations: publishedPresentations,
+    getPresentation: (slug) =>
+      publishedPresentations().find((presentation) => presentation.slug === slug),
     getTags: () => tags,
     getNowLearning: () =>
       sources
