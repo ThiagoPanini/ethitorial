@@ -137,6 +137,44 @@ describe("loadCatalog — books and certifications (with_sources, invariante 16)
   });
 });
 
+describe("loadCatalog — study_status / Now Learning (D1)", () => {
+  it("loads study_status, startedAt, lastActivity, progress from source.yml", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const aihero = catalog.getSource("courses", "aihero");
+    expect(aihero).toMatchObject({
+      studyStatus: "ongoing",
+      startedAt: "2026-01-15",
+      lastActivity: "2026-06-01",
+      progress: 60,
+    });
+  });
+
+  it("getNowLearning returns ongoing sources ordered by lastActivity desc", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const items = catalog.getNowLearning();
+    expect(items.map((i) => i.sourceSlug)).toEqual(["aihero", "ddia"]);
+  });
+
+  it("getNowLearning items have href, title, detail, lastActivity", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const [first] = catalog.getNowLearning();
+    expect(first).toMatchObject({
+      kind: "source",
+      href: "/courses/aihero",
+      title: "AI Hero",
+      detail: "Courses",
+      lastActivity: "2026-06-01",
+      progress: 60,
+    });
+  });
+
+  it("getNowLearning excludes sources with no study_status or concluded", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const slugs = catalog.getNowLearning().map((i) => i.sourceSlug);
+    expect(slugs).not.toContain("aws-saa-c03");
+  });
+});
+
 describe("loadCatalog — build-time validation", () => {
   it("throws when a post uses a tag outside tags.yml (invariante 9)", () => {
     expect(() => loadCatalog(fixture("invalid-tag"))).toThrow(/naoexiste/);

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import matter from "gray-matter";
 import yaml from "js-yaml";
-import type { Post, Section, Source, Tag } from "./domain";
+import type { NowLearningItem, Post, Section, Source, Tag } from "./domain";
 import { isReservedSectionSlug } from "./reserved";
 import {
   postFrontmatterSchema,
@@ -21,6 +21,7 @@ export interface Catalog {
   getDirectPosts(sectionSlug: string): Post[];
   getDirectPost(sectionSlug: string, postSlug: string): Post | undefined;
   getTags(): Tag[];
+  getNowLearning(): NowLearningItem[];
 }
 
 function readYaml(path: string): unknown {
@@ -86,6 +87,10 @@ function loadSources(rootDir: string, section: Section): Source[] {
       description: raw.description,
       cover: raw.cover,
       authorAvatar: raw.author_avatar,
+      studyStatus: raw.study_status,
+      startedAt: raw.started_at,
+      lastActivity: raw.last_activity,
+      progress: raw.progress,
     };
   });
 }
@@ -161,5 +166,21 @@ export function loadCatalog(rootDir: string): Catalog {
     getDirectPost: (sectionSlug, postSlug) =>
       publishedDirect(sectionSlug).find((p) => p.slug === postSlug),
     getTags: () => tags,
+    getNowLearning: () =>
+      sources
+        .filter((s) => s.studyStatus === "ongoing")
+        .sort((a, b) =>
+          (b.lastActivity ?? b.startedAt ?? "").localeCompare(a.lastActivity ?? a.startedAt ?? ""),
+        )
+        .map((s) => ({
+          kind: "source" as const,
+          sectionSlug: s.sectionSlug,
+          sourceSlug: s.slug,
+          href: `/${s.sectionSlug}/${s.slug}`,
+          title: s.name,
+          detail: sections.find((sec) => sec.slug === s.sectionSlug)?.title ?? s.sectionSlug,
+          lastActivity: s.lastActivity ?? s.startedAt ?? "",
+          progress: s.progress,
+        })),
   };
 }
