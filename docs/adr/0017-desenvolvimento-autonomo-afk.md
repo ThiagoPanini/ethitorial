@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Data:** 2026-06-04
+- **Emendado em:** 2026-06-12 — segredo **gerável por máquina** rebaixado de 🔴 para 🟡 (agente gera e seta via MCP). Ver §1 e a seção **Emenda** no fim do documento.
 - **Decisores:** Thiago Panini (solo)
 - **Relacionado:** estende [ADR-0014](0014-roadmap-como-source-skill-solo-dev-assistant.md) (planejamento) e [ADR-0005](0005-deploy-checks-em-tres-portoes.md) (portões de deploy) **sem contradizê-los**; consome os MCPs configurados em [ADR-0003](0003-infra-hostinger-vps-coolify.md)/[ADR-0006](0006-cloudflare-na-frente-da-vps.md)/[ADR-0016](0016-vps-agnostica-multi-projeto.md) (guides [0004](../guides/0004-configurar-hostinger-vps-mcp.md)–[0006](../guides/0006-configurar-cloudflare-mcp.md)); herda o princípio de autonomia da [lesson 0002](../lessons/0002-harness-basico-em-github-projects.md)
 
@@ -28,13 +29,15 @@ Classifique **pelo efeito da operação, não decorando a lista de tools** (os c
 | Faixa | Regra | O agente | Exemplos (Hostinger / Coolify / Cloudflare) |
 |---|---|---|---|
 | 🟢 **Verde** | Leitura e diagnóstico. Sem efeito colateral. | Faz **sempre**, sozinho, sem anunciar. | `get*`/`list*`/`*Details*`/`*Metrics*`/`*Logs*`, `getBackups`, `getSnapshot` · `list_*`/`get_*`/`*_logs`/`diagnose_*`/`find_issues`/`get_infrastructure_overview`/`search_docs`/`server_resources`/`validate_server` · reads e `search` (observabilidade, listar zonas/registros/buckets) |
-| 🟡 **Amarelo** | Efeito **reversível e observável**. Não destrói dado nem fecha acesso. | Faz sozinho, **mas registra em [docs/ai-ops/](../ai-ops/)** o que fez e por quê (vide §4). | criar snapshot, post-install script, public key, projeto de container; start/stop/restart de um app/projeto existente · `deploy`/`redeploy`/`restart` de app existente, `env_vars`/`bulk_env_update` **não-secretas**, criar application/service/database, `scheduled_tasks`, `storages` · purge de cache |
+| 🟡 **Amarelo** | Efeito **reversível e observável**. Não destrói dado nem fecha acesso. | Faz sozinho, **mas registra em [docs/ai-ops/](../ai-ops/)** o que fez e por quê (vide §4). | criar snapshot, post-install script, public key, projeto de container; start/stop/restart de um app/projeto existente · `deploy`/`redeploy`/`restart` de app existente, `env_vars`/`bulk_env_update` **não-secretas**, criar application/service/database, `scheduled_tasks`, `storages` · purge de cache · **segredo gerável por máquina** (senha de DB, secret de sessão, token R2/API criado via API) — o agente **gera** e **seta via MCP** (ver Emenda 2026-06-12) |
 | 🔴 **Vermelho** | **Irreversível, destrutivo, mexe em segredo, ou afeta produção de forma não-recuperável.** | **Propõe e para.** Prepara tudo, descreve o comando exato, e aguarda o operador executar (ou confirmar). | mudar DNS/nameservers/PTR, qualquer operação de firewall (create/update/delete/activate/deactivate/sync), recriar/comprar/destruir VM, restaurar backup/snapshot por cima, mudar senha (root/panel), `delete*` de recurso, recovery mode, hostname · `stop_all_apps`, drop/delete de database ou app com dado, `cloud_tokens`/`private_keys` (segredos) · criar/editar/deletar registro DNS, regra WAF/firewall, configuração de zona, deletar bucket R2 |
 
 Regras de borda:
 
-- **Segredos (🔴) seguem o protocolo de operação sensível:** o agente faz toda a parte sem segredo, **documenta o comando** que toca o segredo, e entrega para o operador aplicar — não trava a sessão nem tenta forçar (consistente com a prática registrada do operador).
-- **O caminho normal para produção continua sendo `merge → deploy` ([ADR-0005](0005-deploy-checks-em-tres-portoes.md) portão 3), gated pela branch protection.** Um `redeploy`/`restart` manual via Coolify MCP é ação de **ops** (recuperação, aplicar env var), reversível e com rollback por health-check — por isso 🟡, não 🔴.
+- **Segredos — distinção pela origem (emenda 2026-06-12):**
+  - 🟡 **Gerável por máquina** (senha de DB, secret de sessão/assinatura, token R2/API que o agente cria via API do provedor): o agente **gera** um valor forte, **seta direto via MCP** no env store da plataforma (nunca commita), e registra em [docs/ai-ops/](../ai-ops/). Reversível por rotação. É o caso de E1 (Postgres) e do secret de sessão do E0a.
+  - 🔴 **Emitido por terceiro fora de MCP** (ex.: `client_secret` de OAuth do console GitHub/Google, API key paga, `cloud_tokens`/`private_keys` que o operador detém): o agente faz toda a parte sem o segredo, **documenta o comando/passo** e entrega para o operador — não trava a sessão. É o caso do E0c (OAuth social).
+- **O caminho normal para produção continua sendo `merge → deploy` ([ADR-0005](0005-deploy-checks-em-tres-portoes.md) portão 3), gated por merge humano.** Um `redeploy`/`restart` manual via Coolify MCP é ação de **ops** (recuperação, aplicar env var), reversível e com rollback por health-check — por isso 🟡, não 🔴.
 - **Na dúvida, 🔴.** É sempre seguro o agente perguntar; não é seguro o agente adivinhar para baixo.
 
 ### 2. Autonomia em feature-dev — o fluxo AFK
@@ -118,3 +121,16 @@ A skill `to-prd` (a ferramenta de *destino/PRD* do fluxo) foi adotada antecipada
 - Substrato de planejamento ([ADR-0014](0014-roadmap-como-source-skill-solo-dev-assistant.md)): ROADMAP single source, intent-loop, hook de auto-commit — intactos. Este ADR adiciona uma superfície (feature-dev/specs) ao mesmo eixo de autonomia.
 - Boundaries de domínio ([ADR-0001](0001-monorepo-and-boundaries.md)) e arquitetura hexagonal ([ADR-0004](0004-hexagonal-pragmatica.md)) — intactos.
 - A escolha de infra ([ADR-0003](0003-infra-hostinger-vps-coolify.md)/[ADR-0006](0006-cloudflare-na-frente-da-vps.md)/[ADR-0016](0016-vps-agnostica-multi-projeto.md)) — intacta; este ADR governa *como* os agentes a operam, não *o que* ela é.
+
+## Emenda — 2026-06-12: segredo gerável por máquina é 🟡
+
+**Contexto.** A versão original tratava *todo* segredo como 🔴 ("documenta e entrega para o operador"). Ao fatiar o push do redesenho ([ADR-0019](0019-redesenho-prototipo-absoluto-push-feature-completo.md)), isso travava slices de infra (E1 — provisionar Postgres, senha de DB, backup R2) e auth (E0a — secret de sessão) cujos segredos o agente **consegue gerar e aplicar sozinho** via os MCPs configurados (Coolify `env_vars`/`bulk_env_update`, Cloudflare `execute`). O operador quer autonomia plena nesses casos, **mesmo tocando produção** — que é exatamente o que os MCPs foram configurados para permitir.
+
+**Decisão.** Classificar segredo pela **origem**, não em bloco:
+
+- 🟡 **Gerável por máquina** — o agente gera um valor forte e seta direto via MCP no env store (nunca commita), registrando em [docs/ai-ops/](../ai-ops/). Reversível por rotação. Ex.: senha do Postgres, secret de sessão, token R2/API criado via API.
+- 🔴 **Emitido por terceiro fora de MCP** — exige um humano num console de terceiro (não há MCP). Permanece "propõe e documenta, operador aplica". Ex.: `client_secret` de OAuth (GitHub/Google), API key paga.
+
+**Por quê é seguro.** O segredo gerável vive só no env store da plataforma (gitleaks continua barrando commit), é rotacionável (reversível), e setá-lo é efeito 🟡 — não destrói dado nem fecha acesso. O blast radius é o de um env var, não o de um `drop database`. A regra "na dúvida, 🔴" continua valendo para qualquer segredo cuja origem o agente não tenha certeza de que é gerável por máquina.
+
+**Efeito nas issues.** E1 (#55) e E0a (#53) deixam de ser HITL → AFK. O passo humano de OAuth foi isolado no slice E0c (#61), que carrega o `hitl`.

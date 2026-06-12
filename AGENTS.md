@@ -6,13 +6,15 @@ Outros arquivos esperados por agentes específicos (`CLAUDE.md`, `.github/copilo
 
 ## O que é o epistemix
 
-Hub pessoal open source de aprendizado que centraliza artefatos intelectuais (posts de blog, notas de cursos, reviews de livros, anotações de certificações e apresentações técnicas) num espaço público com design refinado (referência: codewiki.google, dark first, gradientes leves, animações elegantes mas não extravagantes).
+Hub pessoal open source de aprendizado que centraliza artefatos intelectuais (posts de blog, notas de cursos, reviews de livros, anotações de certificações e apresentações técnicas) num espaço público de alto padrão visual. A identidade visual é o **protótipo da Direção A "Prensa"** — editorial técnica: masthead tipográfico, hairlines de jornal, serif na prosa, acento laranja como tinta de destaque. Dark-first, leitura sem fricção, navegação por teclado.
 
 **Visão completa:** [docs/VISION.md](docs/VISION.md)
-**Roadmap por fases:** [docs/ROADMAP.md](docs/ROADMAP.md)
+**Alvo de produto (absoluto):** o protótipo da Direção A em `.claude/design/epistemix-redesenho-completo/` — implementá-lo *exatamente* é a missão atual ([ADR-0019](docs/adr/0019-redesenho-prototipo-absoluto-push-feature-completo.md))
+**Sistema visual / tokens:** [docs/DESIGN.md](docs/DESIGN.md)
 **Glossário e invariantes de domínio:** [docs/CONTEXT.md](docs/CONTEXT.md)
 **Arquitetura:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 **Decisões registradas:** [docs/adr/](docs/adr/)
+**Execução:** issues do GitHub (fatias vertical-slice via skill `to-issues`, label `agent-ready`). O [docs/ROADMAP.md](docs/ROADMAP.md) faseado foi **aposentado** ([ADR-0019](docs/adr/0019-redesenho-prototipo-absoluto-push-feature-completo.md)) — fica só como histórico e runbook da infra no ar.
 **Autonomia dos agentes (AFK):** [ADR-0017](docs/adr/0017-desenvolvimento-autonomo-afk.md) — ler antes de operar MCPs ou implementar feature
 
 ## Stack (decisões registradas em ADRs)
@@ -41,14 +43,15 @@ epistemix/
 │   └── types/                      # tipos TS gerados via OpenAPI
 ├── docs/
 │   ├── VISION.md
-│   ├── ROADMAP.md
+│   ├── DESIGN.md                   # sistema visual (Direção A "Prensa")
 │   ├── CONTEXT.md
 │   ├── ARCHITECTURE.md
+│   ├── ROADMAP.md                  # superseded (histórico) — ver ADR-0019
 │   └── adr/
 └── .claude/, .agents/              # skills, agents e settings de IA
 ```
 
-Estrutura atual ainda em construção — Fase 0 do roadmap está em andamento.
+A fundação (infra, CI, Lefthook, branch protection, esqueleto web+api) está **fechada e no ar**. O trabalho corrente é implementar o protótipo da Direção A num **push feature-completo** — ver [ADR-0019](docs/adr/0019-redesenho-prototipo-absoluto-push-feature-completo.md).
 
 ## Como rodar
 
@@ -91,7 +94,8 @@ docker compose up -d postgres
 ## O que fazer
 
 - Antes de codificar feature nova: ler [docs/CONTEXT.md](docs/CONTEXT.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) e ADRs relevantes.
-- Feature nova da Fase 1+: destile o alinhamento num spec em [docs/specs/](docs/specs/) (objetivo + critério de aceite + vertical slices) antes de implementar — ver [ADR-0017](docs/adr/0017-desenvolvimento-autonomo-afk.md).
+- Antes de mexer no front: ler [docs/DESIGN.md](docs/DESIGN.md) e conferir a tela correspondente no **protótipo da Direção A** (`.claude/design/`) — ele é o alvo absoluto; divergência resolve a favor do protótipo ([ADR-0019](docs/adr/0019-redesenho-prototipo-absoluto-push-feature-completo.md)).
+- Trabalho corrente chega como **issue do GitHub** (fatia vertical-slice, label `agent-ready`), ancorada na tela do protótipo + DESIGN.md/CONTEXT.md. Frente ainda não fatiada: alinhe com o operador e use a skill `to-issues` antes de codar.
 - Decisão arquitetural nova: registre um ADR em `docs/adr/NNNN-titulo.md` antes de implementar.
 - Mudança em invariante de domínio ou glossário: atualize `docs/CONTEXT.md` no mesmo PR.
 - Mudança de comando, layout ou convenção: atualize este `AGENTS.md` no mesmo PR.
@@ -100,7 +104,7 @@ docker compose up -d postgres
 
 ## O que NÃO fazer
 
-- Não introduzir features da Fase 4 (voz/RAG) antes da Fase 3 estar fechada. Veja [docs/ROADMAP.md](docs/ROADMAP.md).
+- Não introduzir features V2 do boundary `narration` (voz clonada/TTS + RAG/Q&A) sem ADR — seguem **deferidas** (marcadas *(V2)* no CONTEXT.md); o foco é fechar o protótipo da Direção A primeiro.
 - Não acoplar lógica entre boundaries (`catalog`, `identity`, `engagement`, `narration`, `shared`, `platform`). Comunicação via interfaces explícitas, não imports diretos cross-domain.
 - Não usar `--no-verify`, `--force` ou desabilitar CI para fechar PR. Falha no hook = consertar a causa.
 - Não commitar segredos. Use `.env.example` / `.mcp.json.example`. CI roda `gitleaks` em todo PR. O `.mcp.json` real é gitignored.
@@ -118,20 +122,21 @@ Já configuradas em `.agents/skills/`:
 - `prompt-engineering-patterns` — padrões para escrever prompts e instruções
 - `skill-creator` — criar, editar e avaliar skills
 - `solo-dev-assistant` — wrapper de processo solo: `briefing` (digest de sessão), `start`, `cycle`
+- `to-issues` — quebra um alinhamento/spec em issues vertical-slice no tracker (substrato de execução atual)
+- `tdd` — implementação test-first (red-green-refactor) de cada fatia
+- `eptmx` — autoria de conteúdo publicável do catálogo (Posts: blog, nota de curso, review, cert)
 
 Skills nativas do Claude Code para usar regularmente: `init`, `verify`, `simplify`, `review`, `security-review`, `claude-api`, `update-config`.
 
 ## Board e fluxo dos agentes
 
-Plano e estado de execução vivem no **[docs/ROADMAP.md](docs/ROADMAP.md)** como single source — sem board ativo nem espelho a sincronizar (ver [ADR-0014](docs/adr/0014-roadmap-como-source-skill-solo-dev-assistant.md); o desenho anterior via GitHub Projects fica no [ADR-0013 R3](docs/adr/0013-substrato-de-planejamento-operado-por-agentes.md) como histórico). O trabalho acontece no VS Code com Claude Code, Copilot e Codex; o despacho é manual.
+O alvo de produto é o **protótipo da Direção A** (`.claude/design/`); o alvo durável vive em três âncoras — o protótipo, [docs/DESIGN.md](docs/DESIGN.md) (visual) e [docs/CONTEXT.md](docs/CONTEXT.md) (domínio). O **estado de execução vive nas issues do GitHub** — fatias vertical-slice geradas pela skill `to-issues`, com label de triagem `agent-ready`. Não há mais board nem ROADMAP faseado a sincronizar (ver [ADR-0019](docs/adr/0019-redesenho-prototipo-absoluto-push-feature-completo.md); o desenho anterior ROADMAP-as-source fica no [ADR-0014](docs/adr/0014-roadmap-como-source-skill-solo-dev-assistant.md) e o de GitHub Projects no [ADR-0013 R3](docs/adr/0013-substrato-de-planejamento-operado-por-agentes.md) como histórico). O trabalho acontece no VS Code com Claude Code, Copilot e Codex; o despacho é manual.
 
-**Estado no ROADMAP** (3 markers): `- [ ]` disponível · `🚧` em andamento (anexe `(aguardando: <razão>)` para bloqueio) · `- [x]` concluído. Bullets da fase ativa levam sufixo `` `@human` `` ou `` `@agent` `` indicando quem executa.
+**Pegar trabalho:** escolha uma issue `agent-ready` sem bloqueio em aberto (respeite o `Blocked by`). O estado vive na própria issue (assignee/labels/comentário/PR com `Closes #N`), não em documento versionado.
 
-**Orientação de sessão:** invoque `/solo-dev-assistant briefing` para o digest do que está em voo, bloqueado, disponível e recém-concluído (lê ROADMAP + git + PRs).
+**Dependências duras do push atual:** shell/tokens antes de tudo → catálogo antes dos derivados (now-learning, cronologia, grafo) e da busca → auth antes de voto/comentário → 1ª migration + Postgres antes de view/voto/comentário.
 
-**Intent-loop:** quando o operador expressar intenção de pegar uma tarefa ("vou pegar X"), localize o bullet em `docs/ROADMAP.md`, **proponha** a edição ("marco X como 🚧, confirma?") e edite após confirmação — mesma cerimônia para `[x]` ao concluir e para `(aguardando: ...)` ao bloquear. Em Claude Code o **hook PostToolUse** auto-comita a transição com prefixo `chore(roadmap):`; em Codex/Copilot, comite manualmente com o mesmo prefixo.
-
-**Issues** ficam deferidas: crie à mão só quando a tarefa exigir discussão estendida ou link de PR (`Closes #N`). Princípios evergreen do desenho: [lesson 0002](docs/lessons/0002-harness-basico-em-github-projects.md).
+Princípios evergreen do desenho de planejamento (ainda úteis como história): [lesson 0002](docs/lessons/0002-harness-basico-em-github-projects.md).
 
 ## Autonomia dos agentes (AFK)
 
@@ -144,17 +149,17 @@ Princípio raiz: **reversível e de baixo impacto → o agente faz sozinho; irre
 Classifique **pelo efeito**, não decorando a lista de tools:
 
 - 🟢 **Verde — faz sempre, sozinho.** Leitura e diagnóstico: `get*`/`list*`/`*logs*`/`*metrics*`/`diagnose_*`/`search`. Sem efeito colateral.
-- 🟡 **Amarelo — faz sozinho e registra em [docs/ai-ops/](docs/ai-ops/).** Efeito reversível: criar recurso, snapshot, env var não-secreta, `deploy`/`redeploy`/`restart` de app existente, purge de cache.
-- 🔴 **Vermelho — propõe e espera o operador.** Irreversível/destrutivo/produção: DNS/nameservers, firewall, recriar/destruir/comprar VM, restaurar backup por cima, senhas, `delete*` de recurso, `stop_all_apps`, drop de database e **segredos**. Para segredos, faça a parte sem segredo e **documente o comando** para o operador aplicar — não trave a sessão. Merge na `main` saiu desta faixa: é permitido só via PR protegido, CI verde e squash-merge.
+- 🟡 **Amarelo — faz sozinho e registra em [docs/ai-ops/](docs/ai-ops/).** Efeito reversível: criar recurso, snapshot, env var não-secreta, `deploy`/`redeploy`/`restart` de app existente, purge de cache, **segredo gerável por máquina** (senha de DB, secret de sessão, token R2/API criado via API) — gera e seta via MCP, nunca commita (emenda 2026-06-12 ao [ADR-0017](docs/adr/0017-desenvolvimento-autonomo-afk.md)).
+- 🔴 **Vermelho — propõe e espera o operador.** Irreversível/destrutivo/produção: DNS/nameservers, firewall, recriar/destruir/comprar VM, restaurar backup por cima, senhas (root/panel), `delete*` de recurso, `stop_all_apps`, drop de database, **segredo emitido por terceiro fora de MCP** (`client_secret` de OAuth, API key paga). Para esses segredos, faça a parte sem o segredo e **documente o comando** para o operador aplicar — não trave a sessão.
 
 ### Feature-dev — fluxo AFK
 
-1. 🔴 **Alinhar** (`grill-me`/`grill-with-docs`) — o operador define o *o quê*.
-2. 🟡 **PRD-lite** em `docs/specs/NNNN-<feature>.md` — objetivo + critério de aceite + **vertical slices** (fatias que atravessam schema→API→UI→testes→e2e). Ver [docs/specs/](docs/specs/).
-3. 🟢 **Implementar** — cada slice num **git worktree** dedicado, com TDD, até **PR verde**. Pode encadear slices como PRs separados.
+1. 🔴 **Alinhar** (`grill-me`/`grill-with-docs`) — o operador define o *o quê*; o protótipo da Direção A é o alvo absoluto.
+2. 🟡 **Fatiar** em **issues vertical-slice** (skill `to-issues`, label `agent-ready`) — cada issue atravessa schema→API→UI→testes→e2e, ancorada na tela do protótipo + DESIGN.md/CONTEXT.md. (Spec em [docs/specs/](docs/specs/) só para frentes grandes que pedem detalhamento extra.)
+3. 🟢 **Implementar** — cada issue num **git worktree** dedicado, com TDD, até **PR verde**. Pode encadear issues como PRs separados. **Não mergeia.**
 4. 🟡 **Mergear** — se CI estiver verde, branch atualizada, sem conflito e o GitHub permitir, o agente aplica squash-merge. Se houver conflito, atualiza a branch, reroda CI e só mergeia verde.
 
-> ⚠️ O AFK de feature só é executável quando a **Fase 0 fechar** (skeleton + CI + Lefthook + branch protection) — antes disso não há portão real para o loop se auto-verificar.
+> ✅ A fundação (skeleton + CI + Lefthook + branch protection) está **fechada e no ar**, então o AFK de feature é plenamente executável: cada fatia conta com o Portão 2 (checks no push) como portão real de auto-verificação.
 
 ## Para Claude Code, especificamente
 

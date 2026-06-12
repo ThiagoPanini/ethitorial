@@ -1,5 +1,18 @@
 # Roadmap — epistemix
 
+> ⚠️ **SUPERSEDED (2026-06-12).** A sessão `grill-with-docs` de **redesenho
+> completo** aposentou o planejamento por fases sequenciais. O alvo de produto
+> passou a ser o **protótipo de alta fidelidade da Direção A** (`.claude/design/`),
+> implementado num **push feature-completo** (catálogo + engajamento autenticado +
+> projeções derivadas). O substrato de execução agora são **issues do GitHub**
+> (via skill `to-issues`); o alvo vive em **[DESIGN.md](DESIGN.md)** (visual) +
+> **[CONTEXT.md](CONTEXT.md)** (domínio) + o próprio protótipo.
+>
+> Este arquivo é mantido **apenas como histórico**: o estado real da Fase 0 (infra,
+> CI, borda Cloudflare — **tudo no ar**) e os links para `ai-ops`/`guides`/`runbooks`
+> continuam sendo o runbook do que está em produção. Não use mais a estrutura de
+> fases abaixo como plano.
+
 Roadmap em fases sequenciais. Cada fase só começa quando a anterior está fechada (deploy em produção, não apenas "código pronto").
 
 Para a visão de longo prazo, ver [VISION.md](VISION.md). Para decisões registradas, ver [adr/](adr/).

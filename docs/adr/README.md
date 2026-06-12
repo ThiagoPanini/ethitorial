@@ -43,3 +43,5 @@ Não edite o ADR original. Crie um novo ADR de revisão que referencia o anterio
 - [0015 — Modelo de domínio epistemix: Section, Source, Artifact](0015-epistemix-domain-model.md)
 - [0016 — VPS agnóstica: infra desacoplada de um único projeto](0016-vps-agnostica-multi-projeto.md)
 - [0017 — Desenvolvimento autônomo (AFK): HITL nas bordas, AFK no meio](0017-desenvolvimento-autonomo-afk.md)
+- [0018 — Catálogo MDX-native no Next; API/Postgres entram com engagement](0018-catalogo-mdx-native-na-fase-1.md)
+- [0019 — Redesenho: protótipo da Direção A como alvo absoluto, push feature-completo, fases aposentadas](0019-redesenho-prototipo-absoluto-push-feature-completo.md)
