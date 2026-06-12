@@ -53,3 +53,22 @@ export const postFrontmatterSchema = z.object({
   tags: z.array(z.string()),
   summary: z.string(),
 });
+
+export const presentationFileSchema = z.object({
+  title: z.string(),
+  date: isoDateSchema,
+  status: postStatusSchema,
+  tags: z.array(z.string()),
+  summary: z.string(),
+  slides: z
+    .array(
+      z.object({
+        order: z.number(),
+        eyebrow: z.string(),
+        title: z.string(),
+        body: z.string().default(""),
+        bullets: z.array(z.string()).default([]),
+      }),
+    )
+    .min(1),
+});

@@ -1,9 +1,10 @@
 // @vitest-environment happy-dom
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({
   usePathname: vi.fn().mockReturnValue("/"),
+  useRouter: vi.fn().mockReturnValue({ push: vi.fn() }),
 }));
 
 import { AppShell } from "./app-shell";
@@ -55,5 +56,20 @@ describe("AppShell", () => {
     );
     const wrapper = container.querySelector("[data-motion]");
     expect(wrapper).toBeInTheDocument();
+  });
+
+  it("does not open command palette while player is open", () => {
+    render(
+      <AppShell>
+        <div />
+      </AppShell>,
+    );
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent("epx:player-state", { detail: { open: true } }));
+    });
+    fireEvent.keyDown(window, { key: "k", metaKey: true });
+
+    expect(screen.queryByRole("dialog", { name: "Paleta de comandos" })).not.toBeInTheDocument();
   });
 });

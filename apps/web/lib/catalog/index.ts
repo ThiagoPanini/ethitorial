@@ -11,6 +11,8 @@ export type {
   KnowledgeGraphTagNode,
   NowLearningItem,
   Post,
+  Presentation,
+  PresentationSlide,
   Section,
   SectionKind,
   Source,

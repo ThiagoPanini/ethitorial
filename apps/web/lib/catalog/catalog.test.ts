@@ -191,6 +191,28 @@ describe("loadCatalog — Timeline (D2)", () => {
   });
 });
 
+describe("loadCatalog — presentations (C5)", () => {
+  it("loads published Presentations with stable slide order", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const [presentation] = catalog.getPresentations();
+
+    expect(presentation).toMatchObject({
+      slug: "epistemix-visao",
+      sectionSlug: "presentations",
+      title: "epistemix — visão e arquitetura",
+      status: "published",
+    });
+    expect(presentation.slides.map((slide) => slide.order)).toEqual([1, 2]);
+    expect(presentation.slides[0]?.title).toBe("epistemix");
+  });
+
+  it("returns a presentation by slug", () => {
+    const catalog = loadCatalog(fixture("valid"));
+
+    expect(catalog.getPresentation("epistemix-visao")?.slides).toHaveLength(2);
+  });
+});
+
 describe("loadCatalog — Knowledge Graph (D3)", () => {
   it("derives tag and published artifact nodes with membership edges", () => {
     const catalog = loadCatalog(fixture("valid"));

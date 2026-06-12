@@ -22,13 +22,14 @@ function Footer() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [playerOpen, setPlayerOpen] = useState(false);
   const paletteItems = usePaletteItems();
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setPaletteOpen((open) => !open);
+        if (!playerOpen) setPaletteOpen((open) => !open);
       }
       if (e.key === "Escape" && paletteOpen) {
         setPaletteOpen(false);
@@ -36,7 +37,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [paletteOpen]);
+  }, [paletteOpen, playerOpen]);
+
+  useEffect(() => {
+    function onPlayerState(event: Event) {
+      const detail = (event as CustomEvent<{ open: boolean }>).detail;
+      setPlayerOpen(detail.open);
+      if (detail.open) setPaletteOpen(false);
+    }
+    window.addEventListener("epx:player-state", onPlayerState);
+    return () => window.removeEventListener("epx:player-state", onPlayerState);
+  }, []);
 
   return (
     <div data-motion="on">
