@@ -1,28 +1,41 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Archivo, Source_Serif_4, Spline_Sans_Mono } from "next/font/google";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "epistemix",
-  description: "Hub pessoal de aprendizado.",
+  description: "Hub pessoal de aprendizado — posts, cursos, livros, certificações e palestras.",
 };
 
-const inter = Inter({
+const archivo = Archivo({
   display: "swap",
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-sans",
 });
 
-const jetBrainsMono = JetBrains_Mono({
+const sourceSerif4 = Source_Serif_4({
   display: "swap",
   subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
+  weight: ["400", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+});
+
+const splineSansMono = Spline_Sans_Mono({
+  display: "swap",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
 });
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${inter.variable} ${jetBrainsMono.variable}`}>{children}</body>
+    <html
+      lang="pt-BR"
+      className={`${archivo.variable} ${sourceSerif4.variable} ${splineSansMono.variable}`}
+    >
+      <body>{children}</body>
     </html>
   );
 }

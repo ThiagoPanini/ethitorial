@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { getCatalog } from "@/lib/catalog";
-import { getReadTime, getSiteModel } from "@/lib/site/model";
+import { getSiteModel } from "@/lib/site/model";
 import { AppShell } from "../../_components/app-shell";
-import { SourcePageView } from "../../_components/surfaces";
+import { WipPage } from "../../_components/wip-page";
 
 export const dynamicParams = false;
 
@@ -28,27 +28,9 @@ export default async function SourcePage({
   const source = catalog.getSource(sectionSlug, sourceSlug);
   if (!section || !source) notFound();
 
-  const posts = catalog.getPosts(sectionSlug, sourceSlug).map((post) => ({
-    ...post,
-    readTime: getReadTime(post.body),
-    sourceName: source.name,
-  }));
-  const siteSource = {
-    ...source,
-    postCount: posts.length,
-  };
-
   return (
-    <AppShell
-      activeSection={section.slug}
-      crumbs={[
-        { href: "/", label: "epistemix" },
-        { href: `/${section.slug}`, label: section.title },
-        { label: source.name },
-      ]}
-      model={model}
-    >
-      <SourcePageView posts={posts} source={siteSource} tags={model.tags} />
+    <AppShell>
+      <WipPage title={source.name} description={source.description} />
     </AppShell>
   );
 }

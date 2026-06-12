@@ -1,17 +1,17 @@
-import { getSiteModel } from "@/lib/site/model";
 import { AppShell } from "./_components/app-shell";
-import { NotFoundView } from "./_components/surfaces";
 
 export default function NotFound() {
-  const model = getSiteModel();
-
   return (
-    <AppShell
-      activeSection={null}
-      crumbs={[{ href: "/", label: "epistemix" }, { label: "404" }]}
-      model={model}
-    >
-      <NotFoundView />
+    <AppShell>
+      <div className="page wrap">
+        <div className="page-head">
+          <span className="kicker mono">404</span>
+          <h1>Página não encontrada</h1>
+          <p className="desc">
+            A rota solicitada não existe neste hub. Verifique o endereço ou navegue pelo menu.
+          </p>
+        </div>
+      </div>
     </AppShell>
   );
 }
