@@ -104,10 +104,12 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
         {posts.length > 0 ? (
           <div style={{ marginTop: "26px" }}>
             {posts.map((post) => (
-              <Link key={post.href} href={post.href} className="art-row">
+              <article key={post.href} className="art-row">
                 <span className="art-date">{formatDate(post.date)}</span>
                 <div>
-                  <div className="art-t">{post.title}</div>
+                  <Link href={post.href} className="art-t">
+                    {post.title}
+                  </Link>
                   {post.summary && <div className="art-x">{post.summary}</div>}
                   <div className="art-x" style={{ marginTop: "4px", fontSize: "11px" }}>
                     {post.sectionLabel}
@@ -118,12 +120,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
                       {post.tags
                         .filter((t) => t !== tagSlug)
                         .map((t) => (
-                          <Link
-                            key={t}
-                            href={`/tags/${t}`}
-                            className="tag"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <Link key={t} href={`/tags/${t}`} className="tag">
                             {tagLabel(t)}
                           </Link>
                         ))}
@@ -133,7 +130,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
                 <div className="art-side">
                   <span>{formatDate(post.date)}</span>
                 </div>
-              </Link>
+              </article>
             ))}
           </div>
         ) : (
