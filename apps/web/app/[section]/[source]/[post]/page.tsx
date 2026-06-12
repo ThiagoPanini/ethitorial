@@ -11,6 +11,8 @@ import { articleJsonLd, buildPostUrl } from "@/lib/site/meta";
 import { getReadTime, getSiteModel } from "@/lib/site/model";
 import { slugify } from "@/lib/slug";
 import { AppShell } from "../../../_components/app-shell";
+import type { Comment } from "../../../_components/comment-section";
+import { CommentSection } from "../../../_components/comment-section";
 import { TocSpy } from "../../../_components/toc-spy";
 import { ViewTracker } from "../../../_components/view-tracker";
 import { VoteButton } from "../../../_components/vote-button";
@@ -81,6 +83,18 @@ export default async function PostPage({
     url: buildPostUrl(sectionSlug, sourceSlug, postSlug),
   });
 
+  const artifactId = `${sectionSlug}/${sourceSlug}/${postSlug}`;
+  let initialComments: Comment[] = [];
+  try {
+    const apiUrl = process.env.EPISTEMIX_API_URL ?? "http://localhost:8000";
+    const res = await fetch(`${apiUrl}/api/comments/${artifactId}`, {
+      next: { revalidate: 0 },
+    });
+    if (res.ok) initialComments = await res.json();
+  } catch {
+    // no-op: comments load client-side as fallback
+  }
+
   return (
     <AppShell>
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD is safe structured data generated server-side */}
@@ -113,9 +127,11 @@ export default async function PostPage({
             </header>
 
             <div className="engage">
-              <VoteButton artifactId={`${sectionSlug}/${sourceSlug}/${postSlug}`} />
-              <ViewTracker artifactId={`${sectionSlug}/${sourceSlug}/${postSlug}`} />
-              <span className="eng-stat">0 comentários</span>
+              <VoteButton artifactId={artifactId} />
+              <ViewTracker artifactId={artifactId} />
+              <span className="eng-stat">
+                {initialComments.length} comentário{initialComments.length !== 1 ? "s" : ""}
+              </span>
             </div>
 
             <div className="prose">
@@ -195,15 +211,7 @@ export default async function PostPage({
               </nav>
             )}
 
-            <div className="disc">
-              <h3 className="mono">DISCUSSÃO</h3>
-              <p
-                className="mono"
-                style={{ fontSize: "12px", color: "var(--fnt)", marginTop: "14px" }}
-              >
-                Comentários em breve — autenticação implementada em E0a.
-              </p>
-            </div>
+            <CommentSection artifactId={artifactId} initialComments={initialComments} />
           </article>
 
           {headings.length > 0 && <TocSpy headings={headings} />}

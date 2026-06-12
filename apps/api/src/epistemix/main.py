@@ -3,9 +3,11 @@
 from typing import Annotated
 
 from fastapi import Cookie, Depends, FastAPI, HTTPException, Request, status
+from pydantic import BaseModel
 from sqlalchemy import select
 
 from epistemix.db import SessionLocal, ping_db
+from epistemix.engagement import comments as comments_module
 from epistemix.engagement import views as views_module
 from epistemix.engagement import votes as votes_module
 from epistemix.identity.dependencies import get_current_user, require_auth
@@ -63,6 +65,48 @@ async def get_author(username: str) -> dict:
         "username": user.username,
         "image": user.image,
     }
+
+
+@app.get("/api/comments/{artifact_id:path}")
+async def get_comments(artifact_id: str) -> list[dict]:
+    """Returns flat list of non-moderated comments for an artifact."""
+    if comments_module.SessionLocal is None:
+        return []
+    async with comments_module.SessionLocal() as db:
+        return await comments_module.list_comments(db, artifact_id)
+
+
+class CommentBody(BaseModel):
+    body: str
+
+
+@app.post("/api/comments/{artifact_id:path}", status_code=201)
+async def post_comment(
+    artifact_id: str,
+    payload: CommentBody,
+    user: Annotated[AuthUser, Depends(require_auth)],
+) -> dict:
+    """Creates a comment on an artifact. Auth required."""
+    if comments_module.SessionLocal is None:
+        raise HTTPException(status_code=503, detail="Database not configured")
+    async with comments_module.SessionLocal() as db:
+        return await comments_module.create_comment(
+            db, artifact_id, user.id, user.username, payload.body
+        )
+
+
+@app.delete("/api/comments/{comment_id}", status_code=204)
+async def remove_comment(
+    comment_id: str,
+    user: Annotated[AuthUser, Depends(require_auth)],
+) -> None:
+    """Removes a comment. Admins can remove any; users can only remove their own."""
+    if comments_module.SessionLocal is None:
+        raise HTTPException(status_code=503, detail="Database not configured")
+    async with comments_module.SessionLocal() as db:
+        await comments_module.delete_comment(
+            db, comment_id, requesting_user_id=user.id, is_admin=user.role == "admin"
+        )
 
 
 @app.post("/api/views/{artifact_id:path}", status_code=204)
