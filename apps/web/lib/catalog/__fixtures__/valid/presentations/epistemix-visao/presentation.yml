@@ -1,0 +1,19 @@
+title: "epistemix — visão e arquitetura"
+date: "2026-06-11"
+status: published
+tags: [ai]
+summary: "Uma visão curta do hub e da arquitetura."
+slides:
+  - order: 1
+    eyebrow: "/talks/epistemix-visao"
+    title: "epistemix"
+    body: "Aprender em público com rastro técnico."
+    bullets: []
+  - order: 2
+    eyebrow: "01 · arquitetura"
+    title: "Catálogo derivado"
+    body: "O catálogo começa MDX-native e evolui por ports."
+    bullets:
+      - "Sections organizam o hub."
+      - "Sources agrupam estudo."
+      - "Artifacts viram leitura."

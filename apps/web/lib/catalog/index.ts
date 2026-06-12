@@ -3,7 +3,24 @@ import { extname, join, resolve, sep } from "node:path";
 import { type Catalog, loadCatalog } from "./catalog";
 
 export type { Catalog } from "./catalog";
-export type { Post, Section, SectionKind, Source, Tag } from "./domain";
+export type {
+  KnowledgeGraph,
+  KnowledgeGraphArtifactNode,
+  KnowledgeGraphEdge,
+  KnowledgeGraphNode,
+  KnowledgeGraphTagNode,
+  NowLearningItem,
+  Post,
+  Presentation,
+  PresentationSlide,
+  Section,
+  SectionKind,
+  Source,
+  StudyStatus,
+  Tag,
+  TimelineEvent,
+  TimelineEventType,
+} from "./domain";
 
 // `content/` vive na raiz do monorepo. O Next roda (dev/build) com cwd em
 // `apps/web`, então subimos dois níveis. Override via env para outros contextos.

@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { usePaletteItems } from "@/app/providers";
+import { CommandPalette } from "./command-palette";
 import { Rubrics } from "./rubrics";
 import { Topbar } from "./topbar";
 
@@ -20,13 +22,14 @@ function Footer() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const paletteInputRef = useRef<HTMLInputElement>(null);
+  const [playerOpen, setPlayerOpen] = useState(false);
+  const paletteItems = usePaletteItems();
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setPaletteOpen((open) => !open);
+        if (!playerOpen) setPaletteOpen((open) => !open);
       }
       if (e.key === "Escape" && paletteOpen) {
         setPaletteOpen(false);
@@ -34,11 +37,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [paletteOpen]);
+  }, [paletteOpen, playerOpen]);
 
   useEffect(() => {
-    if (paletteOpen) paletteInputRef.current?.focus();
-  }, [paletteOpen]);
+    function onPlayerState(event: Event) {
+      const detail = (event as CustomEvent<{ open: boolean }>).detail;
+      setPlayerOpen(detail.open);
+      if (detail.open) setPaletteOpen(false);
+    }
+    window.addEventListener("epx:player-state", onPlayerState);
+    return () => window.removeEventListener("epx:player-state", onPlayerState);
+  }, []);
 
   return (
     <div data-motion="on">
@@ -46,27 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Rubrics />
       <div className="view">{children}</div>
       <Footer />
-      {paletteOpen && (
-        <div className="scrim" role="dialog" aria-modal="true" aria-label="Paleta de comandos">
-          <div className="pal">
-            <div className="pal-in">
-              <input ref={paletteInputRef} type="text" placeholder="Buscar posts, seções..." />
-            </div>
-            <div className="pal-empty mono">Em breve — catálogo ainda sendo construído.</div>
-            <div className="pal-foot">
-              <span>
-                <kbd>↵</kbd> abrir
-              </span>
-              <span>
-                <kbd>↑↓</kbd> navegar
-              </span>
-              <span>
-                <kbd>esc</kbd> fechar
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+      {paletteOpen && <CommandPalette items={paletteItems} onClose={() => setPaletteOpen(false)} />}
     </div>
   );
 }

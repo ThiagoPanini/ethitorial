@@ -137,6 +137,116 @@ describe("loadCatalog — books and certifications (with_sources, invariante 16)
   });
 });
 
+describe("loadCatalog — study_status / Now Learning (D1)", () => {
+  it("loads study_status, startedAt, lastActivity, progress from source.yml", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const aihero = catalog.getSource("courses", "aihero");
+    expect(aihero).toMatchObject({
+      studyStatus: "ongoing",
+      startedAt: "2026-01-15",
+      lastActivity: "2026-06-01",
+      progress: 60,
+    });
+  });
+
+  it("getNowLearning returns ongoing sources ordered by lastActivity desc", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const items = catalog.getNowLearning();
+    expect(items.map((i) => i.sourceSlug)).toEqual(["aihero", "ddia"]);
+  });
+
+  it("getNowLearning items have href, title, detail, lastActivity", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const [first] = catalog.getNowLearning();
+    expect(first).toMatchObject({
+      kind: "source",
+      href: "/courses/aihero",
+      title: "AI Hero",
+      detail: "Courses",
+      lastActivity: "2026-06-01",
+      progress: 60,
+    });
+  });
+
+  it("getNowLearning excludes sources with no study_status or concluded", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const slugs = catalog.getNowLearning().map((i) => i.sourceSlug);
+    expect(slugs).not.toContain("aws-saa-c03");
+  });
+});
+
+describe("loadCatalog — Timeline (D2)", () => {
+  it("derives publication, note, start, and conquest events ordered newest first", () => {
+    const catalog = loadCatalog(fixture("valid"));
+
+    expect(catalog.getTimelineEvents().map((event) => `${event.type}:${event.label}`)).toEqual([
+      "publication:Primeiro Post do Blog",
+      "note:Primeiras impressões",
+      "publication:Segundo Post do Blog",
+      "note:Setup inicial",
+      "start:Designing Data-Intensive Applications",
+      "conquest:AWS Solutions Architect Associate (SAA-C03)",
+      "start:AI Hero",
+    ]);
+  });
+});
+
+describe("loadCatalog — presentations (C5)", () => {
+  it("loads published Presentations with stable slide order", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const [presentation] = catalog.getPresentations();
+
+    expect(presentation).toMatchObject({
+      slug: "epistemix-visao",
+      sectionSlug: "presentations",
+      title: "epistemix — visão e arquitetura",
+      status: "published",
+    });
+    expect(presentation.slides.map((slide) => slide.order)).toEqual([1, 2]);
+    expect(presentation.slides[0]?.title).toBe("epistemix");
+  });
+
+  it("returns a presentation by slug", () => {
+    const catalog = loadCatalog(fixture("valid"));
+
+    expect(catalog.getPresentation("epistemix-visao")?.slides).toHaveLength(2);
+  });
+});
+
+describe("loadCatalog — Knowledge Graph (D3)", () => {
+  it("derives tag and published artifact nodes with membership edges", () => {
+    const catalog = loadCatalog(fixture("valid"));
+    const graph = catalog.getKnowledgeGraph();
+
+    expect(graph.nodes.filter((node) => node.kind === "tag").map((node) => node.id)).toEqual([
+      "tag:ai",
+      "tag:typescript",
+    ]);
+    expect(graph.nodes.filter((node) => node.kind === "artifact").map((node) => node.id)).toEqual([
+      "artifact:blog/primeiro-post",
+      "artifact:blog/segundo-post",
+      "artifact:courses/aihero/primeiras-impressoes",
+      "artifact:courses/aihero/setup-inicial",
+    ]);
+    expect(graph.edges.map((edge) => `${edge.source}->${edge.target}`)).toEqual([
+      "tag:ai->artifact:blog/primeiro-post",
+      "tag:ai->artifact:blog/segundo-post",
+      "tag:ai->artifact:courses/aihero/primeiras-impressoes",
+      "tag:typescript->artifact:courses/aihero/primeiras-impressoes",
+      "tag:ai->artifact:courses/aihero/setup-inicial",
+    ]);
+  });
+
+  it("uses deterministic coordinates for the same catalog input", () => {
+    const graphA = loadCatalog(fixture("valid")).getKnowledgeGraph();
+    const graphB = loadCatalog(fixture("valid")).getKnowledgeGraph();
+
+    expect(graphA.nodes.map(({ id, x, y }) => ({ id, x, y }))).toEqual(
+      graphB.nodes.map(({ id, x, y }) => ({ id, x, y })),
+    );
+  });
+});
+
 describe("loadCatalog — build-time validation", () => {
   it("throws when a post uses a tag outside tags.yml (invariante 9)", () => {
     expect(() => loadCatalog(fixture("invalid-tag"))).toThrow(/naoexiste/);

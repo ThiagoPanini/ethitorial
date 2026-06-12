@@ -1,0 +1,27 @@
+title: "epistemix — visão e arquitetura"
+date: "2026-06-11"
+status: published
+tags: [ai, agents]
+summary: "Uma visão curta sobre o hub, seu catálogo e o trabalho assistido por agentes."
+slides:
+  - order: 1
+    eyebrow: "/talks/epistemix-visao"
+    title: "epistemix"
+    body: "Aprender em público com notas, código e o raciocínio por trás."
+    bullets: []
+  - order: 2
+    eyebrow: "01 · catálogo"
+    title: "Section → Source → Artifact"
+    body: "O catálogo é derivado e mantém o domínio explícito."
+    bullets:
+      - "Courses, Books e Certifications usam Sources."
+      - "Posts e Presentations são Artifacts publicáveis."
+      - "Tags curadas sustentam descoberta e grafo."
+  - order: 3
+    eyebrow: "02 · processo"
+    title: "Agentes com trilho"
+    body: "Autonomia só funciona quando o repo ensina o agente a operar."
+    bullets:
+      - "AGENTS.md define o chão operacional."
+      - "ADRs preservam decisões."
+      - "Issues viram fatias verticais testáveis."

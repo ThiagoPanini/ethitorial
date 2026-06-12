@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { NowLearningItem } from "@/lib/catalog";
 import { formatDate } from "@/lib/format";
 
 export interface HomePost {
@@ -22,9 +23,10 @@ interface Props {
   featured: HomePost | null;
   latest: HomePost[];
   sections: HomeSection[];
+  nowLearning?: NowLearningItem[];
 }
 
-export function HomeView({ featured, latest, sections }: Props) {
+export function HomeView({ featured, latest, sections, nowLearning = [] }: Props) {
   return (
     <div className="wrap">
       <div className="mast">
@@ -80,6 +82,28 @@ export function HomeView({ featured, latest, sections }: Props) {
               </Link>
             ))}
           </div>
+        </div>
+      )}
+
+      {nowLearning.length > 0 && (
+        <div className="now-learning">
+          <div className="colhead">
+            <span>NOW LEARNING</span>
+          </div>
+          {nowLearning.map((item) => (
+            <Link key={item.href} href={item.href} className="nl-item">
+              <div className="nl-t">{item.title}</div>
+              <div className="nl-m">
+                {item.detail}
+                {item.progress !== undefined && (
+                  <>
+                    {" · "}
+                    <span className="nl-prog">{item.progress}%</span>
+                  </>
+                )}
+              </div>
+            </Link>
+          ))}
         </div>
       )}
 

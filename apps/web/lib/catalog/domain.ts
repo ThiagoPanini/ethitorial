@@ -12,6 +12,8 @@ export interface Section {
   description: string;
 }
 
+export type StudyStatus = "ongoing" | "concluded";
+
 export interface Source {
   slug: string;
   sectionSlug: string;
@@ -19,8 +21,74 @@ export interface Source {
   externalUrl: string;
   author: string;
   description: string;
-  cover?: string; // caminho relativo da capa em content/<section>/<source>/
-  authorAvatar?: string; // caminho relativo do avatar do autor, idem
+  cover?: string;
+  authorAvatar?: string;
+  studyStatus?: StudyStatus;
+  startedAt?: string;
+  lastActivity?: string;
+  progress?: number;
+}
+
+export interface NowLearningItem {
+  kind: "source";
+  sectionSlug: string;
+  sourceSlug: string;
+  href: string;
+  title: string;
+  detail: string;
+  lastActivity: string;
+  progress?: number;
+}
+
+export type TimelineEventType = "publication" | "note" | "lecture" | "start" | "conquest";
+
+export interface TimelineEvent {
+  id: string;
+  type: TimelineEventType;
+  date: string;
+  year: string;
+  label: string;
+  detail: string;
+  href: string;
+  hot: boolean;
+}
+
+export interface KnowledgeGraph {
+  nodes: KnowledgeGraphNode[];
+  edges: KnowledgeGraphEdge[];
+  tagCount: number;
+  artifactCount: number;
+}
+
+export type KnowledgeGraphNode = KnowledgeGraphTagNode | KnowledgeGraphArtifactNode;
+
+export interface KnowledgeGraphTagNode {
+  kind: "tag";
+  id: string;
+  slug: string;
+  label: string;
+  x: number;
+  y: number;
+}
+
+export interface KnowledgeGraphArtifactNode {
+  kind: "artifact";
+  id: string;
+  slug: string;
+  sectionSlug: string;
+  sourceSlug: string;
+  label: string;
+  href: string;
+  x: number;
+  y: number;
+  radius: number;
+  reads: number;
+}
+
+export interface KnowledgeGraphEdge {
+  id: string;
+  source: string;
+  target: string;
 }
 
 export interface Tag {
@@ -40,4 +108,23 @@ export interface Post {
   tags: string[];
   summary: string;
   body: string; // prosa MDX crua, renderizada na rota
+}
+
+export interface PresentationSlide {
+  order: number;
+  eyebrow: string;
+  title: string;
+  body: string;
+  bullets: string[];
+}
+
+export interface Presentation {
+  slug: string;
+  sectionSlug: "presentations";
+  title: string;
+  date: string;
+  status: PostStatus;
+  tags: string[];
+  summary: string;
+  slides: PresentationSlide[];
 }
