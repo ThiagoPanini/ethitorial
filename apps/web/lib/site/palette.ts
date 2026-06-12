@@ -6,7 +6,7 @@ export interface PaletteItem {
   title: string;
   section: string;
   detail?: string;
-  kind: "nav" | "post" | "presentation";
+  kind: "nav" | "post" | "presentation" | "tag";
 }
 
 const NAV_ITEMS: PaletteItem[] = [
@@ -47,5 +47,12 @@ export function buildPaletteItems(model: SiteModel, catalog: Catalog): PaletteIt
     kind: "presentation" as const,
   }));
 
-  return [...NAV_ITEMS, ...presentations, ...withSourcesPosts, ...directPosts];
+  const tags: PaletteItem[] = catalog.getTags().map((tag) => ({
+    href: `/tags/${tag.slug}`,
+    title: `#${tag.label}`,
+    section: "Tags",
+    kind: "tag" as const,
+  }));
+
+  return [...NAV_ITEMS, ...tags, ...presentations, ...withSourcesPosts, ...directPosts];
 }
