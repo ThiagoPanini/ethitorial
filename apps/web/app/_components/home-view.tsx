@@ -10,14 +10,35 @@ function recency(iso: string): string {
   return `há ${days} dias`;
 }
 
+const SECTION_VOCAB: Record<string, string> = {
+  courses: "NOTA DE CURSO",
+  books: "REVIEW",
+  certifications: "ANOTAÇÃO",
+  blog: "BLOG",
+  presentations: "APRESENTAÇÃO",
+};
+
+function buildKicker(post: HomePost): string {
+  const vocab = SECTION_VOCAB[post.sectionSlug] ?? post.sectionSlug.toUpperCase();
+  const parts = ["EM DESTAQUE", vocab];
+  if (post.sourceName && ["courses", "books", "certifications"].includes(post.sectionSlug)) {
+    parts.push(post.sourceName);
+  }
+  return parts.join(" · ");
+}
+
 export interface HomePost {
   slug: string;
   sectionSlug: string;
   sourceSlug: string;
+  sourceName?: string;
   title: string;
   date: string;
   summary: string;
   readTime: string;
+  reads?: number;
+  votes?: number;
+  comments?: number;
 }
 
 export interface HomeSection {
@@ -63,11 +84,24 @@ export function HomeView({ featured, latest, sections, nowLearning = [] }: Props
       {featured && (
         <div className="lead-grid">
           <div className="lead">
-            <span className="kicker">{featured.sectionSlug.toUpperCase()}</span>
+            <span className="kicker">{buildKicker(featured)}</span>
             <h2>
               <Link href={buildHref(featured)}>{featured.title}</Link>
             </h2>
             {featured.summary && <p className="standfirst">{featured.summary}</p>}
+            <div className="metaline feat-meta">
+              <span>{(featured.reads ?? 0).toLocaleString("pt-BR")} leituras</span>
+              <span>·</span>
+              <span>↑ {featured.votes ?? 0}</span>
+              {(featured.comments ?? 0) > 0 && (
+                <>
+                  <span>·</span>
+                  <span>
+                    {featured.comments} comentário{featured.comments !== 1 ? "s" : ""}
+                  </span>
+                </>
+              )}
+            </div>
             <div className="metaline">
               <span>{formatDate(featured.date)}</span>
               <span>·</span>

@@ -13,6 +13,17 @@ const DIRECT_POST = {
   readTime: "2 min",
 };
 
+const COURSE_POST = {
+  slug: "aula-1",
+  sectionSlug: "courses",
+  sourceSlug: "meu-curso",
+  sourceName: "AI CODING FOR REAL ENGINEERS",
+  title: "Aula 1 — Introdução",
+  date: "2026-06-08",
+  summary: "Resumo da aula.",
+  readTime: "3 min",
+};
+
 const SOURCE_POST = {
   slug: "aula-1",
   sectionSlug: "courses",
@@ -66,6 +77,44 @@ describe("HomeView", () => {
   it("renders without featured gracefully (no btn-read)", () => {
     render(<HomeView featured={null} latest={[]} sections={[]} />);
     expect(screen.queryByRole("link", { name: /Ler o post/ })).toBeNull();
+  });
+});
+
+describe("HomeView — kicker de domínio", () => {
+  it("courses kicker shows EM DESTAQUE · NOTA DE CURSO · <source>", () => {
+    render(<HomeView featured={COURSE_POST} latest={[]} sections={[]} />);
+    expect(screen.getByText(/NOTA DE CURSO/)).toBeInTheDocument();
+    expect(screen.getByText(/AI CODING FOR REAL ENGINEERS/)).toBeInTheDocument();
+  });
+
+  it("blog kicker shows EM DESTAQUE · BLOG", () => {
+    render(<HomeView featured={DIRECT_POST} latest={[]} sections={[]} />);
+    expect(screen.getByText(/EM DESTAQUE · BLOG/)).toBeInTheDocument();
+  });
+
+  it("kicker uses 'REVIEW' for books section", () => {
+    const bookPost = { ...COURSE_POST, sectionSlug: "books", sourceName: "DDIA" };
+    render(<HomeView featured={bookPost} latest={[]} sections={[]} />);
+    expect(screen.getByText(/REVIEW/)).toBeInTheDocument();
+  });
+
+  it("kicker uses 'ANOTAÇÃO' for certifications section", () => {
+    const certPost = { ...COURSE_POST, sectionSlug: "certifications", sourceName: "AWS SAA" };
+    render(<HomeView featured={certPost} latest={[]} sections={[]} />);
+    expect(screen.getByText(/ANOTAÇÃO/)).toBeInTheDocument();
+  });
+});
+
+describe("HomeView — MetaLine no destaque", () => {
+  it("renders MetaLine with reads and votes", () => {
+    render(<HomeView featured={COURSE_POST} latest={[]} sections={[]} />);
+    expect(screen.getByText(/leituras/)).toBeInTheDocument();
+    expect(screen.getByText(/↑/)).toBeInTheDocument();
+  });
+
+  it("omits 0 comments from MetaLine", () => {
+    render(<HomeView featured={COURSE_POST} latest={[]} sections={[]} />);
+    expect(screen.queryByText(/comentário/)).toBeNull();
   });
 });
 
