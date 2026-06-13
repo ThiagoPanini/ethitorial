@@ -115,6 +115,7 @@ export default async function PostPage({
                   <b>{formatDate(post.date)}</b>
                 </span>
                 <span>{getReadTime(post.body)} de leitura</span>
+                {source.author && <span>sobre obra de {source.author}</span>}
               </div>
               {post.tags.length > 0 && (
                 <div className="tagrow" style={{ marginTop: "14px" }}>
