@@ -911,14 +911,98 @@ button {
 }
 
 .prose blockquote {
-  border-top: 2px solid var(--ac);
-  border-bottom: 1px solid var(--ln);
-  padding: 20px 0;
-  margin: 30px 0;
-  font-size: 21px;
-  line-height: 1.5;
-  color: var(--ink);
+  border-left: 3px solid var(--ac);
+  padding: 6px 0 6px 22px;
+  margin: 28px 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--fnt);
+  font-style: italic;
+}
+
+/* ---- Prose: tables ---- */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  margin: 0 0 28px;
+}
+
+.prose thead {
+  border-bottom: 2px solid var(--ln-heavy);
+}
+
+.prose th {
+  font-family: var(--mono);
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fnt);
+  padding: 10px 14px;
+  text-align: left;
+}
+
+.prose td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ln);
+  vertical-align: top;
+  line-height: 1.55;
+}
+
+.prose tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+/* ---- Prose: lists ---- */
+.prose ul,
+.prose ol {
+  margin: 0 0 22px;
+  padding-left: 28px;
+}
+
+.prose li {
+  margin-bottom: 7px;
+  line-height: 1.65;
+}
+
+.prose ul li {
+  list-style: disc;
+}
+
+.prose ol li {
+  list-style: decimal;
+}
+
+.prose li::marker {
+  color: var(--ac);
+}
+
+.prose li > ul,
+.prose li > ol {
+  margin-top: 7px;
+  margin-bottom: 0;
+}
+
+/* ---- Prose: inline code ---- */
+.prose :not(pre) > code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--ln);
+  padding: 1px 5px;
+  color: var(--ink);
+}
+
+/* ---- Prose: h3 ---- */
+.prose h3 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  margin: 30px 0 12px;
+  scroll-margin-top: 70px;
 }
 
 .toc {
