@@ -70,4 +70,22 @@ describe("SectionWithSourcesView", () => {
     );
     expect(container.querySelector(".page-head h1")).toHaveTextContent("Cursos");
   });
+
+  it("shows studyStatus chip when source has studyStatus", () => {
+    const sourcesWithStatus = [{ ...MOCK_SOURCES[0], studyStatus: "ongoing" as const }];
+    render(<SectionWithSourcesView section={MOCK_SECTION} sources={sourcesWithStatus} />);
+    expect(document.querySelector(".status-chip")).toHaveTextContent("em andamento");
+  });
+
+  it("omits kicker on src-card when source has no studyStatus", () => {
+    const { container } = render(
+      <SectionWithSourcesView section={MOCK_SECTION} sources={MOCK_SOURCES} />,
+    );
+    expect(container.querySelector(".src-card .kicker")).toBeNull();
+  });
+
+  it("note count is in src-by with author", () => {
+    render(<SectionWithSourcesView section={MOCK_SECTION} sources={MOCK_SOURCES} />);
+    expect(screen.getByText(/por Matt Pocock · 3 notas/)).toBeInTheDocument();
+  });
 });

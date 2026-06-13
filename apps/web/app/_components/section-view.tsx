@@ -27,21 +27,19 @@ export function SectionWithSourcesView({
 
       {sources.map((source) => (
         <Link key={source.slug} href={`/${section.slug}/${source.slug}`} className="src-card">
-          <div className="kicker mono">{source.author}</div>
+          {source.studyStatus && (
+            <span className="kicker">
+              <span className="status-chip">
+                {source.studyStatus === "ongoing" ? "em andamento" : "concluído"}
+              </span>
+            </span>
+          )}
           <div className="src-name">{source.name}</div>
-          <div className="src-by">por {source.author}</div>
-          {source.description && <p className="src-desc">{source.description}</p>}
-          <div
-            className="mono"
-            style={{
-              fontSize: "10.5px",
-              color: "var(--fnt)",
-              marginTop: "12px",
-              letterSpacing: "0.06em",
-            }}
-          >
-            {source.postCount} {source.postCount === 1 ? "nota" : "notas"}
+          <div className="src-by">
+            por {source.author} · {source.postCount}{" "}
+            {source.postCount === 1 ? "nota" : "notas"}
           </div>
+          {source.description && <p className="src-desc">{source.description}</p>}
         </Link>
       ))}
     </div>
