@@ -13,6 +13,11 @@ const MOCK_SOURCE: Source = {
   description: "Curso sobre IA em produção.",
 };
 
+const MOCK_SOURCE_WITH_STATUS: Source = {
+  ...MOCK_SOURCE,
+  studyStatus: "ongoing",
+};
+
 const MOCK_POSTS: Post[] = [
   {
     slug: "primeiras-impressoes",
@@ -40,24 +45,50 @@ const MOCK_POSTS: Post[] = [
 
 describe("SourceView", () => {
   it("renders the source name as heading", () => {
-    render(<SourceView source={MOCK_SOURCE} posts={MOCK_POSTS} sectionSlug="courses" />);
+    render(
+      <SourceView
+        source={MOCK_SOURCE}
+        posts={MOCK_POSTS}
+        sectionSlug="courses"
+        sectionTitle="Cursos"
+      />,
+    );
     expect(screen.getByRole("heading", { name: "AI Hero" })).toBeInTheDocument();
   });
 
   it("renders the author name", () => {
-    render(<SourceView source={MOCK_SOURCE} posts={MOCK_POSTS} sectionSlug="courses" />);
+    render(
+      <SourceView
+        source={MOCK_SOURCE}
+        posts={MOCK_POSTS}
+        sectionSlug="courses"
+        sectionTitle="Cursos"
+      />,
+    );
     expect(screen.getByText(/Matt Pocock/)).toBeInTheDocument();
   });
 
   it("renders a note-row for each post", () => {
     const { container } = render(
-      <SourceView source={MOCK_SOURCE} posts={MOCK_POSTS} sectionSlug="courses" />,
+      <SourceView
+        source={MOCK_SOURCE}
+        posts={MOCK_POSTS}
+        sectionSlug="courses"
+        sectionTitle="Cursos"
+      />,
     );
     expect(container.querySelectorAll(".note-row")).toHaveLength(2);
   });
 
   it("each note-row links to the correct post path", () => {
-    render(<SourceView source={MOCK_SOURCE} posts={MOCK_POSTS} sectionSlug="courses" />);
+    render(
+      <SourceView
+        source={MOCK_SOURCE}
+        posts={MOCK_POSTS}
+        sectionSlug="courses"
+        sectionTitle="Cursos"
+      />,
+    );
     expect(screen.getByRole("link", { name: /Primeiras impressões/ })).toHaveAttribute(
       "href",
       "/courses/ai-hero/primeiras-impressoes",
@@ -70,7 +101,12 @@ describe("SourceView", () => {
 
   it("shows numbered index for each note", () => {
     const { container } = render(
-      <SourceView source={MOCK_SOURCE} posts={MOCK_POSTS} sectionSlug="courses" />,
+      <SourceView
+        source={MOCK_SOURCE}
+        posts={MOCK_POSTS}
+        sectionSlug="courses"
+        sectionTitle="Cursos"
+      />,
     );
     const indices = container.querySelectorAll(".note-idx");
     expect(indices).toHaveLength(2);
@@ -78,10 +114,65 @@ describe("SourceView", () => {
     expect(indices[1]).toHaveTextContent("02");
   });
 
-  it("links to external source url", () => {
-    render(<SourceView source={MOCK_SOURCE} posts={MOCK_POSTS} sectionSlug="courses" />);
-    const externalLink = screen.getByRole("link", { name: /aihero\.dev/i });
-    expect(externalLink).toHaveAttribute("href", "https://aihero.dev");
-    expect(externalLink).toHaveAttribute("target", "_blank");
+  it("renders kicker with breadcrumb link to section", () => {
+    render(
+      <SourceView
+        source={MOCK_SOURCE}
+        posts={MOCK_POSTS}
+        sectionSlug="courses"
+        sectionTitle="Cursos"
+      />,
+    );
+    const link = screen.getByRole("link", { name: "Cursos" });
+    expect(link).toHaveAttribute("href", "/courses");
+  });
+
+  it("renders NOTAS DO CURSO colhead before the list", () => {
+    const { container } = render(
+      <SourceView
+        source={MOCK_SOURCE}
+        posts={MOCK_POSTS}
+        sectionSlug="courses"
+        sectionTitle="Cursos"
+      />,
+    );
+    expect(container.querySelector(".colhead")).toHaveTextContent("NOTAS DO CURSO");
+  });
+
+  it("renders metaline meta with post count", () => {
+    const { container } = render(
+      <SourceView
+        source={MOCK_SOURCE}
+        posts={MOCK_POSTS}
+        sectionSlug="courses"
+        sectionTitle="Cursos"
+      />,
+    );
+    const metaline = container.querySelector(".metaline.meta");
+    expect(metaline?.textContent).toMatch(/2 notas/);
+  });
+
+  it("renders studyStatus chip when ongoing", () => {
+    render(
+      <SourceView
+        source={MOCK_SOURCE_WITH_STATUS}
+        posts={MOCK_POSTS}
+        sectionSlug="courses"
+        sectionTitle="Cursos"
+      />,
+    );
+    expect(document.querySelector(".status-chip")).toHaveTextContent("em andamento");
+  });
+
+  it("does not render studyStatus chip when absent", () => {
+    render(
+      <SourceView
+        source={MOCK_SOURCE}
+        posts={MOCK_POSTS}
+        sectionSlug="courses"
+        sectionTitle="Cursos"
+      />,
+    );
+    expect(document.querySelector(".status-chip")).toBeNull();
   });
 });

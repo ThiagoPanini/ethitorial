@@ -10,11 +10,11 @@ function Footer() {
   return (
     <footer className="foot">
       <div className="foot-in wrap">
-        <span>© 2026 epistemix</span>
-        <span className="spacer" aria-hidden="true" />
         <a href="https://github.com/ThiagoPanini/epistemix" rel="noreferrer" target="_blank">
-          github.com/ThiagoPanini/epistemix
+          GITHUB.COM/THIAGOPANINI/EPISTEMIX
         </a>
+        <span>MIT LICENSE</span>
+        <span className="spacer" aria-hidden="true" />
       </div>
     </footer>
   );

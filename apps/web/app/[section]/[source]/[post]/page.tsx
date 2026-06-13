@@ -111,9 +111,11 @@ export default async function PostPage({
               <h1>{post.title}</h1>
               {post.summary && <p className="standfirst">{post.summary}</p>}
               <div className="metaline">
-                <span>{formatDate(post.date)}</span>
-                <span>·</span>
+                <span>
+                  <b>{formatDate(post.date)}</b>
+                </span>
                 <span>{getReadTime(post.body)} de leitura</span>
+                {source.author && <span>sobre obra de {source.author}</span>}
               </div>
               {post.tags.length > 0 && (
                 <div className="tagrow" style={{ marginTop: "14px" }}>

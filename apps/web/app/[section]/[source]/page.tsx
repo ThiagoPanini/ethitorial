@@ -10,7 +10,12 @@ import { articleJsonLd, buildPostUrl } from "@/lib/site/meta";
 import { getReadTime, getSiteModel } from "@/lib/site/model";
 import { slugify } from "@/lib/slug";
 import { AppShell } from "../../_components/app-shell";
+import type { Comment } from "../../_components/comment-section";
+import { CommentSection } from "../../_components/comment-section";
 import { SourceView } from "../../_components/source-view";
+import { TocSpy } from "../../_components/toc-spy";
+import { ViewTracker } from "../../_components/view-tracker";
+import { VoteButton } from "../../_components/vote-button";
 
 export const dynamicParams = false;
 
@@ -90,7 +95,13 @@ export default async function SourceOrDirectPostPage({
     const tags = catalog.getTags();
     return (
       <AppShell>
-        <SourceView source={source} posts={posts} sectionSlug={sectionSlug} tags={tags} />
+        <SourceView
+          source={source}
+          posts={posts}
+          sectionSlug={sectionSlug}
+          sectionTitle={section.title}
+          tags={tags}
+        />
       </AppShell>
     );
   }
@@ -112,6 +123,18 @@ export default async function SourceOrDirectPostPage({
     url: buildPostUrl(sectionSlug, "", sourceSlug),
   });
 
+  const artifactId = `${sectionSlug}/${sourceSlug}`;
+  let initialComments: Comment[] = [];
+  try {
+    const apiUrl = process.env.EPISTEMIX_API_URL ?? "http://localhost:8000";
+    const res = await fetch(`${apiUrl}/api/comments/${artifactId}`, {
+      next: { revalidate: 0 },
+    });
+    if (res.ok) initialComments = await res.json();
+  } catch {
+    // no-op
+  }
+
   return (
     <AppShell>
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD is safe structured data generated server-side */}
@@ -120,14 +143,15 @@ export default async function SourceOrDirectPostPage({
         <div className="read-grid">
           <article>
             <header className="read-head">
-              <span className="kicker mono">
+              <span className="kicker">
                 <Link href={`/${sectionSlug}`}>{section.title}</Link>
               </span>
               <h1>{post.title}</h1>
               {post.summary && <p className="standfirst">{post.summary}</p>}
               <div className="metaline">
-                <span>{formatDate(post.date)}</span>
-                <span>·</span>
+                <span>
+                  <b>{formatDate(post.date)}</b>
+                </span>
                 <span>{getReadTime(post.body)} de leitura</span>
               </div>
               {post.tags.length > 0 && (
@@ -142,11 +166,11 @@ export default async function SourceOrDirectPostPage({
             </header>
 
             <div className="engage">
-              <button type="button" className="up-btn">
-                ▲ Upvote
-              </button>
-              <span className="eng-stat">0 leituras</span>
-              <span className="eng-stat">0 comentários</span>
+              <VoteButton artifactId={artifactId} />
+              <ViewTracker artifactId={artifactId} />
+              <span className="eng-stat">
+                {initialComments.length} comentário{initialComments.length !== 1 ? "s" : ""}
+              </span>
             </div>
 
             <div className="prose">
@@ -210,31 +234,10 @@ export default async function SourceOrDirectPostPage({
               </nav>
             )}
 
-            <div className="disc">
-              <h3 className="mono">DISCUSSÃO</h3>
-              <p
-                className="mono"
-                style={{ fontSize: "12px", color: "var(--fnt)", marginTop: "14px" }}
-              >
-                Comentários em breve — autenticação implementada em E0a.
-              </p>
-            </div>
+            <CommentSection artifactId={artifactId} initialComments={initialComments} />
           </article>
 
-          {headings.length > 0 && (
-            <aside className="toc">
-              <div className="toc-label">CONTEÚDO</div>
-              {headings.map((h) => (
-                <a
-                  key={h.id}
-                  href={`#${h.id}`}
-                  style={{ paddingLeft: h.level === 3 ? "24px" : "12px" }}
-                >
-                  {h.text}
-                </a>
-              ))}
-            </aside>
-          )}
+          {headings.length > 0 && <TocSpy headings={headings} />}
         </div>
       </div>
     </AppShell>

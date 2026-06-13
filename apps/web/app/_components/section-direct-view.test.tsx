@@ -69,4 +69,17 @@ describe("SectionDirectView", () => {
     render(<SectionDirectView section={MOCK_SECTION} posts={MOCK_POSTS} />);
     expect(screen.getAllByRole("link").length).toBeGreaterThan(0);
   });
+
+  it("shows 'atualizada em' with most recent post date in metaline", () => {
+    const { container } = render(<SectionDirectView section={MOCK_SECTION} posts={MOCK_POSTS} />);
+    const metaline = container.querySelector(".metaline.meta");
+    expect(metaline?.textContent).toMatch(/atualizada em/);
+    expect(metaline?.textContent).toMatch(/10 jun 2026/);
+  });
+
+  it("omits 'atualizada em' when posts list is empty", () => {
+    const { container } = render(<SectionDirectView section={MOCK_SECTION} posts={[]} />);
+    const metaline = container.querySelector(".metaline.meta");
+    expect(metaline?.textContent).not.toMatch(/atualizada em/);
+  });
 });
