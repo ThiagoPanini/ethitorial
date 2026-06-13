@@ -52,7 +52,7 @@ export function Topbar({ onPaletteOpen }: TopbarProps) {
           aria-label="Abrir paleta de comandos"
           onClick={onPaletteOpen}
         >
-          <span>Buscar</span>
+          <span>Buscar no caderno</span>
           <kbd>⌘K</kbd>
         </button>
         <a
