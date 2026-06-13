@@ -88,4 +88,25 @@ describe("SectionWithSourcesView", () => {
     render(<SectionWithSourcesView section={MOCK_SECTION} sources={MOCK_SOURCES} />);
     expect(screen.getByText(/por Matt Pocock · 3 notas/)).toBeInTheDocument();
   });
+
+  it("shows 'atualizada em' with most recent lastActivity in metaline", () => {
+    const sourcesWithDate = [
+      { ...MOCK_SOURCES[0], lastActivity: "2026-06-10" },
+      { ...MOCK_SOURCES[1], lastActivity: "2026-05-01" },
+    ];
+    const { container } = render(
+      <SectionWithSourcesView section={MOCK_SECTION} sources={sourcesWithDate} />,
+    );
+    const metaline = container.querySelector(".metaline.meta");
+    expect(metaline?.textContent).toMatch(/atualizada em/);
+    expect(metaline?.textContent).toMatch(/10 jun 2026/);
+  });
+
+  it("omits 'atualizada em' when no sources have dates", () => {
+    const { container } = render(
+      <SectionWithSourcesView section={MOCK_SECTION} sources={MOCK_SOURCES} />,
+    );
+    const metaline = container.querySelector(".metaline.meta");
+    expect(metaline?.textContent).not.toMatch(/atualizada em/);
+  });
 });

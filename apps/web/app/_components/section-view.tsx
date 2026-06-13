@@ -1,8 +1,17 @@
 import Link from "next/link";
 import type { Section, Source } from "@/lib/catalog";
+import { formatDate } from "@/lib/format";
 
 interface SourceWithCount extends Source {
   postCount: number;
+}
+
+function mostRecentDate(sources: SourceWithCount[]): string | undefined {
+  return sources
+    .map((s) => s.lastActivity ?? s.startedAt)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
 }
 
 export function SectionWithSourcesView({
@@ -12,6 +21,7 @@ export function SectionWithSourcesView({
   section: Section;
   sources: SourceWithCount[];
 }) {
+  const updatedAt = mostRecentDate(sources);
   return (
     <div className="page wrap">
       <div className="page-head">
@@ -22,6 +32,7 @@ export function SectionWithSourcesView({
           <span>
             {sources.length} {sources.length === 1 ? "fonte" : "fontes"}
           </span>
+          {updatedAt && <span>atualizada em {formatDate(updatedAt)}</span>}
         </div>
       </div>
 
