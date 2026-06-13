@@ -3,12 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Icon } from "@/app/_components/primitives";
+import { AuthLayout } from "@/app/_components/auth-layout";
+import { AuthSocial } from "@/app/_components/auth-social";
 import { signIn } from "@/lib/auth-client";
-
-const HAS_GITHUB = process.env.NEXT_PUBLIC_GITHUB_OAUTH === "1";
-const HAS_GOOGLE = process.env.NEXT_PUBLIC_GOOGLE_OAUTH === "1";
-const HAS_SOCIAL = HAS_GITHUB || HAS_GOOGLE;
 
 export default function SignInPage() {
   const router = useRouter();
@@ -16,7 +13,9 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [socialPending, setSocialPending] = useState<string | null>(null);
+  const [socialPending, setSocialPending] = useState(false);
+
+  const busy = pending || socialPending;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,96 +35,51 @@ export default function SignInPage() {
     }
   }
 
-  async function handleSocial(provider: "github" | "google") {
-    setSocialPending(provider);
-    try {
-      await signIn.social({
-        provider,
-        callbackURL: "/",
-      });
-    } catch {
-      setError(`Erro ao entrar com ${provider}. Tente novamente.`);
-      setSocialPending(null);
-    }
-  }
-
   return (
-    <div className="auth-page wrap">
-      <div className="auth-card">
-        <Link href="/" className="auth-brand">
-          epistemix
+    <AuthLayout>
+      <h1 className="auth-title">Entrar</h1>
+
+      <AuthSocial formPending={pending} onError={setError} onPendingChange={setSocialPending} />
+
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <label className="auth-label" htmlFor="email">
+          E-mail
+        </label>
+        <input
+          id="email"
+          type="email"
+          className="auth-input"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+          disabled={busy}
+        />
+        <label className="auth-label" htmlFor="password">
+          Senha
+        </label>
+        <input
+          id="password"
+          type="password"
+          className="auth-input"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          autoComplete="current-password"
+          disabled={busy}
+        />
+        {error && <p className="auth-error">{error}</p>}
+        <button type="submit" className="auth-submit" disabled={busy}>
+          {pending ? "Entrando…" : "Entrar"}
+        </button>
+      </form>
+
+      <p className="auth-alt">
+        Ainda não tem conta?{" "}
+        <Link href="/auth/sign-up" className="auth-alt-link">
+          Criar conta →
         </Link>
-        <div className="auth-rule" />
-        <p className="auth-value-prop">
-          Entre para votar, comentar e acompanhar o que está sendo publicado.
-        </p>
-
-        {HAS_SOCIAL && (
-          <div className="auth-social">
-            {HAS_GITHUB && (
-              <button
-                type="button"
-                className="auth-social-btn"
-                disabled={socialPending !== null || pending}
-                onClick={() => handleSocial("github")}
-              >
-                <Icon name="github" size={15} />
-                {socialPending === "github" ? "Redirecionando…" : "Entrar com GitHub"}
-              </button>
-            )}
-            {HAS_GOOGLE && (
-              <button
-                type="button"
-                className="auth-social-btn"
-                disabled={socialPending !== null || pending}
-                onClick={() => handleSocial("google")}
-              >
-                {socialPending === "google" ? "Redirecionando…" : "Entrar com Google"}
-              </button>
-            )}
-            <div className="auth-divider">
-              <span>ou</span>
-            </div>
-          </div>
-        )}
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label className="auth-label" htmlFor="email">
-            E-mail
-          </label>
-          <input
-            id="email"
-            type="email"
-            className="auth-input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            disabled={pending || socialPending !== null}
-          />
-          <label className="auth-label" htmlFor="password">
-            Senha
-          </label>
-          <input
-            id="password"
-            type="password"
-            className="auth-input"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            disabled={pending || socialPending !== null}
-          />
-          {error && <p className="auth-error">{error}</p>}
-          <button
-            type="submit"
-            className="auth-submit"
-            disabled={pending || socialPending !== null}
-          >
-            {pending ? "Entrando…" : "Entrar"}
-          </button>
-        </form>
-      </div>
-    </div>
+      </p>
+    </AuthLayout>
   );
 }

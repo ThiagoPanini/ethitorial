@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { NowLearningItem } from "@/lib/catalog";
 import { formatDate } from "@/lib/format";
+import { TagLink } from "./tag-link";
 
 const MONTHS_PT = [
   "JANEIRO",
@@ -56,6 +57,7 @@ export interface HomePost {
   date: string;
   summary: string;
   readTime: string;
+  tags?: { slug: string; label: string }[];
   reads?: number;
   votes?: number;
   comments?: number;
@@ -114,24 +116,26 @@ export function HomeView({ featured, latest, sections, nowLearning = [] }: Props
               <Link href={buildHref(featured)}>{featured.title}</Link>
             </h2>
             {featured.summary && <p className="standfirst">{featured.summary}</p>}
-            <div className="metaline feat-meta">
+            <div className="metaline">
+              <span>
+                <b>{formatDate(featured.date)}</b>
+              </span>
+              <span>{featured.readTime} de leitura</span>
               <span>{(featured.reads ?? 0).toLocaleString("pt-BR")} leituras</span>
-              <span>·</span>
               <span>↑ {featured.votes ?? 0}</span>
               {(featured.comments ?? 0) > 0 && (
-                <>
-                  <span>·</span>
-                  <span>
-                    {featured.comments} comentário{featured.comments !== 1 ? "s" : ""}
-                  </span>
-                </>
+                <span>
+                  {featured.comments} comentário{featured.comments !== 1 ? "s" : ""}
+                </span>
               )}
             </div>
-            <div className="metaline">
-              <span>{formatDate(featured.date)}</span>
-              <span>·</span>
-              <span>{featured.readTime} de leitura</span>
-            </div>
+            {featured.tags && featured.tags.length > 0 && (
+              <div className="tagrow">
+                {featured.tags.map((tag) => (
+                  <TagLink key={tag.slug} slug={tag.slug} label={tag.label} />
+                ))}
+              </div>
+            )}
             <Link href={buildHref(featured)} className="btn-read">
               Ler o post →
             </Link>

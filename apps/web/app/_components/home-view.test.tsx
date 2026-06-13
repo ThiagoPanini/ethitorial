@@ -129,6 +129,36 @@ describe("HomeView — MetaLine no destaque", () => {
     render(<HomeView featured={COURSE_POST} latest={[]} sections={[]} />);
     expect(screen.queryByText(/comentário/)).toBeNull();
   });
+
+  it("keeps date, reading time, reads and votes on a single metaline row", () => {
+    render(<HomeView featured={COURSE_POST} latest={[]} sections={[]} />);
+    // A single .metaline carries every indicator (no second stacked row).
+    const metalines = document.querySelectorAll(".lead .metaline");
+    expect(metalines).toHaveLength(1);
+    const text = metalines[0]?.textContent ?? "";
+    expect(text).toMatch(/de leitura/);
+    expect(text).toMatch(/leituras/);
+    expect(text).toMatch(/↑/);
+  });
+
+  it("renders the featured tags as a tagrow before the read button", () => {
+    const tagged = {
+      ...COURSE_POST,
+      tags: [
+        { slug: "ai", label: "IA" },
+        { slug: "typescript", label: "TypeScript" },
+      ],
+    };
+    render(<HomeView featured={tagged} latest={[]} sections={[]} />);
+    const tagrow = document.querySelector(".lead .tagrow");
+    expect(tagrow).toBeInTheDocument();
+    const ia = screen.getByRole("link", { name: "IA" });
+    expect(ia).toHaveAttribute("href", "/tags/ai");
+    expect(screen.getByRole("link", { name: "TypeScript" })).toHaveAttribute(
+      "href",
+      "/tags/typescript",
+    );
+  });
 });
 
 const NOW_LEARNING = [

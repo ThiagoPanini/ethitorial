@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AccountNav } from "./account-nav";
 
@@ -32,16 +31,10 @@ interface TopbarProps {
 }
 
 export function Topbar({ onPaletteOpen }: TopbarProps) {
-  const pathname = usePathname();
-
   return (
     <header className="topbar">
       <div className="topbar-in wrap">
-        <Link
-          href="/"
-          className="brand"
-          style={{ visibility: pathname === "/" ? "hidden" : "visible" }}
-        >
+        <Link href="/" className="brand">
           epistemix
         </Link>
         <LiveDate />

@@ -1287,38 +1287,21 @@ button {
 /* ============================================================
    CRONOLOGIA
    ============================================================ */
-.tl-year-group {
-  position: relative;
-  padding-top: 16px;
-  margin-top: 44px;
-}
-
 .tl-year {
   font-weight: 800;
-  font-size: clamp(72px, 11vw, 140px);
-  letter-spacing: -0.04em;
+  font-size: clamp(50px, 7vw, 88px);
+  letter-spacing: -0.03em;
   color: var(--fnt);
-  opacity: 0.22;
+  opacity: 0.55;
   line-height: 1;
-  margin: 0;
-  pointer-events: none;
+  margin: 44px 0 6px;
   user-select: none;
-  /* ghost behind the first row */
-  position: absolute;
-  top: -8px;
-  right: 0;
-  z-index: 0;
-}
-
-.tl-lines {
-  position: relative;
-  z-index: 1;
 }
 
 .tl-row {
   display: grid;
-  grid-template-columns: 96px 110px 1fr;
-  gap: 24px;
+  grid-template-columns: 110px 130px 1fr;
+  gap: 22px;
   padding: 14px 0;
   border-bottom: 1px solid var(--ln);
   align-items: baseline;
@@ -1331,16 +1314,15 @@ button {
 
 .tl-date {
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--fnt);
   letter-spacing: 0.04em;
-  padding-left: 2px;
 }
 
 .tl-type {
   font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.16em;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--mut);
 }
@@ -1350,10 +1332,9 @@ button {
 }
 
 .tl-t {
-  display: block;
-  font-weight: 600;
-  font-size: 15.5px;
-  letter-spacing: -0.008em;
+  font-weight: 650;
+  font-size: 17px;
+  letter-spacing: -0.01em;
   transition: color 140ms;
 }
 
@@ -1361,19 +1342,9 @@ button {
   color: var(--ac-text);
 }
 
-.tl-detail {
-  display: block;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--fnt);
-  letter-spacing: 0.05em;
-  margin-top: 3px;
-}
-
 @media (max-width: 720px) {
   .tl-year {
     font-size: 60px;
-    right: 0;
   }
 
   .tl-row {
@@ -1752,6 +1723,34 @@ svg.graph {
   position: relative;
 }
 
+/* Holds the topbar account slot while the session resolves, so the row does not
+   reflow and the ENTRAR/account control does not pop in after first paint.
+   Sized to roughly match the ENTRAR (.kbtn) footprint. */
+.acct-skeleton {
+  display: inline-block;
+  width: 62px;
+  height: 25px;
+  border: 1px solid var(--ln);
+  opacity: 0.4;
+  animation: acct-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes acct-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acct-skeleton {
+    animation: none;
+  }
+}
+
 .acct-btn {
   display: inline-flex;
   align-items: center;
@@ -1814,7 +1813,7 @@ svg.graph {
 }
 
 /* ============================================================
-   AUTH PAGES (sign-in)
+   AUTH PAGES (sign-in / sign-up) — split editorial
    ============================================================ */
 .auth-page {
   min-height: 100vh;
@@ -1824,18 +1823,32 @@ svg.graph {
   padding: 60px 20px;
 }
 
-.auth-card {
+/* Two-panel frame: masthead "cover" aside (left) + form column (right). */
+.auth-split {
   width: 100%;
-  max-width: 380px;
+  max-width: 760px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   border: 1px solid var(--ln);
-  padding: 40px 36px 44px;
+}
+
+.auth-aside {
+  display: flex;
+  flex-direction: column;
+  padding: 44px 36px;
+  background: var(--bg2);
+  border-right: 1px solid var(--ln);
+}
+
+.auth-main {
+  padding: 44px 36px;
 }
 
 .auth-brand {
   display: block;
   font-weight: 800;
-  font-size: 17px;
-  letter-spacing: -0.02em;
+  font-size: 30px;
+  letter-spacing: -0.03em;
   color: var(--ink);
   margin-bottom: 16px;
 }
@@ -1844,21 +1857,39 @@ svg.graph {
   height: 1px;
   background: var(--ln);
   border: none;
-  margin: 0 0 20px;
+  margin: 0 0 16px;
 }
 
-.auth-value-prop {
-  font-size: 14px;
-  line-height: 1.55;
-  color: var(--fnt);
+.auth-tagline {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut);
   margin-bottom: 28px;
+}
+
+.auth-quote {
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--fnt);
+}
+
+.auth-edition {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ac-text);
+  margin-top: auto;
+  padding-top: 28px;
 }
 
 .auth-title {
   font-weight: 750;
-  font-size: 28px;
+  font-size: 26px;
   letter-spacing: -0.025em;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .auth-form {
@@ -1973,6 +2004,52 @@ svg.graph {
   content: "";
   flex: 1;
   border-top: 1px solid var(--ln);
+}
+
+.auth-hint {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--mut);
+  margin-top: 6px;
+}
+
+.auth-alt {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ln);
+  font-size: 13px;
+  color: var(--mut);
+}
+
+.auth-alt-link {
+  color: var(--ac-text);
+  font-weight: 600;
+}
+
+.auth-alt-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+  .auth-split {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+  }
+
+  .auth-aside {
+    border-right: none;
+    border-bottom: 1px solid var(--ln);
+    padding: 32px 28px;
+  }
+
+  .auth-main {
+    padding: 32px 28px;
+  }
+
+  .auth-edition {
+    display: none;
+  }
 }
 
 /* ============================================================

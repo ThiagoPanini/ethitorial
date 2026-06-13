@@ -32,7 +32,7 @@ describe("AccountNav", () => {
     expect(link).toHaveAttribute("href", "/auth/sign-in");
   });
 
-  it("renders nothing while session is loading", () => {
+  it("reserves a placeholder slot while the session is loading (no reflow / pop-in)", () => {
     mockUseSession.mockReturnValue({
       data: null,
       isPending: true,
@@ -41,7 +41,13 @@ describe("AccountNav", () => {
     } as never);
 
     const { container } = render(<AccountNav />);
-    expect(container.firstChild).toBeNull();
+    const skeleton = container.querySelector(".acct-skeleton");
+    // The slot is held (not collapsed) so the topbar layout stays stable…
+    expect(skeleton).toBeInTheDocument();
+    expect(skeleton).toHaveAttribute("aria-hidden", "true");
+    // …but it is not an interactive ENTRAR/account control yet.
+    expect(screen.queryByRole("link", { name: /entrar/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
   it("renders user avatar button when logged in", () => {

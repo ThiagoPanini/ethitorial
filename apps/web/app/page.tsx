@@ -9,6 +9,10 @@ export default function Home() {
   const catalog = getCatalog();
   const model = getSiteModel();
 
+  const tagLabels = new Map(model.tags.map((t) => [t.slug, t.label]));
+  const toTags = (slugs: string[]) =>
+    slugs.map((slug) => ({ slug, label: tagLabels.get(slug) ?? slug }));
+
   const withSourcesPosts: HomePost[] = model.posts.map((p) => ({
     slug: p.slug,
     sectionSlug: p.sectionSlug,
@@ -18,6 +22,7 @@ export default function Home() {
     date: p.date,
     summary: p.summary,
     readTime: p.readTime,
+    tags: toTags(p.tags),
   }));
 
   const directPosts: HomePost[] = catalog
@@ -32,6 +37,7 @@ export default function Home() {
         date: p.date,
         summary: p.summary,
         readTime: getReadTime(p.body),
+        tags: toTags(p.tags),
       })),
     );
 
