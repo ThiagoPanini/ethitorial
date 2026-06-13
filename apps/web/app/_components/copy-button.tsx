@@ -5,8 +5,7 @@ export function CopyButton() {
   const [copied, setCopied] = useState(false);
 
   function handleCopy(e: React.MouseEvent<HTMLButtonElement>) {
-    const text =
-      e.currentTarget.closest(".code-wrap")?.querySelector("code")?.textContent ?? "";
+    const text = e.currentTarget.closest(".code-wrap")?.querySelector("code")?.textContent ?? "";
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
