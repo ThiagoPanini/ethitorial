@@ -23,6 +23,7 @@ export function SectionDirectView({
           <span>
             {posts.length} {posts.length === 1 ? "post" : "posts"}
           </span>
+          {posts.length > 0 && <span>atualizada em {formatDate(posts[0].date)}</span>}
         </div>
       </div>
 
