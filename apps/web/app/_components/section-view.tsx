@@ -36,8 +36,7 @@ export function SectionWithSourcesView({
           )}
           <div className="src-name">{source.name}</div>
           <div className="src-by">
-            por {source.author} · {source.postCount}{" "}
-            {source.postCount === 1 ? "nota" : "notas"}
+            por {source.author} · {source.postCount} {source.postCount === 1 ? "nota" : "notas"}
           </div>
           {source.description && <p className="src-desc">{source.description}</p>}
         </Link>
