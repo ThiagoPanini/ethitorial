@@ -71,8 +71,8 @@ export default async function PostPage({
 
   const allPosts = catalog.getPosts(sectionSlug, sourceSlug);
   const idx = allPosts.findIndex((p) => p.slug === postSlug);
-  const prev = idx > 0 ? allPosts[idx - 1] : null;
-  const next = idx < allPosts.length - 1 ? allPosts[idx + 1] : null;
+  const older = idx < allPosts.length - 1 ? allPosts[idx + 1] : null;
+  const newer = idx > 0 ? allPosts[idx - 1] : null;
   const tagLabels = new Map(model.tags.map((t) => [t.slug, t.label]));
   const headings = extractHeadings(post.body);
 
@@ -157,7 +157,7 @@ export default async function PostPage({
               />
             </div>
 
-            {(prev || next) && (
+            {(older || newer) && (
               <nav
                 style={{
                   display: "grid",
@@ -168,9 +168,9 @@ export default async function PostPage({
                   paddingTop: "24px",
                 }}
               >
-                {prev ? (
+                {older ? (
                   <Link
-                    href={`/${sectionSlug}/${sourceSlug}/${prev.slug}`}
+                    href={`/${sectionSlug}/${sourceSlug}/${older.slug}`}
                     style={{ fontSize: "13px" }}
                   >
                     <div
@@ -184,14 +184,14 @@ export default async function PostPage({
                     >
                       ← ANTERIOR
                     </div>
-                    <div style={{ fontWeight: 600 }}>{prev.title}</div>
+                    <div style={{ fontWeight: 600 }}>{older.title}</div>
                   </Link>
                 ) : (
                   <span />
                 )}
-                {next ? (
+                {newer ? (
                   <Link
-                    href={`/${sectionSlug}/${sourceSlug}/${next.slug}`}
+                    href={`/${sectionSlug}/${sourceSlug}/${newer.slug}`}
                     style={{ fontSize: "13px", textAlign: "right" }}
                   >
                     <div
@@ -205,7 +205,7 @@ export default async function PostPage({
                     >
                       PRÓXIMO →
                     </div>
-                    <div style={{ fontWeight: 600 }}>{next.title}</div>
+                    <div style={{ fontWeight: 600 }}>{newer.title}</div>
                   </Link>
                 ) : (
                   <span />
