@@ -90,7 +90,13 @@ export default async function SourceOrDirectPostPage({
     const tags = catalog.getTags();
     return (
       <AppShell>
-        <SourceView source={source} posts={posts} sectionSlug={sectionSlug} tags={tags} />
+        <SourceView
+          source={source}
+          posts={posts}
+          sectionSlug={sectionSlug}
+          sectionTitle={section.title}
+          tags={tags}
+        />
       </AppShell>
     );
   }

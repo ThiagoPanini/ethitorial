@@ -2,48 +2,54 @@ import Link from "next/link";
 import type { Post, Source, Tag } from "@/lib/catalog";
 import { formatDate } from "@/lib/format";
 
+const STATUS_LABEL: Record<string, string> = {
+  ongoing: "em andamento",
+  concluded: "concluído",
+};
+
 export function SourceView({
   source,
   posts,
   sectionSlug,
+  sectionTitle,
   tags = [],
 }: {
   source: Source;
   posts: Post[];
   sectionSlug: string;
+  sectionTitle: string;
   tags?: Tag[];
 }) {
   const tagLabel = (slug: string) => tags.find((t) => t.slug === slug)?.label ?? slug;
-  const hostname = (() => {
-    try {
-      return new URL(source.externalUrl).hostname.replace(/^www\./, "");
-    } catch {
-      return source.externalUrl;
-    }
-  })();
 
   return (
     <div className="page wrap">
       <div className="page-head">
-        <span className="kicker mono">{sectionSlug}</span>
+        <span className="kicker">
+          <Link href={`/${sectionSlug}`}>{sectionTitle}</Link>
+        </span>
         <h1>{source.name}</h1>
         <p className="desc">{source.description}</p>
-        <div className="metaline">
-          <span>por {source.author}</span>
-          <span>·</span>
-          <a
-            href={source.externalUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="mono"
-            style={{ fontSize: "11px", color: "var(--ac-text)", letterSpacing: "0.04em" }}
-          >
-            {hostname}
-          </a>
+        <div className="metaline meta">
+          <span>
+            <b>por {source.author}</b>
+          </span>
+          {source.studyStatus && (
+            <span className="status-chip">
+              {STATUS_LABEL[source.studyStatus] ?? source.studyStatus}
+            </span>
+          )}
+          <span>
+            {posts.length} {posts.length === 1 ? "nota" : "notas"}
+          </span>
         </div>
       </div>
 
-      <div style={{ marginTop: "26px" }}>
+      <div className="colhead" style={{ marginTop: 30 }}>
+        NOTAS DO CURSO
+      </div>
+
+      <div>
         {posts.map((post, i) => (
           <Link
             key={post.slug}
