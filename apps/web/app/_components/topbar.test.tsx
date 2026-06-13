@@ -1,11 +1,7 @@
 // @vitest-environment happy-dom
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Topbar } from "./topbar";
-
-vi.mock("next/navigation", () => ({
-  usePathname: vi.fn().mockReturnValue("/blog"),
-}));
 
 describe("Topbar", () => {
   it("renders the wordmark 'epistemix'", () => {
@@ -43,9 +39,10 @@ describe("Topbar", () => {
     expect(document.querySelector(".date-hide")).toBeInTheDocument();
   });
 
-  it("brand is visible when not on home", () => {
+  it("brand is always visible (no per-route visibility toggle)", () => {
     const { container } = render(<Topbar />);
     const brand = container.querySelector(".brand") as HTMLElement;
-    expect(brand?.style.visibility).toBe("visible");
+    // The wordmark must never be hidden — it is the persistent home affordance.
+    expect(brand?.style.visibility).not.toBe("hidden");
   });
 });

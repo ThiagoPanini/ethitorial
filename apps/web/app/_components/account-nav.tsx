@@ -10,7 +10,11 @@ export function AccountNav() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  if (isPending) return null;
+  // Reserve the slot while the session resolves so the topbar doesn't reflow
+  // (and the "ENTRAR" button doesn't pop in a few frames after everything else).
+  if (isPending) {
+    return <span className="acct-skeleton" aria-hidden="true" />;
+  }
 
   const user = session?.user;
 
