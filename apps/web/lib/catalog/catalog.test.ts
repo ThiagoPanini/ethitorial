@@ -147,7 +147,7 @@ describe("loadCatalog — study_status / Now Learning (D1)", () => {
       lastActivity: "2026-06-01",
     });
     // progress field must not exist in domain
-    expect((aihero as Record<string, unknown>)?.progress).toBeUndefined();
+    expect((aihero as unknown as Record<string, unknown>)?.progress).toBeUndefined();
   });
 
   it("getNowLearning returns ongoing sources ordered by derived lastActivity desc", () => {
@@ -167,7 +167,7 @@ describe("loadCatalog — study_status / Now Learning (D1)", () => {
       // lastActivity derived from most recent published post (primeiras-impressoes: 2026-06-05)
       lastActivity: "2026-06-05",
     });
-    expect((first as Record<string, unknown>)?.progress).toBeUndefined();
+    expect((first as unknown as Record<string, unknown>)?.progress).toBeUndefined();
   });
 
   it("getNowLearning: source with no posts falls back to source.lastActivity", () => {
