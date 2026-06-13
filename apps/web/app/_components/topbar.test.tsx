@@ -1,7 +1,11 @@
 // @vitest-environment happy-dom
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Topbar } from "./topbar";
+
+vi.mock("next/navigation", () => ({
+  usePathname: vi.fn().mockReturnValue("/blog"),
+}));
 
 describe("Topbar", () => {
   it("renders the wordmark 'epistemix'", () => {
@@ -34,11 +38,14 @@ describe("Topbar", () => {
     expect(container.querySelector(".topbar")).toBeInTheDocument();
   });
 
-  it("does not render a date in the topbar", () => {
+  it("renders .date-hide element with current date", () => {
     render(<Topbar />);
-    const topbarIn = document.querySelector(".topbar-in");
-    expect(topbarIn).toBeInTheDocument();
-    // date-hide element should not exist
-    expect(document.querySelector(".date-hide")).not.toBeInTheDocument();
+    expect(document.querySelector(".date-hide")).toBeInTheDocument();
+  });
+
+  it("brand is visible when not on home", () => {
+    const { container } = render(<Topbar />);
+    const brand = container.querySelector(".brand") as HTMLElement;
+    expect(brand?.style.visibility).toBe("visible");
   });
 });
