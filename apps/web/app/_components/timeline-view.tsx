@@ -14,18 +14,17 @@ export function TimelineView({ events }: { events: TimelineEvent[] }) {
   const years = groupByYear(events);
 
   return (
-    <div className="content-inner timeline-page">
+    <div className="wrap page">
       <div className="page-head">
-        <span className="page-eyebrow">Cronologia · catálogo derivado</span>
-        <h1 className="page-title">Cronologia</h1>
-        <p className="page-desc">
+        <span className="kicker">Diário de aprendizado</span>
+        <h1>Cronologia</h1>
+        <p className="desc">
           Publicações, notas de estudo, inícios e conquistas, todos derivados do catálogo MDX.
         </p>
       </div>
 
       {years.length > 0 ? (
-        <div className="timeline-stack">
-          {years.map(([year, yearEvents]) => (
+        years.map(([year, yearEvents]) => (
             <section className="tl-year-group" key={year}>
               <h2 className="tl-year">{year}</h2>
               <div className="tl-lines">
@@ -45,8 +44,7 @@ export function TimelineView({ events }: { events: TimelineEvent[] }) {
                 ))}
               </div>
             </section>
-          ))}
-        </div>
+        ))
       ) : (
         <div className="empty-state">
           <h2>Cronologia vazia</h2>
