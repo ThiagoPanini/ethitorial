@@ -13,6 +13,7 @@ export default function Home() {
     slug: p.slug,
     sectionSlug: p.sectionSlug,
     sourceSlug: p.sourceSlug,
+    sourceName: p.sourceName,
     title: p.title,
     date: p.date,
     summary: p.summary,
