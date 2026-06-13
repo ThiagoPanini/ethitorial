@@ -1,0 +1,332 @@
+---
+title: "Resumo das Aulas do Dia 01"
+date: 2026-06-13
+status: published
+tags: [ai, agents, sdd]
+summary: "Um resumo detalhado do Dia 01 do AI Coding for Real Engineers: restrições dos LLMs, subagents, exploração, contexto, plan mode, grill-me, compact e handoff."
+---
+
+O Dia 01 do **AI Coding for Real Engineers** é menos sobre "usar melhor o Claude Code" e mais
+sobre aceitar uma restrição que governa todas as outras: agentes só trabalham bem quando o
+contexto está bem desenhado.
+
+Essa frase parece genérica, mas as aulas deixam o mecanismo bem concreto. O modelo é *stateless*,
+não é banco de dados, tem uma janela de contexto com uma região prática de qualidade e produz
+respostas não determinísticas. O *harness* tenta compensar isso com subagents, modos de execução,
+status line, compactação e handoff. O papel do engenheiro é entender essas peças para não pedir
+ao agente um tipo de trabalho que o próprio arranjo torna frágil.
+
+O dia tem dez aulas principais:
+
+| Aula | Tema | Ideia central |
+| --- | --- | --- |
+| 03.01 | Restrições dos LLMs | Smart zone, dumb zone, alucinação, cutoff e statelessness |
+| 03.02 | Subagents | Delegar exploração para janelas separadas e preservar contexto do orquestrador |
+| 03.03 | Exploração do codebase | Toda sessão começa como um dev novo chegando ao repo |
+| 03.04 | Construir uma feature | Observar o comportamento padrão do agente enquanto implementa algo real |
+| 03.05 | Não determinismo | Mesmo input pode gerar rotas diferentes, e isso é normal |
+| 03.06 | Contexto na status line | Tornar o consumo de contexto visível o tempo todo |
+| 03.07 | Por que plan mode decepciona | Planejar é bom; produzir plano antes de alinhamento é ruim |
+| 03.08 | Grill, execute, clear | Entrevistar, implementar e limpar contexto como loop de trabalho |
+| 03.09 | Compaction | Resumir uma conversa grande para continuar, com custo e sedimento |
+| 03.10 | Handoff | Passar contexto para outra sessão por um artefato pequeno e verificável |
+
+## 03.01 - As restrições dos LLMs
+
+A primeira aula abre com uma correção de modelo mental: um LLM não é um desenvolvedor júnior
+trabalhando sem parar. Ele é uma máquina estatística com restrições estranhas, e ignorar essas
+restrições faz o desenvolvedor culpar a IA por falhas que vieram do próprio fluxo.
+
+A restrição principal é a janela de contexto. O modelo recebe texto, transforma em tokens e
+precisa acompanhar relações entre esses tokens. O custo cresce de forma quadrática: adicionar
+mais tokens não é como acrescentar caracteres em um documento, é como aumentar o número de times
+em um campeonato em que todos jogam contra todos.
+
+Daí vem a distinção entre **smart zone** e **dumb zone**. No começo da janela, o modelo consegue
+raciocinar com nitidez. Conforme a conversa cresce, a atenção fica tensionada, a qualidade cai,
+alucinações aparecem e o modelo pode até perder acesso prático a informação que está dentro do
+próprio contexto.
+
+No material gravado originalmente, a paranoia começava perto de 40% de uma janela de 200 mil
+tokens, algo em torno de 80 mil. A atualização posterior é ainda mais importante: janelas de 1M
+tokens não aumentaram proporcionalmente a *smart zone*. A região boa continua por volta de
+80-100 mil tokens. O que cresceu foi a quantidade de espaço onde você consegue continuar
+trabalhando mal sem perceber.
+
+A aula também trata de outras três restrições:
+
+| Restrição | Como aparece na prática | Implicação para o fluxo |
+| --- | --- | --- |
+| LLM não é banco de dados | O conhecimento de treino é comprimido e impreciso | Traga docs e exemplos para o contexto |
+| *Knowledge cutoff* | O modelo não sabe com segurança o que aconteceu depois do treino | Não confie nele para APIs recentes sem fonte |
+| *Statelessness* | Cada conversa começa sem memória | Repo, docs e organização precisam orientar um recém-chegado |
+
+A síntese é forte: o único lugar onde o modelo enxerga informação bruta e recente é a janela de
+contexto. Mas essa janela é finita e degrada quando enche. Todo o restante do dia nasce dessa
+tensão.
+
+## 03.02 - O que são subagents
+
+A segunda aula mostra como o Claude Code tenta reduzir o custo de exploração. A conversa principal
+é conduzida por um agente orquestrador. Esse orquestrador precisa entender o pedido, coordenar
+ferramentas, decidir rota e responder ao usuário. Se ele fizer toda a exploração do repositório
+dentro da própria janela, consome tokens que seriam úteis para implementar.
+
+Subagents resolvem parte desse problema. O orquestrador delega uma tarefa focada para outra janela
+de contexto. Esse subagent lê arquivos, roda comandos, investiga uma parte do problema e devolve
+um resumo. O orquestrador recebe o resultado útil sem carregar todos os passos intermediários.
+
+O ganho é duplo:
+
+- a exploração acontece dentro da *smart zone* do subagent;
+- a conversa principal fica mais limpa para a implementação.
+
+Subagents também podem rodar em paralelo e usar modelos diferentes. Para exploração simples, o
+Claude Code pode usar um modelo mais rápido e barato, porque a tarefa é focada e o resultado será
+resumido.
+
+A leitura que ficou para mim é que subagent é menos uma "feature avançada" e mais uma estratégia
+de economia de contexto. Mesmo quando eu não configuro subagents manualmente, vale reconhecer o
+padrão: isolar trabalho, gastar tokens em uma janela separada e devolver só o que importa.
+
+## 03.03 - Exploração do codebase
+
+A terceira aula transforma *statelessness* em exercício. Cada interação com o agente é como
+receber um desenvolvedor novo no projeto. Ele não conhece a stack, não sabe onde ficam as regras
+de negócio, não viu as decisões anteriores e precisa se orientar antes de agir.
+
+Por isso, exploração não é uma tarefa de setup feita uma vez. É a fundação de quase toda sessão
+com agente.
+
+O exercício começa com um prompt simples:
+
+```txt
+Tell me what the tech stack of this repo is and what its intended purpose is.
+```
+
+A partir daí, a aula sugere perguntas de aprofundamento:
+
+| Pergunta | O que ela testa |
+| --- | --- |
+| Como funciona PPP no repo? | Se o agente entende uma regra de domínio específica |
+| Quais roles e permissões existem? | Se ele sabe conectar código e comportamento |
+| Onde fica autenticação e autorização? | Se ele encontra fronteiras importantes |
+| Qual modo do React Router está sendo usado? | Se ele infere arquitetura a partir de pistas reais |
+| Como é o schema do banco? | Se ele sabe mapear persistência |
+
+O objetivo não é apenas obter respostas. É observar como o agente investiga: que arquivos lê,
+quando usa subagents, quais comandos roda e que hipóteses levanta. Aprender a explorar com o
+agente é aprender a calibrar a qualidade do contexto antes de pedir implementação.
+
+## 03.04 - Construir a primeira feature
+
+A quarta aula coloca tudo em movimento com uma feature real: um sistema de avaliação por estrelas
+para cursos. Estudantes podem deixar uma nota de 1 a 5, sem review escrita. A média aparece na
+listagem de cursos e na página do curso.
+
+O escopo foi bem escolhido. Ele atravessa banco, serviços, rotas e UI, mas não exige uma interface
+complexa demais. A intenção pedagógica não é produzir a feature perfeita. É observar o
+comportamento padrão do Claude Code em uma tarefa que toca várias camadas do sistema.
+
+O fluxo recomendado é:
+
+1. Começar uma sessão limpa com `/clear`.
+2. Escrever um prompt leve de uma ou duas frases.
+3. Observar se o agente cria um subagent de exploração.
+4. Ler o plano antes de aceitar implementação.
+5. Usar `/context` para monitorar consumo de tokens.
+6. Corrigir a rota em linguagem natural quando algo não bater.
+7. Testar o comportamento final no app.
+
+O detalhe mais importante é a paranoia de contexto. O aluno deve acompanhar quanto da janela o
+orquestrador está usando e ficar atento perto da região de 80-100 mil tokens. Se a sessão começa
+a ficar pesada, é melhor pedir resumo do que falta, fechar a fase ou começar uma nova janela.
+
+A aula também reforça uma postura: quando algo quebra, não saia necessariamente consertando à
+mão. Diga ao agente o que você esperava, o que aconteceu e deixe que ele use o próprio ambiente
+de feedback para corrigir. Essa é parte do ciclo de trabalho com agentes.
+
+## 03.05 - Não determinismo
+
+Depois da primeira feature, o curso faz uma pausa para ajustar expectativa. A pergunta que surge
+naturalmente é: por que meu agente não fez a mesma coisa que o do instrutor, se usei o mesmo repo
+e o mesmo prompt?
+
+A resposta é simples e desconfortável: agentes são não determinísticos.
+
+LLMs escolhem o próximo token a partir de uma distribuição de probabilidades. A mesma pergunta
+pode gerar duas respostas diferentes. Em geral, as respostas se agrupam em torno de caminhos
+razoáveis, mas às vezes aparecem outliers. Isso não significa que o aluno fez algo errado.
+
+A consequência prática é que o curso não deve ser seguido como uma receita pixel-perfect. Dois
+agentes podem explorar arquivos diferentes, propor planos distintos ou errar de maneiras
+diferentes. O trabalho do engenheiro é aprender a "surfar a onda": observar, orientar, criar
+feedback loops e reduzir variância quando o fluxo exigir mais consistência.
+
+Esse ponto é importante para AFK depois. Não determinismo nunca desaparece por completo, mas
+testes, CI, specs, issues pequenas e critérios de aceitação estreitam a distribuição de saídas
+aceitáveis.
+
+## 03.06 - Mostrar contexto na status line
+
+A sexta aula transforma `/context` em instrumento permanente. O problema do comando é que ele
+interrompe o fluxo: você precisa sair do que está fazendo para perguntar quanto da janela foi
+usado. Em ferramentas como Cursor ou OpenCode, a visibilidade de contexto costuma ser mais
+imediata. No Claude Code, é preciso configurar.
+
+O curso usa `ccstatusline`, uma ferramenta da comunidade, para mostrar a contagem de tokens e a
+porcentagem na status line. A versão atualizada das instruções prioriza o número bruto de tokens,
+porque a janela de 1M tornou porcentagens menos úteis.
+
+O formato recomendado mostra algo como:
+
+```txt
+186.2k (17.3%)
+```
+
+O número absoluto é o que interessa para a *smart zone*. Se a região boa está por volta de
+80-100 mil tokens, 17% de uma janela de 1M já pode estar alto demais, enquanto 40% deixou de ser
+uma régua confiável.
+
+A aula passa por criar `~/.config/ccstatusline/settings.json`, configurar `~/.claude/settings.json`
+e reiniciar o Claude Code. Tecnicamente é uma aula de setup. Conceitualmente, é uma aula sobre
+feedback: uma métrica invisível vira uma decisão visível.
+
+## 03.07 - Por que plan mode decepciona
+
+Esta é uma das aulas mais importantes do dia. Matt deixa claro que planejamento é poderoso, mas
+o *plan mode* padrão tem uma falha recorrente: ele cria um plano antes de criar entendimento.
+
+No modo de implementação, o agente pode escrever arquivos, ler arquivos, rodar bash e chamar MCPs.
+No *plan mode*, a escrita fica bloqueada. O agente ainda consegue explorar, analisar e montar um
+plano. Em teoria, ótimo: você pensa antes de editar.
+
+O fluxo ideal teria prompt inicial, exploração, entrevista e plano. O problema é que a entrevista
+costuma ser curta demais. O agente lê o repo, faz uma ou duas perguntas e gera uma parede de
+Markdown. O humano revisa por cima, talvez perca um detalhe crítico, aceita, e só depois descobre
+que agente e humano estavam imaginando coisas diferentes.
+
+Matt usa a noção de **conceito de design compartilhado**, de Frederick P. Brooks, para explicar a
+falha. O que falta não é um arquivo de plano. Falta entendimento comum entre os participantes do
+design.
+
+A alternativa proposta é `grill-me`: uma skill que força o agente a entrevistar o usuário até que
+as decisões estejam suficientemente resolvidas. Ela ainda é planejamento, mas resiste à ansiedade
+de produzir documento cedo demais.
+
+## 03.08 - O loop grill, execute, clear
+
+A oitava aula coloca `grill-me` em prática. O exercício é criar comentários em aulas. A descrição
+é vaga de propósito: estudantes devem comentar, mas não está claro quem pode ver, quem pode
+moderar, se instrutores participam, se há exclusão, se comentários são públicos ou restritos a
+alunos matriculados.
+
+Essas perguntas são interdependentes. Se instrutores podem moderar, talvez precisem de UI própria.
+Se comentários são públicos, regras de visibilidade mudam. Se existe *soft delete*, o schema e a
+experiência de auditoria mudam. Um plano prematuro provavelmente escolheria respostas sem deixar
+claro que escolheu.
+
+O `grill-me` faz o agente caminhar por essa árvore de decisões. A skill pede perguntas uma por
+vez, recomenda respostas e explora o código quando a resposta pode ser descoberta no repositório.
+Isso evita perguntas inúteis e concentra a conversa no que precisa de julgamento humano.
+
+O loop que emerge é:
+
+| Etapa | Papel |
+| --- | --- |
+| *Grill* | Resolver intenção, domínio e decisões |
+| *Execute* | Implementar depois de alinhado |
+| *Clear* | Limpar contexto para a próxima unidade de trabalho |
+
+Esse loop também explica por que o curso insiste tanto em contexto. Uma boa sessão de *grill*
+enche a janela com intenção valiosa. Mas, se ela ficar longa demais, a implementação pode começar
+fora da região boa. Por isso limpar ou fazer *handoff* passa a ser parte do desenho, não um
+remendo.
+
+## 03.09 - Compactação
+
+A nona aula abre a caixa do `/compact`. Quando a conversa chega perto do limite, o Claude Code
+tem uma região reservada para auto-compactação. Ao entrar nessa zona, o *harness* pode resumir a
+conversa e continuar a partir de um contexto menor.
+
+Compactar preserva uma versão comprimida do que aconteceu: arquivos tocados, mensagens do usuário,
+planos, tarefas pendentes e instruções extras. Se você acabou de implementar uma feature e quer
+fazer QA, pode dizer isso na instrução de compactação para que o resumo preserve o contexto certo.
+
+O benefício é óbvio: você não perde uma exploração cara nem uma implementação recente. O custo
+também: o resumo é lossy e consome tokens para ser produzido. Se você compacta repetidamente, cria
+camadas de contexto antigo. Matt chama isso de sedimento, e a imagem é boa. A sessão passa a
+carregar resumos de conversas anteriores, com interpretações e sobras que afetam o output de forma
+menos previsível.
+
+A recomendação do curso é não otimizar o fluxo para compactações infinitas. Compact é útil para
+debugging longo, QA curto ou uma continuação direta. Mas o destino desejado é outro: sessões
+limpas, artefatos duráveis e contexto suficiente para o agente trabalhar sem depender de uma
+memória comprimida demais.
+
+## 03.10 - Handoff
+
+A última aula do dia apresenta `/handoff` como resposta a um problema que aparece no meio de
+trabalho real. Você está resolvendo uma tarefa principal e descobre outra coisa importante: um
+teste quebrado, um bug lateral, uma oportunidade de refatoração ou uma pergunta de design que
+merece protótipo.
+
+Fazer tudo na mesma sessão pode consumir o orçamento da tarefa principal. Limpar contexto não
+serve, porque a tarefa principal ainda precisa continuar. Compactar pode misturar assuntos. O
+*handoff* cria uma terceira opção: escrever um documento temporário para uma sessão nova.
+
+Esse documento deve resumir o contexto relevante, sugerir skills, apontar para artefatos existentes
+e evitar duplicar conteúdo que já vive em PRDs, issues, planos, commits ou diffs. Se o usuário
+passa um foco, o documento é adaptado para esse foco.
+
+O padrão é especialmente bom em dois cenários:
+
+| Cenário | Como handoff ajuda |
+| --- | --- |
+| Bug lateral durante implementação | A sessão nova corrige sem poluir a principal |
+| Grill longo com pergunta específica | A sessão nova prototipa ou pesquisa e devolve aprendizado compacto |
+
+O *handoff* permite expandir e contrair contexto. Você abre uma janela para gastar tokens em uma
+investigação, depois retorna com um artefato pequeno que a sessão original consegue absorver.
+
+Para mim, essa aula fecha o dia com a melhor ponte para trabalho multiagente. O arquivo de
+*handoff* vive no ambiente, pode ser lido por outra ferramenta e pode ser revisado antes de ser
+usado. É mais transparente que uma memória compactada e mais portátil que uma conversa presa em
+um *harness*.
+
+## A síntese do dia
+
+O Dia 01 forma uma escada bem nítida:
+
+1. Entenda que a janela de contexto tem uma região boa limitada.
+2. Use subagents e exploração para construir contexto sem poluir tudo.
+3. Aceite que agentes são não determinísticos.
+4. Torne o consumo de contexto visível.
+5. Não confunda plano com entendimento compartilhado.
+6. Use entrevista para resolver decisões antes de implementar.
+7. Limpe contexto como parte do fluxo.
+8. Compacte com cuidado quando uma continuação direta justificar.
+9. Faça *handoff* quando outra sessão deve receber uma fatia de trabalho.
+
+O padrão que começa a aparecer é uma engenharia de contexto. Não basta escrever prompts melhores.
+É preciso desenhar onde o contexto nasce, onde ele vive, quando ele é descartado, quando vira
+documento e quando precisa ser verificado contra fonte primária.
+
+Isso muda meu próprio fluxo no epistemix. Eu já usava `AGENTS.md`, ADRs, specs, issues e skills,
+mas muitas vezes tratava limpeza de contexto como higiene ocasional. Depois desse dia, ela fica
+mais central. A pergunta deixa de ser "o agente ainda cabe na janela?" e vira "esta sessão ainda
+está no melhor lugar para o tipo de trabalho que estou pedindo?".
+
+Quando a resposta for não, o caminho agora está mais claro: compactar se a continuação for curta,
+fazer *handoff* se o foco mudou, ou limpar e recomeçar se o estado importante já está fora da
+conversa.
+
+## Referências
+
+- [AI Coding for Real Engineers, página do cohort](https://www.aihero.dev/cohorts/ai-coding-for-real-engineers-m0k0w)
+- [An Introduction To Plan Mode, Matt Pocock](https://www.aihero.dev/plan-mode-introduction)
+- [5 Agent Skills I Use Every Day, Matt Pocock](https://www.aihero.dev/5-agent-skills-i-use-every-day)
+- [grill-with-docs: Align Before You Build, Matt Pocock](https://www.aihero.dev/grill-with-docs)
+- [handoff: Move Context Between Agent Sessions, Matt Pocock](https://www.aihero.dev/skills-handoff)
+- [Handoff artifact, AI Coding Dictionary](https://www.aihero.dev/ai-coding-dictionary/handoff-artifact)
+- Aulas `03.01` a `03.10`, do material bruto extraído do cohort

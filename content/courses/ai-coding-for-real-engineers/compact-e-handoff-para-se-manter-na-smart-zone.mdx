@@ -1,0 +1,231 @@
+---
+title: "Compact e Handoff para se manter na smart zone"
+date: 2026-06-13
+status: published
+tags: [ai, agents]
+summary: "Como compactação e handoff lidam com o mesmo problema, preservar contexto sem carregar uma conversa inchada para fora da smart zone."
+---
+
+A janela de contexto é o lugar onde o agente pensa com nitidez. O restante é administração de
+risco.
+
+Essa foi a ideia que amarrou o dia 1 do curso para mim. Primeiro veio a distinção entre *smart
+zone* e *dumb zone*: no começo da janela, o modelo ainda consegue prestar atenção às relações
+entre tokens com folga. Conforme a conversa cresce, a atenção fica tensionada, a qualidade cai e
+o agente começa a raciocinar pior mesmo tendo a informação "lá dentro".
+
+Depois vieram duas técnicas que parecem parentes, mas apontam para fluxos bem diferentes:
+`/compact` e `/handoff`.
+
+As duas respondem à mesma pergunta: como carregar o que importa para continuar trabalhando sem
+arrastar todo o peso da conversa anterior? A diferença é onde esse resumo vive, quanto controle
+você tem sobre ele e que tipo de próxima sessão ele prepara.
+
+## Compact é resumo dentro da própria conversa
+
+`/compact` é o mecanismo do Claude Code para reduzir uma conversa grande a um resumo menor. A
+sessão encheu, chegou perto do limite ou passou da região boa da janela; o *harness* chama um
+LLM para condensar o histórico e coloca esse resumo de volta no contexto.
+
+Em teoria, é perfeito. Você não perde tudo que acabou de construir e volta para uma janela menor.
+Na aula `03.09-compaction`, o exemplo é bem concreto: depois de implementar uma feature de
+comentários, a conversa estava pesada, mas ainda havia uma rodada de QA pela frente. Limpar
+contexto exigiria redescobrir o repositório e a implementação. Compactar preservava o que havia
+sido feito, os arquivos relevantes, as tarefas pendentes e a intenção da próxima fase.
+
+Esse detalhe é importante: compactar funciona melhor quando você diz por que está compactando.
+Uma instrução curta, como "acabei de implementar uma feature e quero fazer QA", ajuda o resumo a
+preservar o que será útil para o próximo movimento.
+
+O que tende a sobreviver em um bom compact:
+
+| Informação | Por que importa |
+| --- | --- |
+| O que foi implementado | Evita reexplicar a feature do zero |
+| Arquivos tocados | Dá pontos de entrada para inspeção |
+| Pedidos do usuário | Preserva intenção, não só código |
+| Tarefas pendentes | Orienta a próxima fase |
+| Planos ou artefatos existentes | Permite apontar para fontes mais estáveis |
+| Instrução de compactação | Ajusta o resumo ao próximo objetivo |
+
+Mas há uma troca. O compact também é um resumo feito por modelo. Ele é menor porque é lossy. O
+que ficou de fora desapareceu para a próxima rodada, a menos que esteja em um arquivo, commit,
+teste, issue ou outro artefato fora da conversa.
+
+## O sedimento aparece quando compact vira estilo de vida
+
+Matt usa uma imagem boa para o problema de compactar várias vezes: sedimento. Cada compact deixa
+uma camada comprimida da conversa anterior. Se você cresce a janela, compacta, cresce de novo,
+compacta de novo e segue assim, começa a trabalhar em cima de várias camadas de resumos
+parciais.
+
+Isso não é sempre fatal, mas torna o comportamento menos previsível. O agente passa a carregar
+restos de decisões antigas, interpretações intermediárias e pedaços de contexto que talvez não
+sejam mais relevantes. Pior: esses restos têm autoridade dentro da conversa, mesmo quando são só
+uma leitura resumida do que aconteceu.
+
+Por isso o curso não otimiza para conversas infinitas. A direção é outra: organizar o trabalho
+para que o agente consiga começar de contexto limpo com frequência e ainda assim produzir bem.
+
+Limpar contexto costuma dar:
+
+| Ganho | Efeito prático |
+| --- | --- |
+| Mais tempo na *smart zone* | A próxima tarefa começa leve |
+| Menos tokens gastos em resumo | O orçamento vai para trabalho real |
+| Comportamento mais previsível | Menos herança acidental de decisões antigas |
+| Separação clara entre tarefas | Cada sessão tem um propósito mais nítido |
+
+O problema é que limpar contexto sem preparar nada apaga tudo. O modelo é *stateless*. A próxima
+sessão começa sem memória. É aí que entra o *handoff*.
+
+## Handoff é contexto levado para o ambiente
+
+`/handoff` cria um documento temporário de passagem. Em vez de compactar a conversa dentro da
+própria janela, você escreve um artefato em Markdown para uma sessão nova. Essa sessão pode ser
+outro Claude Code, Codex, Copilot CLI ou qualquer agente capaz de ler o arquivo.
+
+O ponto não é guardar tudo. É guardar o mínimo suficiente para uma sessão com zero contexto
+continuar sem relitigar decisões já tomadas.
+
+Um bom *handoff* costuma conter:
+
+| Parte | Função |
+| --- | --- |
+| Objetivo da próxima sessão | Define para que o resumo existe |
+| Contexto relevante | Carrega só o que a próxima sessão precisa |
+| Decisões e motivo | Evita reabrir escolhas já resolvidas |
+| Caminhos concretos | Substitui "aquele arquivo" por `apps/web/...` |
+| Artefatos existentes | Aponta para PRD, issue, plano, teste, diff ou ADR |
+| Skills sugeridas | Orienta o modo de trabalho da próxima sessão |
+| Alertas de segurança | Remove segredos, tokens e dados sensíveis |
+
+Isso conversa com uma distinção que gosto muito: fonte primária e fonte secundária. O código, os
+testes, os arquivos reais e os commits são fontes primárias. O *handoff* é uma fonte secundária:
+uma leitura do que aconteceu. Ele é útil porque é pequeno, mas justamente por isso precisa ser
+verificável.
+
+Se o *handoff* diz que um teste falha por causa de uma migration, a próxima sessão não deve tratar
+isso como verdade revelada. Deve usar como pista, abrir o teste, rodar o comando e confirmar.
+
+## Compact, clear e handoff não são a mesma ferramenta
+
+A confusão fica menor quando comparo os três movimentos:
+
+| Movimento | O que faz | Quando usar | Risco |
+| --- | --- | --- | --- |
+| `/clear` | Zera a conversa | Próxima tarefa pode reexplorar ou já tem artefato suficiente | Perder decisões que só estavam na conversa |
+| `/compact` | Resume a conversa dentro do contexto | QA curto, debugging longo, follow-up direto da mesma sessão | Acumular sedimento e herdar resumo lossy |
+| `/handoff` | Escreve um artefato para outra sessão | Dividir tarefas, trocar agente, prototipar, continuar limpo | Documento ruim causar relitigação ou omitir detalhe crítico |
+
+Minha leitura depois das aulas é esta: `compact` é ótimo quando ainda estou dentro da mesma linha
+de raciocínio e preciso de uma extensão curta. `handoff` é melhor quando quero preservar a pureza
+da sessão atual ou mudar de foco. `clear` é o movimento padrão quando o trabalho já tem artefato
+durável suficiente fora da conversa.
+
+## O caso mais comum: uma tarefa amarela aparece no meio da azul
+
+A aula `03.10-handing-off` usa uma imagem simples. Você está no meio de uma tarefa azul, dentro
+de uma sessão que ainda precisa terminar. Durante a investigação, descobre uma tarefa amarela:
+um teste quebrado, uma refatoração pequena, um bug lateral, uma decisão de produto que precisa de
+protótipo.
+
+Fazer a tarefa amarela na sessão azul pode consumir o orçamento que você precisava para terminar
+a tarefa principal. Limpar contexto também não serve, porque a tarefa azul ainda está em aberto.
+Compactar tudo talvez misture as duas coisas.
+
+O *handoff* resolve criando uma fronteira:
+
+1. A sessão azul escreve um documento para a tarefa amarela.
+2. Uma sessão nova lê esse documento e trabalha só nela.
+3. Se a tarefa amarela gerar aprendizado relevante, ela faz outro *handoff* de volta.
+4. A sessão azul continua limpa, focada e com mais chance de ficar na *smart zone*.
+
+Esse padrão parece simples, mas é poderoso porque permite expandir e contrair contexto. Você abre
+uma janela nova para gastar tokens em pesquisa, protótipo ou debugging, depois volta com um
+resumo pequeno e orientado.
+
+No limite, é uma forma manual e legível de fazer o que subagents fazem automaticamente: isolar uma
+fatia de trabalho em outra janela e retornar só o resultado útil.
+
+## O handoff também muda o trabalho entre agentes
+
+Existe um benefício que vai além do Claude Code. Como o *handoff* é um arquivo, ele é portátil.
+Eu posso pedir para Claude Code investigar uma falha, escrever um *handoff* e passar o documento
+para Codex revisar a solução. Posso usar um agente para prototipar uma UI e outro para
+transformar as conclusões em issue. Posso pedir uma revisão adversarial sem carregar toda a
+conversa anterior.
+
+Isso encaixa bem no tipo de fluxo que tenho tentado construir no epistemix: documentos pequenos,
+testes verificáveis, branches limpas e agentes trabalhando em fatias que podem ser revisadas.
+
+Mas a portabilidade só funciona se o documento for escrito para alguém sem memória. Um *handoff*
+ruim diz "continue de onde paramos". Um bom *handoff* diz:
+
+- qual é o objetivo;
+- quais arquivos importam;
+- o que foi decidido;
+- o que ainda está aberto;
+- como verificar;
+- o que não deve ser tocado.
+
+O primeiro depende da conversa. O segundo sobrevive ao `/clear`.
+
+## Quando eu compactaria
+
+Depois dessas aulas, minha regra pessoal ficou mais conservadora.
+
+Eu compactaria quando a sessão acumulou contexto caro de reconstruir e a próxima etapa ainda é
+uma continuação direta. Exemplos:
+
+- acabei de implementar uma feature e quero uma rodada curta de QA;
+- investiguei um bug difícil e preciso preservar tentativas já feitas;
+- estou em uma conversa longa de diagnóstico e ainda faltam poucos testes;
+- a alternativa seria reexplorar muito código para uma intervenção pequena.
+
+Mesmo nesses casos, eu tenderia a compactar uma vez. Se a sessão pede compactação repetida, é
+sinal de que o trabalho deveria ter virado artefato, issue, spec ou *handoff* antes.
+
+## Quando eu faria handoff
+
+Eu faria *handoff* quando o problema precisa respirar em outra janela.
+
+- A sessão de `grill-me` abriu uma pergunta específica de produto.
+- Uma implementação revelou um bug lateral que não cabe na tarefa atual.
+- Um protótipo visual precisa queimar contexto sem poluir a decisão principal.
+- Quero trocar de ferramenta ou pedir revisão de outro agente.
+- O plano já está entendido, mas a implementação deveria começar de contexto limpo.
+
+Aqui, a pergunta não é "quero continuar a conversa?". É "qual é o menor pacote de contexto que
+uma sessão nova precisa para agir com segurança?".
+
+## O que fica como prática
+
+Compact e *handoff* são respostas diferentes para a mesma restrição: agentes são fortes quando a
+janela está saudável e pioram quando carregam contexto demais.
+
+O erro é tratar a janela grande como permissão para continuar para sempre. A janela de 1M tokens
+não transformou a conversa inteira em *smart zone*. Ela só tornou mais fácil se perder em uma
+região ruim sem sentir o impacto imediatamente.
+
+Então a prática que levo é simples:
+
+1. Medir contexto por token, não por sensação.
+2. Limpar contexto sempre que houver artefato suficiente para recomeçar.
+3. Compactar só quando a continuação direta vale mais do que uma sessão limpa.
+4. Fazer *handoff* quando o próximo trabalho merece uma janela própria.
+5. Verificar o *handoff* contra fontes primárias antes de agir.
+
+No fundo, a disciplina é a mesma de engenharia que aparece no resto do curso: deixar o estado
+importante em lugares auditáveis, reduzir acoplamento entre tarefas e evitar carregar complexidade
+invisível. A diferença é que, agora, a complexidade também mora dentro da janela de contexto.
+
+## Referências
+
+- [AI Coding for Real Engineers, página do cohort](https://www.aihero.dev/cohorts/ai-coding-for-real-engineers-m0k0w)
+- [handoff: Move Context Between Agent Sessions, Matt Pocock](https://www.aihero.dev/skills-handoff)
+- [Handoff, AI Coding Dictionary](https://www.aihero.dev/ai-coding-dictionary/handoff)
+- [Handoff artifact, AI Coding Dictionary](https://www.aihero.dev/ai-coding-dictionary/handoff-artifact)
+- [Creating The Perfect Claude Code Status Line, Matt Pocock](https://www.aihero.dev/creating-the-perfect-claude-code-status-line)
+- Aula `03.09-compaction`, do material bruto extraído do cohort
+- Aula `03.10-handing-off`, do material bruto extraído do cohort

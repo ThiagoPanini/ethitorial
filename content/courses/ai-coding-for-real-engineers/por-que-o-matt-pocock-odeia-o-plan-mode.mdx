@@ -1,0 +1,180 @@
+---
+title: "Por que o Matt Pocock odeia o plan mode?"
+date: 2026-06-13
+status: published
+tags: [ai, agents, sdd]
+summary: "A provocação por trás da crítica ao plan mode: o problema não é planejar, é trocar entendimento compartilhado por um documento cedo demais."
+---
+
+A resposta curta é: ele não odeia planejar. Pelo contrário, a tese do curso inteiro depende
+de planejamento. O que o Matt Pocock passou a rejeitar é uma versão específica de *plan mode*:
+aquela em que o agente explora um pouco o repositório, faz uma ou duas perguntas, cospe uma
+parede de texto e chama isso de alinhamento.
+
+Esse detalhe muda tudo. O alvo da crítica não é o ato de pensar antes de escrever código. É a
+pressa do agente em transformar uma conversa mal resolvida num artefato com cara de pronto.
+O plano parece sério, tem bullets, nomes de arquivos, etapas e talvez até critérios de teste.
+Mas, se ele nasceu antes de humano e agente chegarem a uma compreensão comum do problema, o
+documento só cristaliza desalinhamento.
+
+É por isso que o título desta nota é provocativo. Matt não odeia o *plan mode* como mecanismo
+de segurança. Ele odeia a ilusão de segurança que aparece quando o plano substitui a conversa.
+
+## A mudança de posição é o ponto mais interessante
+
+O contexto importa. Em janeiro de 2026, Matt publicou textos defendendo fortemente o *plan
+mode*. A ideia era boa e continua boa: antes de qualquer edição, o agente precisa ler o código,
+validar suposições, discutir requisitos e construir contexto. Em vez de jogar uma tarefa vaga
+no modo de implementação, você cria uma fase explícita para pensar.
+
+Na aula `03.07-why-plan-mode-sucks`, porém, a ênfase muda. Ele diz que costumava recomendar
+esse modo com entusiasmo, mas não recomenda mais da mesma forma. O motivo não é que o
+planejamento deixou de funcionar. É que a interface padrão do *plan mode* costuma pular a parte
+mais valiosa do planejamento: a entrevista.
+
+O desenho ideal teria três fases:
+
+| Fase | O que deveria acontecer |
+| --- | --- |
+| Prompt inicial | O humano descreve a intenção, ainda com alguma nebulosidade |
+| Exploração | O agente lê o repositório, roda comandos e entende o terreno |
+| Entrevista e plano | O agente faz perguntas suficientes, resolve ambiguidades e só então escreve o plano |
+
+O problema prático está na terceira linha. Em muitas sessões, o agente explora, pergunta pouco
+e produz o plano cedo demais. A partir daí o humano precisa revisar um documento grande para
+descobrir se está alinhado. E esse é um trabalho ruim para humano fazer: plano longo é fácil de
+escanear por cima, e desalinhamento pequeno costuma ficar escondido justamente onde mais dói.
+
+Uma decisão minúscula sobre permissão, visibilidade, persistência ou estado pode virar uma
+implementação inteira na direção errada.
+
+## O plano não é o conceito de design
+
+A crítica mais importante vem de Frederick P. Brooks, em *The Design of Design*. Matt usa a
+ideia de **conceito de design compartilhado** para explicar por que um plano pode parecer
+correto e ainda assim estar errado.
+
+Um conceito de design não é o arquivo `.md`. Não é a lista de passos. Não é o PRD. É a
+compreensão viva, ainda meio frágil, que os participantes de um trabalho passam a compartilhar
+quando conversam o suficiente sobre a coisa que querem construir.
+
+Quando trabalho com um agente, existe uma lacuna de comunicação. Eu tenho contexto, gosto,
+restrições e imagens mentais que não estão automaticamente na janela de contexto. O agente tem
+capacidade de exploração, mas não tem memória institucional nem intuição sobre as minhas
+preferências. O planejamento bom é o processo de atravessar essa lacuna.
+
+O *plan mode* ruim faz o contrário: ele cria um objeto antes de criar entendimento. O documento
+vira uma espécie de contrato falso. Parece que estamos combinados, mas só porque existe uma
+lista numerada.
+
+## Onde entra o grill-me
+
+`/grill-me` é a resposta do Matt para essa falha. A skill é curta, mas muda o centro de
+gravidade do processo: em vez de pedir um plano, ela pede que o agente entreviste o humano
+relentlessly até os dois chegarem a entendimento compartilhado.
+
+Na prática, isso altera o comportamento em três pontos:
+
+| Ferramenta | Tendência | Risco | Melhor uso |
+| --- | --- | --- | --- |
+| *Plan mode* padrão | Explorar e gerar um plano | Produzir documento antes de resolver ambiguidades | Tarefas bem delimitadas ou fase final depois da conversa |
+| `/grill-me` | Fazer perguntas uma a uma | Gastar contexto se a conversa não for podada | Intenção nebulosa, produto, UX, regras de domínio |
+| `/grill-with-docs` | Entrevistar contra a linguagem e os docs do projeto | Exigir docs minimamente bons | Codebases reais, domínio com termos próprios e decisões registradas |
+
+O detalhe que mais gosto no `grill-me` é que ele ainda é planejamento. Só não é obcecado por
+produzir o artefato cedo. Ele força a conversa a ficar no problema: quem pode fazer o quê, quais
+regras dependem de quais decisões, que perguntas o agente consegue responder explorando o código
+e que perguntas precisam mesmo de julgamento humano.
+
+Na aula seguinte, `03.08-the-grill-execute-clear-loop`, isso aparece num exercício concreto:
+criar um sistema de comentários em aulas. A tarefa é deliberadamente vaga. Estudantes podem
+comentar? Instrutores podem moderar? Comentários são públicos? Só alunos matriculados veem?
+Existe *soft delete*? Cada resposta muda a próxima pergunta. É exatamente o tipo de trabalho
+em que um plano prematuro parece produtividade e vira retrabalho.
+
+## Grill-with-docs é a versão com memória de domínio
+
+`/grill-with-docs` leva a mesma ideia para codebases que já têm linguagem própria. Ele procura
+um `CONTEXT.md`, desafia termos frouxos, cruza decisões com o código e pode atualizar glossário
+ou ADRs quando uma escolha merece registro.
+
+Esse ponto conversa diretamente com o epistemix. Aqui, por exemplo, "Post", "Section",
+"Source", "Tag" e "Artifact" não são palavras intercambiáveis. Elas têm invariantes no domínio
+e aparecem no loader do catálogo. Um agente que planeja usando "article", "category" e "item"
+talvez ainda escreva código que compila, mas já começou pensando fora da linguagem do projeto.
+
+O `grill-with-docs` reduz esse atrito porque transforma a entrevista em uma conversa situada.
+Não é só "o que você quer?". É "o que você quer, usando as palavras que este sistema já usa, e
+sem atropelar as decisões que já estão registradas?".
+
+Para mim, esse é o ponto em que a crítica ao *plan mode* fica mais justa. Um plano genérico pode
+ser correto em abstrato e errado para o projeto. Uma entrevista ancorada nos docs tem mais chance
+de produzir um conceito de design que cabe no repositório real.
+
+## O contexto também decide a técnica
+
+Existe outra camada, mais operacional. Uma conversa de planejamento ocupa contexto. Isso não é
+defeito: uma boa entrevista enche a janela com intenção do usuário, restrições, decisões e
+vocabulário. Esse é um contexto muito mais valioso do que uma pilha de tool calls irrelevantes.
+
+Mas ele ainda ocupa espaço. Por isso o loop do dia 1 não é simplesmente "grill e implemente".
+Ele é:
+
+| Etapa | Objetivo |
+| --- | --- |
+| *Grill* | Chegar ao conceito de design compartilhado |
+| *Execute* | Implementar dentro de uma janela ainda saudável |
+| *Clear* | Encerrar a sessão antes de carregar sedimento para o próximo trabalho |
+
+Quando a conversa de planejamento fica longa demais, o caminho não é necessariamente compactar e
+seguir. Pode ser transformar o que foi aprendido em um artefato pequeno, limpar contexto e
+começar a implementação numa sessão fresca. A aula de *handoff* fecha esse raciocínio: o que
+precisa sobreviver deve ir para o ambiente, em um documento legível, não ficar escondido em uma
+janela inchada.
+
+## Então, quando eu ainda usaria plan mode?
+
+Eu ainda usaria, mas com menos inocência.
+
+Se a tarefa é pequena, o domínio é conhecido e as decisões já estão claras, o *plan mode* pode
+ser uma ótima trava contra edição prematura. Ele força exploração, impede escrita de arquivo e
+permite revisar a rota antes de tocar no código.
+
+Para trabalho nebuloso, eu inverteria a ordem:
+
+1. Começar com `grill-me` ou `grill-with-docs`.
+2. Deixar o agente explorar o que ele consegue responder sozinho.
+3. Resolver decisões uma por uma, com recomendações explícitas.
+4. Só então pedir um PRD, uma lista de issues ou um plano conciso.
+5. Implementar em uma sessão limpa quando o contexto já estiver pesado.
+
+Nessa leitura, o *plan mode* vira uma ferramenta dentro do processo, não o processo inteiro.
+Ele é bom para congelar uma direção já entendida. Ele é fraco quando tenta descobrir a direção
+produzindo um documento.
+
+## O que fica para o meu fluxo
+
+A principal mudança que levo dessa aula é parar de perguntar "qual plano o agente gerou?" e
+começar a perguntar "qual entendimento nós construímos antes do plano?".
+
+Isso parece sutil, mas muda o comportamento. Um plano pode estar bonito e ainda ser inútil. Uma
+entrevista pode parecer lenta e economizar horas de retrabalho. O critério não é a existência de
+um artefato, é a qualidade do alinhamento que veio antes dele.
+
+No meu fluxo ideal, `grill-me` abre quando a intenção ainda está difusa. `grill-with-docs` entra
+quando a base tem domínio, linguagem e ADRs. O plano aparece depois, mais curto, mais verificável
+e menos cheio de confiança falsa. E, se a sessão começar a sair da *smart zone*, eu prefiro
+limpar ou fazer um *handoff* do que carregar um plano ótimo dentro de um contexto cansado.
+
+Matt não odeia planejamento. Ele odeia quando o plano vira teatro de alinhamento. E, depois
+dessa aula, eu também.
+
+## Referências
+
+- [AI Coding for Real Engineers, página do cohort](https://www.aihero.dev/cohorts/ai-coding-for-real-engineers-m0k0w)
+- [An Introduction To Plan Mode, Matt Pocock](https://www.aihero.dev/plan-mode-introduction)
+- [5 Agent Skills I Use Every Day, Matt Pocock](https://www.aihero.dev/5-agent-skills-i-use-every-day)
+- [grill-with-docs: Align Before You Build, Matt Pocock](https://www.aihero.dev/grill-with-docs)
+- [Full Walkthrough: Workflow for AI Coding, transcript público](https://github.com/shanraisshan/claude-code-best-practice/blob/main/videos/claude-matt-pocock-24-apr-26.md)
+- Aula `03.07-why-plan-mode-sucks`, do material bruto extraído do cohort
+- Aula `03.08-the-grill-execute-clear-loop`, do material bruto extraído do cohort
