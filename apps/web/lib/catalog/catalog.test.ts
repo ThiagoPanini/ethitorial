@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { loadCatalog } from "./catalog";
@@ -53,6 +56,71 @@ describe("loadCatalog — posts", () => {
       "primeiras-impressoes",
       "setup-inicial",
     ]);
+  });
+
+  it("uses slug as deterministic tiebreaker for posts with the same date", () => {
+    const root = mkdtempSync(join(tmpdir(), "epistemix-catalog-order-"));
+    try {
+      writeFileSync(
+        join(root, "sections.yml"),
+        `- slug: courses
+  title: Courses
+  kind: with_sources
+  order: 1
+  description: "Cursos."
+`,
+      );
+      writeFileSync(
+        join(root, "tags.yml"),
+        `- slug: ai
+  label: "AI"
+`,
+      );
+      mkdirSync(join(root, "courses", "aihero"), { recursive: true });
+      writeFileSync(
+        join(root, "courses", "aihero", "source.yml"),
+        `name: "AI Hero"
+external_url: "https://aihero.dev"
+author: "Matt Pocock"
+description: "Curso."
+`,
+      );
+      writeFileSync(
+        join(root, "courses", "aihero", "b-post.mdx"),
+        `---
+title: "B Post"
+date: 2026-06-13
+status: published
+tags: [ai]
+summary: "Segundo no desempate."
+---
+
+B.
+`,
+      );
+      writeFileSync(
+        join(root, "courses", "aihero", "a-post.mdx"),
+        `---
+title: "A Post"
+date: 2026-06-13
+status: published
+tags: [ai]
+summary: "Primeiro no desempate."
+---
+
+A.
+`,
+      );
+
+      const catalog = loadCatalog(root);
+
+      expect(catalog.getPosts("courses", "aihero").map((p) => p.slug)).toEqual([
+        "a-post",
+        "b-post",
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("excludes draft posts from the listing (invariante 6)", () => {

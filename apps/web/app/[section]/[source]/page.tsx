@@ -112,8 +112,8 @@ export default async function SourceOrDirectPostPage({
 
   const allPosts = catalog.getDirectPosts(sectionSlug);
   const idx = allPosts.findIndex((p) => p.slug === sourceSlug);
-  const prev = idx > 0 ? allPosts[idx - 1] : null;
-  const next = idx < allPosts.length - 1 ? allPosts[idx + 1] : null;
+  const older = idx < allPosts.length - 1 ? allPosts[idx + 1] : null;
+  const newer = idx > 0 ? allPosts[idx - 1] : null;
   const tagLabels = new Map(model.tags.map((t) => [t.slug, t.label]));
   const headings = extractHeadings(post.body);
   const jsonLd = articleJsonLd({
@@ -181,7 +181,7 @@ export default async function SourceOrDirectPostPage({
               />
             </div>
 
-            {(prev || next) && (
+            {(older || newer) && (
               <nav
                 style={{
                   display: "grid",
@@ -192,8 +192,8 @@ export default async function SourceOrDirectPostPage({
                   paddingTop: "24px",
                 }}
               >
-                {prev ? (
-                  <Link href={`/${sectionSlug}/${prev.slug}`} style={{ fontSize: "13px" }}>
+                {older ? (
+                  <Link href={`/${sectionSlug}/${older.slug}`} style={{ fontSize: "13px" }}>
                     <div
                       className="mono"
                       style={{
@@ -205,14 +205,14 @@ export default async function SourceOrDirectPostPage({
                     >
                       ← ANTERIOR
                     </div>
-                    <div style={{ fontWeight: 600 }}>{prev.title}</div>
+                    <div style={{ fontWeight: 600 }}>{older.title}</div>
                   </Link>
                 ) : (
                   <span />
                 )}
-                {next ? (
+                {newer ? (
                   <Link
-                    href={`/${sectionSlug}/${next.slug}`}
+                    href={`/${sectionSlug}/${newer.slug}`}
                     style={{ fontSize: "13px", textAlign: "right" }}
                   >
                     <div
@@ -226,7 +226,7 @@ export default async function SourceOrDirectPostPage({
                     >
                       PRÓXIMO →
                     </div>
-                    <div style={{ fontWeight: 600 }}>{next.title}</div>
+                    <div style={{ fontWeight: 600 }}>{newer.title}</div>
                   </Link>
                 ) : (
                   <span />

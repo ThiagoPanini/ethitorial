@@ -201,12 +201,12 @@ export function loadCatalog(rootDir: string): Catalog {
         (p) =>
           p.status === "published" && p.sectionSlug === sectionSlug && p.sourceSlug === sourceSlug,
       )
-      .sort((a, b) => b.date.localeCompare(a.date));
+      .sort(comparePostsNewestFirst);
 
   const publishedDirect = (sectionSlug: string) =>
     directPosts
       .filter((p) => p.status === "published" && p.sectionSlug === sectionSlug)
-      .sort((a, b) => b.date.localeCompare(a.date));
+      .sort(comparePostsNewestFirst);
 
   const sectionTitle = (slug: string) =>
     sections.find((section) => section.slug === slug)?.title ?? slug;
@@ -379,6 +379,12 @@ function artifactKey(post: Post): string {
 
 function artifactHref(post: Post): string {
   return `/${artifactKey(post)}`;
+}
+
+function comparePostsNewestFirst(a: Post, b: Post): number {
+  const date = b.date.localeCompare(a.date);
+  if (date !== 0) return date;
+  return a.slug.localeCompare(b.slug);
 }
 
 function spread(index: number, total: number): number {
