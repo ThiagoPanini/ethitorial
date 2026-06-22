@@ -16,7 +16,7 @@ A tese das quatro primeiras aulas do dia 1 é direta: o recurso mais escasso de 
 agente não é inteligência, é espaço. A **janela de contexto** governa tudo o que
 vem depois, e quase toda técnica que o curso ensina mais tarde existe para
 proteger esse espaço. Decidi tratar essas aulas como um Post único porque elas
-contam uma história só — a janela de contexto e as estratégias para não estourá-la.
+contam uma história só: a janela de contexto e as estratégias para não estourá-la.
 
 ## Por que começar pela restrição, e não pela técnica
 
@@ -24,7 +24,7 @@ O Matt abre com uma provocação que vale repetir: um LLM não é um desenvolved
 júnior muito animado que trabalha 24 horas por dia. É algo mais estranho e mais
 limitado que isso. E o aviso que acompanha a provocação é o que me fez levar a
 aula a sério: se você não entende as restrições, vai culpar o modelo, o provedor
-ou o Claude Code quando algo der errado — quando, na verdade, você está
+ou o Claude Code quando algo der errado; quando, na verdade, você está
 trabalhando *contra* a natureza do modelo em vez de *com* ela.
 
 Este Post não é sobre truques de *prompt*. É sobre entender por que o agente fica
@@ -35,7 +35,7 @@ o trabalho em torno do limite real dela.
 ## Smart zone e dumb zone: por que adicionar um token custa caro
 
 A primeira restrição é a mais importante, e é a que volta o curso inteiro. Um LLM
-recebe texto, quebra em pedaços e transforma cada pedaço num número — um *token*.
+recebe texto, quebra em pedaços e transforma cada pedaço num número, um *token*.
 Tudo o que o modelo enxerga de uma vez são os tokens dentro da janela de contexto,
 que costumava terminar por volta de 200 mil tokens.
 
@@ -51,7 +51,7 @@ todos os outros tokens**. E aí a conta explode:
 
 A escala é quadrática, não linear. O Matt usa uma analogia que gruda: não é como
 acrescentar uma letra a um documento, é como adicionar um time a um campeonato de
-pontos corridos — cada time novo joga contra todos os outros, e o número de jogos
+pontos corridos: cada time novo joga contra todos os outros, e o número de jogos
 dispara. Cada token novo é um time novo nessa liga.
 
 Na prática, isso cria duas regiões dentro da mesma janela. Cedo, com a janela
@@ -68,14 +68,14 @@ a dumb zone existe e que ela precisa estar no seu radar sempre que você usa um
 LLM.
 
 Sei que esse trecho é o mais denso do Post. Ele é também o mais importante: se só
-uma ideia daqui sobreviver, que seja esta — a janela de contexto tem um teto
+uma ideia daqui sobreviver, que seja esta: a janela de contexto tem um teto
 prático bem antes do teto técnico, e o seu trabalho é não cruzá-lo.
 
 ## A janela de 1 milhão não aumenta a smart zone
 
 Aqui entra a atualização que mais me chamou atenção, porque é fácil entendê-la ao
 contrário. Desde que o curso foi gravado, a janela de contexto dominante saltou de
-200 mil para um milhão de tokens — o Claude [liberou janelas de 1M](https://claude.com/blog/1m-context-ga)
+200 mil para um milhão de tokens. O Claude [liberou janelas de 1M](https://claude.com/blog/1m-context-ga)
 para Opus 4.6 e Sonnet 4.6, e hoje esse já é o padrão de muita gente no Claude Code.
 
 A pergunta óbvia é: isso aposenta a conta de smart zone e dumb zone? Os 40% ainda
@@ -87,7 +87,7 @@ região ruim agora, se quiser, mas a região boa praticamente não cresceu.
 A consequência operacional é a parte que anotei para mim e que vale mais que o
 número: **pare de pensar em porcentagem e passe a pensar em tokens absolutos**. Os
 40% eram uma régua para a janela de 200 mil. Numa janela de 1M, 40% são 400 mil
-tokens — muito além da smart zone. O limite real está na contagem de tokens, não
+tokens, muito além da smart zone. O limite real está na contagem de tokens, não
 na barra de progresso. É um detalhe que muda a forma de monitorar o agente, e vou
 voltar nele quando falar do comando `/context`.
 
