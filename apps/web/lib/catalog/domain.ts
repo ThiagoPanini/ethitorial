@@ -27,6 +27,9 @@ export interface Source {
   startedAt?: string;
   lastActivity?: string;
   detail?: string;
+  // Ordem de leitura explícita dos Posts deste Source, da primeira à última
+  // leitura (lista de slugs). Quando ausente, a listagem cai para `date` desc.
+  postOrder?: string[];
 }
 
 export interface NowLearningItem {
@@ -107,6 +110,10 @@ export interface Post {
   status: PostStatus;
   tags: string[];
   summary: string;
+  // Posição de leitura derivada de `Source.postOrder` (índice na lista, 0-based).
+  // Não é frontmatter: a sequência é declarada no Source, o Post mantém 5 campos.
+  // `undefined` quando o Source não declara ordem ou não lista este Post.
+  order?: number;
   body: string; // prosa MDX crua, renderizada na rota
 }
 

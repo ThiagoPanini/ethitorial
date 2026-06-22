@@ -123,6 +123,54 @@ A.
     }
   });
 
+  it("honors the Source post_order over date for reading sequence", () => {
+    const root = mkdtempSync(join(tmpdir(), "epistemix-catalog-postorder-"));
+    try {
+      writeFileSync(
+        join(root, "sections.yml"),
+        `- slug: courses
+  title: Courses
+  kind: with_sources
+  order: 1
+  description: "Cursos."
+`,
+      );
+      writeFileSync(join(root, "tags.yml"), `- slug: ai\n  label: "AI"\n`);
+      mkdirSync(join(root, "courses", "aihero"), { recursive: true });
+      // Os três Posts compartilham a mesma data real de escrita; a sequência de
+      // leitura vem só do post_order, não de datas forçadas.
+      writeFileSync(
+        join(root, "courses", "aihero", "source.yml"),
+        `name: "AI Hero"
+external_url: "https://aihero.dev"
+author: "Matt Pocock"
+description: "Curso."
+post_order:
+  - intro
+  - meio
+  - fim
+`,
+      );
+      for (const slug of ["fim", "intro", "meio"]) {
+        writeFileSync(
+          join(root, "courses", "aihero", `${slug}.mdx`),
+          `---\ntitle: "${slug}"\ndate: 2026-06-22\nstatus: published\ntags: [ai]\nsummary: "Mesmo dia."\n---\n\n${slug}.\n`,
+        );
+      }
+
+      const catalog = loadCatalog(root);
+
+      // Listagem newest-first: o último da sequência de leitura aparece primeiro.
+      expect(catalog.getPosts("courses", "aihero").map((p) => p.slug)).toEqual([
+        "fim",
+        "meio",
+        "intro",
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("excludes draft posts from the listing (invariante 6)", () => {
     const catalog = loadCatalog(fixture("valid"));
 

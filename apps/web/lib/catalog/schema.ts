@@ -35,6 +35,9 @@ export const sourceFileSchema = z.object({
   started_at: isoDateSchema.optional(),
   last_activity: isoDateSchema.optional(),
   detail: z.string().optional(),
+  // Ordem de leitura explícita dos Posts (lista de slugs, da primeira à última).
+  // Desacopla a sequência de leitura do `date`, que permanece a data real de escrita.
+  post_order: z.array(z.string()).optional(),
 });
 
 export const tagSchema = z.object({
