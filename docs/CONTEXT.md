@@ -49,6 +49,7 @@ Este documento é o **glossário e conjunto de invariantes** que define a lingua
 17. **Status de estudo é ortogonal à visibilidade.** `ongoing`/`concluded` não substituem nem se misturam com `draft`/`published`. Um `Artifact` `draft` permanece oculto (invariante 6) independentemente do status de estudo.
 18. **`Now Learning`, `Timeline` e `Knowledge Graph` são projeções derivadas do catálogo.** Não têm persistência, autoria, nem identidade próprias: todo item que aparece neles existe como `Artifact` ou `Source`. Mudar o catálogo é a única forma de mudá-los.
 19. **`role` é atribuído server-side; nunca aceito como input do cliente.** O campo `role` do `User` é declarado com `input: false` no better-auth — o servidor sempre ignora qualquer `role` enviado no corpo de signup ou update. Valor padrão é `"user"`; promoção a `"admin"` é operação manual exclusiva do operador no banco (SEC-1).
+20. **A ordem de leitura dos `Post`s de um `Source` é declarada, não inferida da data.** O `date` de um `Post` é sempre a data real de escrita e nunca é ajustado para forçar sequência. A ordem de leitura vem de `post_order` no `source.yml` (lista de slugs, da primeira à última leitura), o que dá ordem total e estável mesmo a notas escritas no mesmo dia (análogo à invariante 2 para `Slide`s). Para `Post`s não listados, ou `Source` sem `post_order`, a listagem cai para `date` decrescente com desempate determinístico por slug.
 
 ## Boundaries de domínio
 

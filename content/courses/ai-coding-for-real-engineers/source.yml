@@ -8,3 +8,18 @@ study_status: ongoing
 started_at: "2026-06-01"
 last_activity: "2026-06-12"
 progress: 60
+
+# Ordem de leitura dos Posts, da primeira à última. Desacopla a sequência do
+# `date` (que é a data real de escrita): notas escritas no mesmo dia ainda têm
+# ordem total e estável. Post não listado aqui cai para `date` decrescente.
+post_order:
+  - motivacoes-e-objetivos
+  - fase-inicial-setup-e-ambientacao
+  - janela-de-contexto-e-a-fuga-da-dumb-zone
+  - por-que-o-matt-pocock-odeia-o-plan-mode
+  - compact-e-handoff-para-se-manter-na-smart-zone
+  - resumo-das-aulas-do-dia-01
+  - agents-md-e-claude-md-steering-que-entra-em-toda-request
+  - progressive-disclosure-o-mapa-nao-o-territorio
+  - agent-skills-capacidade-que-o-agente-descobre
+  - memoria-do-agente-o-steering-que-ele-escreve-sozinho

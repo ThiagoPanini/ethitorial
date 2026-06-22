@@ -113,6 +113,7 @@ function loadSources(rootDir: string, section: Section): Source[] {
       startedAt: raw.started_at,
       lastActivity: raw.last_activity,
       detail: raw.detail,
+      postOrder: raw.post_order,
     };
   });
 }
@@ -132,11 +133,17 @@ function loadPosts(rootDir: string, source: Source, knownTags: Set<string>): Pos
       );
     }
 
+    const slug = file.replace(/\.mdx$/, "");
+    // Posição de leitura declarada no Source (post_order). `undefined` quando
+    // não declarada — a listagem então cai para `date` desc.
+    const orderIndex = source.postOrder?.indexOf(slug) ?? -1;
+
     return {
-      slug: file.replace(/\.mdx$/, ""),
+      slug,
       sectionSlug: source.sectionSlug,
       sourceSlug: source.slug,
       ...frontmatter,
+      order: orderIndex >= 0 ? orderIndex : undefined,
       body: content,
     };
   });
@@ -382,6 +389,12 @@ function artifactHref(post: Post): string {
 }
 
 function comparePostsNewestFirst(a: Post, b: Post): number {
+  // Ordem de leitura explícita do Source (post_order) vence quando os dois Posts
+  // a declaram: índice maior = mais à frente na sequência = mais recente na
+  // listagem newest-first. O `date` continua sendo a data real de escrita.
+  if (a.order != null && b.order != null && a.order !== b.order) {
+    return b.order - a.order;
+  }
   const date = b.date.localeCompare(a.date);
   if (date !== 0) return date;
   return a.slug.localeCompare(b.slug);
