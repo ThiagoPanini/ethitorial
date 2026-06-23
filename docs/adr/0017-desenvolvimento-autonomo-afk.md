@@ -4,6 +4,7 @@
 - **Data:** 2026-06-04
 - **Emendado em:** 2026-06-12 — segredo **gerável por máquina** rebaixado de 🔴 para 🟡 (agente gera e seta via MCP). Ver §1 e a seção **Emenda** no fim do documento.
 - **Emendado em:** 2026-06-22 — exceção pontual e escopada à migração ethitorial: **criar/atualizar registro DNS aditivo em zona já-possuída (`panlabs.tech`) = 🟡** (faz e loga em ai-ops); DNS destrutivo (remover zona/registros, nameserver, firewall) **continua 🔴**. Ver [ADR-0021](0021-rebatismo-ethitorial-e-migracao-panlabs-tech.md).
+- **Emendado em:** 2026-06-23 — **convenção do diário `docs/ai-ops/` aposentada**: operações 🟡 passam a ser registradas na **mensagem do commit/PR que as dispara** (o `git log` é a trilha auditável); a pasta `docs/ai-ops/` foi removida do working tree (preservada no git history). Ver [ADR-0022](0022-enxugamento-documentacao-pos-cutover.md) e a seção **Emenda — 2026-06-23** no fim. Onde este documento diz "registra em `docs/ai-ops/`", leia "registra no commit/PR".
 - **Decisores:** Thiago Panini (solo)
 - **Relacionado:** estende [ADR-0014](0014-roadmap-como-source-skill-solo-dev-assistant.md) (planejamento) e [ADR-0005](0005-deploy-checks-em-tres-portoes.md) (portões de deploy) **sem contradizê-los**; consome os MCPs configurados em [ADR-0003](0003-infra-hostinger-vps-coolify.md)/[ADR-0006](0006-cloudflare-na-frente-da-vps.md)/[ADR-0016](0016-vps-agnostica-multi-projeto.md) (guides [0004](../guides/0004-configurar-hostinger-vps-mcp.md)–[0006](../guides/0006-configurar-cloudflare-mcp.md)); herda o princípio de autonomia da [lesson 0002](../lessons/0002-harness-basico-em-github-projects.md)
 
@@ -62,7 +63,9 @@ Todo run AFK de implementação acontece num **git worktree dedicado** (o harnes
 
 ### 4. Diário de ops: 🟡 registra em `docs/ai-ops/`
 
-Operações 🟡 executadas por agente são anotadas em [docs/ai-ops/](../ai-ops/) — a trilha auditável que já existe para operações de infra. Não é um log novo: é o mesmo gênero, agora também alimentado por ações autônomas. Mantém a propriedade de que **toda mudança de estado de infra é rastreável**, mesmo quando feita sem o operador olhando.
+> **Superseded pela emenda 2026-06-23 (ver fim do documento).** A pasta `docs/ai-ops/` foi aposentada e removida (history). Operações 🟡 passam a ser registradas no commit/PR que as dispara; o `git log` é a trilha auditável. O texto original abaixo fica como registro histórico.
+
+Operações 🟡 executadas por agente são anotadas em `docs/ai-ops/` — a trilha auditável que já existe para operações de infra. Não é um log novo: é o mesmo gênero, agora também alimentado por ações autônomas. Mantém a propriedade de que **toda mudança de estado de infra é rastreável**, mesmo quando feita sem o operador olhando.
 
 ### 5. Convenção `docs/specs/` — PRD-lite versionado
 
@@ -135,3 +138,13 @@ A skill `to-prd` (a ferramenta de *destino/PRD* do fluxo) foi adotada antecipada
 **Por quê é seguro.** O segredo gerável vive só no env store da plataforma (gitleaks continua barrando commit), é rotacionável (reversível), e setá-lo é efeito 🟡 — não destrói dado nem fecha acesso. O blast radius é o de um env var, não o de um `drop database`. A regra "na dúvida, 🔴" continua valendo para qualquer segredo cuja origem o agente não tenha certeza de que é gerável por máquina.
 
 **Efeito nas issues.** E1 (#55) e E0a (#53) deixam de ser HITL → AFK. O passo humano de OAuth foi isolado no slice E0c (#61), que carrega o `hitl`.
+
+## Emenda — 2026-06-23: diário `docs/ai-ops/` aposentado; audit trail no git
+
+**Contexto.** O diário `docs/ai-ops/` (§4) foi a trilha auditável das operações de infra durante o build-out — uma pasta com 9 registros que crescia a cada deploy/cutover. Com a fundação **fechada e no ar**, o churn operacional pesado que justificava o diário caiu, e a pasta virou ruído de navegação para os agentes (poluindo `find`/`grep` e a janela de contexto) sem ganho proporcional. Faz parte do enxugamento de documentação registrado em [ADR-0022](0022-enxugamento-documentacao-pos-cutover.md).
+
+**Decisão.** Aposentar a convenção do §4. Operações 🟡 passam a ser registradas na **mensagem do commit/PR que as dispara** — o `git log` é a trilha auditável (toda mudança de estado de infra já chega via deploy disparado por merge, ou via commit que ajusta config). Onde uma operação 🟡 não nasce de um commit (ex.: um `redeploy` manual de recuperação via MCP), o agente a relata no PR/issue corrente ou num commit dedicado de nota. A pasta `docs/ai-ops/` foi removida do working tree e preservada no git history.
+
+**O que NÃO muda.** O semáforo 🟢🟡🔴 (§1), o fluxo AFK (§2), o sandbox por worktree (§3) e a regra "na dúvida, 🔴" seguem intactos. Muda só *onde* o efeito 🟡 é anotado: de uma pasta dedicada para o próprio histórico do git. A propriedade "toda mudança de estado de infra é rastreável" é preservada — apenas migra de substrato.
+
+**Resumo operacional vivo** (lido pelos agentes): [docs/agents/afk-ops.md](../agents/afk-ops.md).

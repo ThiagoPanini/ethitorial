@@ -7,8 +7,8 @@
 > vence e este doc deve ser corrigido. Recria-se o **resultado visual**, não a
 > estrutura interna do protótipo (hash-router, mock em `data.js`).
 >
-> Supersede `docs/design/0001-direcao-visual-v1.md` (direção violeta/Linear,
-> aposentada). Domínio em [CONTEXT.md](CONTEXT.md).
+> Supersede a direção violeta/Linear anterior (`docs/design/0001`, aposentada e
+> preservada no git history). Domínio em [CONTEXT.md](CONTEXT.md).
 
 ## 0. Conceito
 

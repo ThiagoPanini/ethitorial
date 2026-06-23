@@ -8,7 +8,8 @@ Documentação adicional obrigatória:
 - **Alvo absoluto:** o protótipo da Direção A em `.claude/design/epistemix-redesenho-completo/` + [`docs/DESIGN.md`](../docs/DESIGN.md) (sistema visual) — ver [ADR-0019](../docs/adr/0019-redesenho-prototipo-absoluto-push-feature-completo.md)
 - [`docs/CONTEXT.md`](../docs/CONTEXT.md) — glossário e invariantes de domínio
 - [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — desenho de alto nível e boundaries
-- [`docs/adr/`](../docs/adr/) — decisões registradas. O [`docs/ROADMAP.md`](../docs/ROADMAP.md) faseado foi **aposentado** (ADR-0019); execução vive nas issues do GitHub.
+- [`docs/adr/`](../docs/adr/) — decisões registradas. Execução vive nas issues do GitHub (label `agent-ready`); não há ROADMAP faseado ([ADR-0019](../docs/adr/0019-redesenho-prototipo-absoluto-push-feature-completo.md)).
+- [`docs/agents/`](../docs/agents/) — instruções operacionais modulares (convenções, AFK/ops, MCPs, fluxo), lidas sob demanda.
 
 ## Resumo das regras
 

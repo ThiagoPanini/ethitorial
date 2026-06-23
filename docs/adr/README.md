@@ -47,3 +47,4 @@ Não edite o ADR original. Crie um novo ADR de revisão que referencia o anterio
 - [0019 — Redesenho: protótipo da Direção A como alvo absoluto, push feature-completo, fases aposentadas](0019-redesenho-prototipo-absoluto-push-feature-completo.md)
 - [0020 — Autenticação com better-auth](0020-auth-better-auth.md)
 - [0021 — Rebatismo epistemix → ethitorial e migração para ethitorial.panlabs.tech](0021-rebatismo-ethitorial-e-migracao-panlabs-tech.md)
+- [0022 — Enxugamento da documentação pós-cutover: modelo enxuto inspirado no panlabs](0022-enxugamento-documentacao-pos-cutover.md)
