@@ -5,8 +5,8 @@ name: deploy
 # Coolify (webhook) -> smoke test em ethitorial.panlabs.tech.
 #
 # O job `deploy` é GUARDADO pela presença do secret COOLIFY_TOKEN: enquanto o
-# operador não tiver configurado os apps no Coolify + secrets (ver
-# docs/runbooks/0003-deploy-cutover-coolify.md), o build/push roda e o deploy
+# operador não tiver configurado os apps no Coolify + secrets (ops via MCP em
+# docs/agents/afk-ops.md), o build/push roda e o deploy
 # é pulado (não falha). Depois do setup, o deploy passa a rodar.
 
 on:
@@ -98,4 +98,4 @@ jobs:
         if: steps.guard.outputs.enabled != 'true'
         run: |
           echo "::notice::COOLIFY_TOKEN ausente — build/push para GHCR feito, deploy pulado."
-          echo "::notice::Configure os apps + secrets via docs/runbooks/0003-deploy-cutover-coolify.md"
+          echo "::notice::Configure os apps + secrets via Coolify MCP (ver docs/agents/afk-ops.md)"
