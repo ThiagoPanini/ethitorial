@@ -1,1 +1,1 @@
-"""epistemix API package."""
+"""ethitorial API package."""
