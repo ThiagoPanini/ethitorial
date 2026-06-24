@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    include: ["lib/**/*.test.ts", "app/**/*.test.tsx"],
+    include: ["lib/**/*.test.{ts,tsx}", "app/**/*.test.{ts,tsx}", "*.test.{ts,tsx}"],
     setupFiles: ["./vitest.setup.ts"],
   },
 });
